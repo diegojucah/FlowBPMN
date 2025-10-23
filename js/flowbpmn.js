@@ -91,8 +91,7 @@ class BpmnFlowEditor {
     
     initModeler() {
         this.modeler = new BpmnJS({
-            container: this.container,
-            keyboard: { bindTo: document }
+            container: this.container
         });
         
         // Load diagram

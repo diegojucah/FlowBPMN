@@ -4,9 +4,14 @@
  * -------------------------------------------------------------------------
  * flowBPMN Plugin for GLPI - AJAX Flow Handler
  * -------------------------------------------------------------------------
+ * @copyright Copyright (C) 2024 by KactuX
+ * @license   GPLv3 https://www.gnu.org/licenses/gpl-3.0.html
+ * @link      https://github.com/diegojucah/pluginBPMN
+ * -------------------------------------------------------------------------
  */
 
-include ('../../../inc/includes.php');
+define('GLPI_ROOT', '../../..');
+include (GLPI_ROOT . "/inc/includes.php");
 
 header('Content-Type: application/json; charset=UTF-8');
 

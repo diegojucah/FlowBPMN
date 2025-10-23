@@ -6,8 +6,11 @@
  * -------------------------------------------------------------------------
  */
 
-include ('../../../inc/includes.php');
+// Include GLPI
+define('GLPI_ROOT', '../../..');
+include (GLPI_ROOT . "/inc/includes.php");
 
+// Check rights
 Session::checkRight('config', UPDATE);
 
 // Handle form submission
