@@ -40,7 +40,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
     static $rightname = 'plugin_flowbpmn';
     
     static function getTypeName($nb = 0) {
-        return __('BPMN Flow', 'flowbpmn');
+        return 'FlowBPMN';
     }
     
     /**
@@ -64,7 +64,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                 );
                 
                 return self::createTabEntry(
-                    '<i class="ti ti-git-fork"></i> ' . __('Fluxo BPMN', 'flowbpmn'),
+                    '<i class="ti ti-git-fork"></i> FlowBPMN',
                     $nb
                 );
             }

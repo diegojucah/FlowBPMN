@@ -6,11 +6,12 @@
  * -------------------------------------------------------------------------
  */
 
-// Include GLPI
+use Glpi\Event;
+
+// Direct include for GLPI
 define('GLPI_ROOT', '../../..');
 include (GLPI_ROOT . "/inc/includes.php");
 
-// Check rights
 Session::checkRight('config', UPDATE);
 
 // Handle form submission

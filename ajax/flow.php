@@ -10,9 +10,12 @@
  * -------------------------------------------------------------------------
  */
 
-include('../../../inc/includes.php');
+define('GLPI_ROOT', '../../..');
+include (GLPI_ROOT . "/inc/includes.php");
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=UTF-8');
+
+use Glpi\Event;
 
 Session::checkLoginUser();
 

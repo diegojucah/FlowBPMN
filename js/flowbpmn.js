@@ -161,9 +161,15 @@ class BpmnFlowEditor {
             const { xml } = await this.modeler.saveXML({ format: true });
             const { svg } = await this.modeler.saveSVG();
             
-            const response = await fetch(`${this.pluginUrl}/ajax/flow.php`, {
+            const url = `${this.pluginUrl}/ajax/flow.php`;
+            console.log('Saving to:', url);
+            
+            const response = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({
                     action: 'save',
                     itemtype: this.itemtype,
@@ -174,22 +180,95 @@ class BpmnFlowEditor {
                 })
             });
             
-            const result = await response.json();
+            console.log('Response status:', response.status);
+            const text = await response.text();
+            console.log('Response text:', text);
+            
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch (e) {
+                throw new Error('Resposta inválida do servidor: ' + text.substring(0, 100));
+            }
             
             if (result.success) {
-                this.showSuccess('BPMN diagram saved successfully!');
+                this.showSuccess('Diagrama BPMN salvo com sucesso!');
             } else {
-                throw new Error(result.message || 'Failed to save');
+                throw new Error(result.message || 'Falha ao salvar');
             }
         } catch (err) {
-            console.error('Save error:', err);
-            this.showError('Error saving diagram: ' + err.message);
+            console.error('Erro ao salvar:', err);
+            this.showError('Erro ao salvar diagrama: ' + err.message);
         }
     }
     
-    showExportModal() {
-        // Simple export functionality
-        alert('Export feature - Choose format: BPMN, SVG, or PNG');
+    async showExportModal() {
+        try {
+            const format = prompt('Escolha o formato de exportação:\n1 - BPMN XML\n2 - SVG\n3 - PNG', '1');
+            
+            if (!format) return;
+            
+            switch(format) {
+                case '1':
+                    await this.exportBPMN();
+                    break;
+                case '2':
+                    await this.exportSVG();
+                    break;
+                case '3':
+                    await this.exportPNG();
+                    break;
+                default:
+                    alert('Formato inválido');
+            }
+        } catch (err) {
+            this.showError('Erro ao exportar: ' + err.message);
+        }
+    }
+    
+    async exportBPMN() {
+        const { xml } = await this.modeler.saveXML({ format: true });
+        this.downloadFile(xml, 'diagram.bpmn', 'application/bpmn+xml');
+    }
+    
+    async exportSVG() {
+        const { svg } = await this.modeler.saveSVG();
+        this.downloadFile(svg, 'diagram.svg', 'image/svg+xml');
+    }
+    
+    async exportPNG() {
+        const { svg } = await this.modeler.saveSVG();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(svgBlob);
+        
+        img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            
+            canvas.toBlob(blob => {
+                this.downloadFile(blob, 'diagram.png', 'image/png');
+                URL.revokeObjectURL(url);
+            });
+        };
+        
+        img.src = url;
+    }
+    
+    downloadFile(data, filename, mimeType) {
+        const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
     
     showVersionsModal() {
