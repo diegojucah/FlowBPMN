@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<glpi_plugin>
+    <name>flowBPMN</name>
+    <display_name>Flow BPMN</display_name>
+    <version>1.0.0</version>
+    <apiversion>1.5</apiversion>
+    <author>Your Name</author>
+    <license>GPLv3+</license>
+    <homepage>https://github.com/yourusername/flowbpmn</homepage>
+    <description>BPMN Editor and Viewer for GLPI with support for tickets, changes, and problems</description>
+    <min_glpi_version>11.0.0</min_glpi_version>
+    <max_glpi_version>11.99.99</max_glpi_version>
+    <url>https://github.com/yourusername/flowbpmn</url>
+    <email>your.email@example.com</email>
+    
+    <requirements>
+        <requirement type="php" version="7.4"/>
+        <requirement type="glpi" version="11.0.0" max_version="11.99.99"/>
+    </requirements>
+    
+    <class>PluginFlowBPMN</class>
+    
+    <tables>
+        <table name="glpi_plugin_flowbpmn_flows" version="1.0.0"/>
+    </tables>
+    
+    <hooks>
+        <hook name="pre_item_form" file="hook.php" />
+        <hook name="item_add" file="hook.php" />
+        <hook name="item_update" file="hook.php" />
+        <hook name="item_delete" file="hook.php" />
+        <hook name="menu_entry" file="hook.php" />
+        <hook name="use_rules" file="hook.php" />
+        <hook name="getSearchOptions" file="hook.php" />
+    </hooks>
+    
+    <menu>
+        <page>front/config.form.php</page>
+    </menu>
+    
+    <sub_entry>
+        <name>flowBPMN</name>
+        <title>BPMN Editor</title>
+        <page>front/bpmn.php</page>
+        <config>true</config>
+    </sub_entry>
+    
+</glpi_plugin>

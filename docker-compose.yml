@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  glpi:
+    image: glpi/glpi:11.0.1
+    container_name: glpi_app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - glpi_data:/var/www/glpi
+      - glpi_config:/etc/glpi
+      - ./plugins:/var/www/glpi/plugins
+      - ./glpi-plugins/meu-bpmn-plugin:/var/www/glpi/plugins/meu-bpmn-plugin
+    environment:
+      - GLPI_LANG=pt_BR
+      - GLPI_INSTALL=1
+      - GLPI_DB_HOST=glpi_db
+      - GLPI_DB_NAME=glpi
+      - GLPI_DB_USER=glpi
+      - GLPI_DB_PASSWORD=glpi
+    depends_on:
+      - glpi_db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/glpi/install/install.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  glpi_db:
+    image: mariadb:10.6
+    container_name: glpi_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: glpi
+      MYSQL_DATABASE: glpi
+      MYSQL_USER: glpi
+      MYSQL_PASSWORD: glpi
+    volumes:
+      - glpi_db:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "glpi", "-pglpi"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  glpi_data:
+  glpi_config:
+  glpi_db:

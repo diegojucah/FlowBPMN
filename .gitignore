@@ -1,0 +1,64 @@
+# GLPI Plugin gitignore
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+.cache/
+
+# Composer
+/vendor/
+composer.lock
+composer.phar
+
+# NPM
+node_modules/
+package-lock.json
+npm-debug.log
+
+# Build files
+/dist/
+/build/
+
+# Environment files
+.env
+.env.local
+
+# Testing
+/tests/coverage/
+phpunit.xml
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+# Plugin specific
+files/_cache/
+files/_sessions/
+files/_tmp/
+files/_uploads/
+
+# Database backups
+*.sql
+*.sql.gz
+
+# Documentation build
+/docs/_build/
