@@ -15,8 +15,6 @@ include (GLPI_ROOT . "/inc/includes.php");
 
 header('Content-Type: application/json; charset=UTF-8');
 
-use Glpi\Event;
-
 Session::checkLoginUser();
 
 $input = json_decode(file_get_contents('php://input'), true);
