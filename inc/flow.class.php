@@ -107,7 +107,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         // Toolbar
         echo "<div class='flowbpmn-toolbar' style='display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; margin-bottom: 10px;'>";
         echo "<div class='flowbpmn-toolbar-left'>";
-        echo "<h3 style='margin: 0;'><i class='ti ti-git-fork'></i> " . __('Editor de Fluxo BPMN', 'flowbpmn') . "</h3>";
+        echo "<h3 style='margin: 0;'><i class='ti ti-git-fork'></i> Editor flowBPMN</h3>";
         echo "</div>";
         
         if ($canEdit) {

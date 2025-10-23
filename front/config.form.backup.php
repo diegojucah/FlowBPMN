@@ -2,13 +2,10 @@
 
 /**
  * -------------------------------------------------------------------------
- * flowBPMN Plugin for GLPI - Configuration Form
+ * flowBPMN Plugin for GLPI
  * -------------------------------------------------------------------------
  */
 
-// Bootstrap GLPI
-chdir(dirname($_SERVER['SCRIPT_FILENAME']));
-require '../../../vendor/autoload.php';
 include ('../../../inc/includes.php');
 
 Session::checkRight('config', UPDATE);
@@ -21,13 +18,13 @@ if (isset($_POST['update'])) {
     
     if ($config->updateConfig($_POST)) {
         Session::addMessageAfterRedirect(
-            'Configuração do flowBPMN atualizada com sucesso',
+            __('Configuração atualizada com sucesso', 'flowbpmn'),
             false,
             INFO
         );
     } else {
         Session::addMessageAfterRedirect(
-            'Erro ao atualizar configuração do flowBPMN',
+            __('Erro ao atualizar configuração', 'flowbpmn'),
             false,
             ERROR
         );
@@ -38,7 +35,7 @@ if (isset($_POST['update'])) {
 
 // Display page
 Html::header(
-    'Configuração do flowBPMN',
+    __('Configuração do Fluxo BPMN', 'flowbpmn'),
     $_SERVER['PHP_SELF'],
     'config',
     'PluginFlowbpmnConfig'

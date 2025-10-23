@@ -6,9 +6,6 @@
  * -------------------------------------------------------------------------
  */
 
-// Bootstrap GLPI
-chdir(dirname($_SERVER['SCRIPT_FILENAME']));
-require '../../../vendor/autoload.php';
 include ('../../../inc/includes.php');
 
 header('Content-Type: application/json; charset=UTF-8');
@@ -43,7 +40,7 @@ try {
             );
             
             if ($id) {
-                echo json_encode(['success' => true, 'id' => $id, 'message' => 'Fluxo salvo com sucesso!']);
+                echo json_encode(['success' => true, 'id' => $id]);
             } else {
                 throw new Exception('Failed to save flow');
             }

@@ -40,11 +40,11 @@ class PluginFlowbpmnConfig extends CommonDBTM {
     static $rightname = 'config';
     
     static function getTypeName($nb = 0) {
-        return __('BPMN Flow Configuration', 'flowbpmn');
+        return 'Configuração do flowBPMN';
     }
     
     static function getMenuName() {
-        return self::getTypeName();
+        return 'flowBPMN';
     }
     
     static function getMenuContent() {
