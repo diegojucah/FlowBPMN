@@ -97,6 +97,10 @@ class PluginFlowbpmnConfig extends CommonDBTM {
     static function updateConfig($input) {
         global $DB;
         
+        if (!isset($_SESSION['glpi_currenttime'])) {
+            $_SESSION['glpi_currenttime'] = date('Y-m-d H:i:s');
+        }
+        
         $data = [
             'id' => 1,
             'enable_auto_attach_image' => isset($input['enable_auto_attach_image']) ? 1 : 0,

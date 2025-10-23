@@ -1,0 +1,261 @@
+═══════════════════════════════════════════════════════════════════
+  PLUGIN flowBPMN - GUIA RÁPIDO DE TESTE
+═══════════════════════════════════════════════════════════════════
+
+✅ STATUS: Plugin corrigido e pronto para teste!
+
+═══════════════════════════════════════════════════════════════════
+  📦 MÉTODO 1: INSTALAÇÃO AUTOMÁTICA (RECOMENDADO)
+═══════════════════════════════════════════════════════════════════
+
+1. Execute o script:
+
+   cd /home/diego/glpi11/flowBPMN
+   ./INSTALL_DOCKER.sh
+
+   Ou especifique o container:
+   
+   ./INSTALL_DOCKER.sh 4a5500931c39
+
+2. O script irá:
+   ✓ Verificar Docker
+   ✓ Fazer backup do plugin existente
+   ✓ Criar ZIP do plugin
+   ✓ Copiar para o Docker
+   ✓ Instalar no diretório correto
+   ✓ Ajustar permissões
+
+═══════════════════════════════════════════════════════════════════
+  🔧 MÉTODO 2: INSTALAÇÃO MANUAL
+═══════════════════════════════════════════════════════════════════
+
+1. Criar ZIP:
+   cd /home/diego/glpi11
+   zip -r flowBPMN.zip flowBPMN/
+
+2. Copiar para Docker:
+   docker cp flowBPMN.zip 4a5500931c39:/tmp/
+
+3. Instalar no Docker:
+   docker exec -it 4a5500931c39 bash
+   cd /tmp
+   unzip -o flowBPMN.zip
+   rm -rf /var/www/glpi/plugins/flowBPMN
+   mv flowBPMN /var/www/glpi/plugins/
+   chown -R www-data:www-data /var/www/glpi/plugins/flowBPMN
+   exit
+
+═══════════════════════════════════════════════════════════════════
+  🌐 ACESSAR E TESTAR NO GLPI
+═══════════════════════════════════════════════════════════════════
+
+PASSO 1: INSTALAÇÃO
+━━━━━━━━━━━━━━━━━━━
+1. Abra o navegador
+2. Acesse o GLPI
+3. Configurar → Plugins
+4. Localize "BPMN Flow v1.0.0"
+5. Clique em [Instalar]
+6. Clique em [Ativar]
+
+✅ Se aparecer "Plugin instalado com sucesso" → OK!
+❌ Se aparecer erro → Veja seção TROUBLESHOOTING abaixo
+
+PASSO 2: CONFIGURAÇÃO BÁSICA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Configurar → Gerais → BPMN Flow (ou Plugins → flowBPMN → Configurar)
+2. Ajuste as configurações:
+   ☑ Anexar diagrama automaticamente
+   ☑ Máximo de versões: 10
+   ☑ Habilitar exportação BPMN/SVG/PNG
+3. Clique em [Salvar]
+
+PASSO 3: CONFIGURAR PERMISSÕES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Configurar → Perfis
+2. Selecione um perfil (ex: "Super-Admin")
+3. Aba "BPMN Flow"
+4. Marque as permissões desejadas:
+   ☑ Visualizar (Ticket/Problem/Change)
+   ☑ Editar (Ticket/Problem/Change)
+   ☑ Excluir (Ticket/Problem/Change)
+   ☑ Restaurar (Ticket/Problem/Change)
+5. Clique em [Salvar]
+
+PASSO 4: TESTAR FUNCIONALIDADE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Assistência → Chamados
+2. Abra um chamado existente ou crie um novo
+3. Procure a aba "BPMN Flow"
+4. Clique na aba
+5. O editor BPMN deve carregar
+6. Crie um diagrama simples:
+   - Arraste elementos da paleta
+   - Conecte com setas
+   - Configure propriedades
+7. Clique em [Salvar]
+8. Verifique se salvou corretamente
+9. Recarregue a página
+10. Verifique se o diagrama foi mantido
+
+PASSO 5: TESTAR VERSIONAMENTO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Edite o diagrama BPMN
+2. Faça alterações
+3. Salve novamente
+4. Clique em [Versões]
+5. Verifique se as versões aparecem
+6. Teste restaurar uma versão anterior
+
+PASSO 6: TESTAR EXPORTAÇÃO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Clique em [Exportar]
+2. Escolha formato (BPMN/SVG/PNG)
+3. Verifique se download funciona
+
+PASSO 7: TESTAR DESINSTALAÇÃO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Configurar → Plugins
+2. Localize "BPMN Flow"
+3. Clique em [Desinstalar]
+4. Confirme
+5. Verifique se desinstalou sem erros
+
+✅ Se desinstalar completamente → SUCESSO!
+
+═══════════════════════════════════════════════════════════════════
+  🐛 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════
+
+PROBLEMA: Plugin não aparece na lista
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Solução:
+1. Verificar permissões:
+   docker exec 4a5500931c39 ls -la /var/www/glpi/plugins/
+   docker exec 4a5500931c39 chown -R www-data:www-data /var/www/glpi/plugins/flowBPMN
+
+2. Verificar logs:
+   docker exec 4a5500931c39 tail -50 /var/www/glpi/files/_log/php-errors.log
+
+PROBLEMA: Erro ao instalar plugin
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Solução:
+1. Verificar compatibilidade:
+   - GLPI 11.0.0 ou superior
+   - PHP 8.0 ou superior
+
+2. Verificar banco de dados:
+   docker exec 4a5500931c39 mysql -u root -p glpi -e "SHOW TABLES LIKE 'glpi_plugin_flowbpmn%';"
+
+3. Limpar tabelas antigas se existirem:
+   docker exec 4a5500931c39 mysql -u root -p glpi << SQL
+   SET FOREIGN_KEY_CHECKS = 0;
+   DROP TABLE IF EXISTS glpi_plugin_flowbpmn_flows;
+   DROP TABLE IF EXISTS glpi_plugin_flowbpmn_versions;
+   DROP TABLE IF EXISTS glpi_plugin_flowbpmn_profiles;
+   DROP TABLE IF EXISTS glpi_plugin_flowbpmn_configs;
+   SET FOREIGN_KEY_CHECKS = 1;
+   SQL
+
+PROBLEMA: Aba BPMN Flow não aparece
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Solução:
+1. Verificar permissões do perfil:
+   Configurar → Perfis → [Seu Perfil] → Aba BPMN Flow
+   Marcar "Visualizar"
+
+2. Limpar cache:
+   docker exec 4a5500931c39 rm -rf /var/www/glpi/files/_cache/*
+
+PROBLEMA: Erro ao salvar diagrama
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Solução:
+1. Verificar console do navegador (F12)
+2. Verificar logs PHP:
+   docker exec 4a5500931c39 tail -f /var/www/glpi/files/_log/php-errors.log
+3. Verificar permissões de edição no perfil
+
+PROBLEMA: Erro ao desinstalar
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Solução:
+1. Já foi corrigido com SET FOREIGN_KEY_CHECKS
+2. Se ainda houver problema, remover manualmente:
+   docker exec 4a5500931c39 mysql -u root -p glpi << SQL
+   SET FOREIGN_KEY_CHECKS = 0;
+   DROP TABLE IF EXISTS glpi_plugin_flowbpmn_versions;
+   DROP TABLE IF EXISTS glpi_plugin_flowbpmn_flows;
+   DROP TABLE IF EXISTS glpi_plugin_flowbpmn_profiles;
+   DROP TABLE IF EXISTS glpi_plugin_flowbpmn_configs;
+   SET FOREIGN_KEY_CHECKS = 1;
+   SQL
+
+═══════════════════════════════════════════════════════════════════
+  📋 CHECKLIST DE TESTE
+═══════════════════════════════════════════════════════════════════
+
+INSTALAÇÃO:
+☐ Plugin aparece na lista de plugins
+☐ Instalação sem erros
+☐ Ativação sem erros
+☐ 4 tabelas criadas no banco
+
+INTERFACE:
+☐ Aba "BPMN Flow" em Chamados
+☐ Aba "BPMN Flow" em Problemas
+☐ Aba "BPMN Flow" em Mudanças
+☐ Editor BPMN carrega corretamente
+
+FUNCIONALIDADES:
+☐ Criar diagrama BPMN
+☐ Salvar diagrama
+☐ Editar diagrama existente
+☐ Criar nova versão
+☐ Visualizar versões anteriores
+☐ Restaurar versão anterior
+☐ Exportar BPMN/SVG/PNG
+
+CONFIGURAÇÃO:
+☐ Página de configuração acessível
+☐ Salvar configurações
+☐ Configurar permissões por perfil
+☐ Permissões funcionando corretamente
+
+DESINSTALAÇÃO:
+☐ Desinstalação sem erros
+☐ Tabelas removidas completamente
+☐ Sem resquícios no banco
+
+═══════════════════════════════════════════════════════════════════
+  📞 LOGS IMPORTANTES
+═══════════════════════════════════════════════════════════════════
+
+Ver logs em tempo real:
+docker exec -it 4a5500931c39 tail -f /var/www/glpi/files/_log/php-errors.log
+
+Ver logs SQL:
+docker exec -it 4a5500931c39 tail -f /var/www/glpi/files/_log/sql-errors.log
+
+Ver últimos 100 erros:
+docker exec 4a5500931c39 tail -100 /var/www/glpi/files/_log/php-errors.log
+
+═══════════════════════════════════════════════════════════════════
+  ✅ RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════════
+
+Se tudo estiver correto, você deve conseguir:
+
+1. ✅ Instalar o plugin sem erros
+2. ✅ Ver a aba BPMN Flow em Tickets/Problems/Changes
+3. ✅ Criar e editar diagramas BPMN
+4. ✅ Salvar e recuperar diagramas
+5. ✅ Gerenciar versões
+6. ✅ Exportar diagramas
+7. ✅ Configurar permissões por perfil
+8. ✅ Desinstalar completamente
+
+═══════════════════════════════════════════════════════════════════
+
+Documentação completa: CORREÇÕES_APLICADAS.md
+Script de instalação: INSTALL_DOCKER.sh
+
+Boa sorte com os testes! 🚀

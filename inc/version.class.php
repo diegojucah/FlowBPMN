@@ -47,6 +47,10 @@ class PluginFlowbpmnVersion extends CommonDBTM {
     static function createVersion($flow_id, $flowData) {
         global $DB;
         
+        if (!isset($_SESSION['glpi_currenttime'])) {
+            $_SESSION['glpi_currenttime'] = date('Y-m-d H:i:s');
+        }
+        
         // Get next version number
         $iterator = $DB->request([
             'SELECT' => 'MAX(version_number) as max_version',
@@ -69,8 +73,8 @@ class PluginFlowbpmnVersion extends CommonDBTM {
             'version_number' => $nextVersion,
             'name' => $flowData['name'] ?? '',
             'comment' => sprintf(__('Version %d', 'flowbpmn'), $nextVersion),
-            'bpmn_xml' => $flowData['bpmn_xml'],
-            'svg_content' => $flowData['svg_content'],
+            'bpmn_xml' => $flowData['bpmn_xml'] ?? '',
+            'svg_content' => $flowData['svg_content'] ?? '',
             'users_id' => Session::getLoginUserID(),
             'date_creation' => $_SESSION['glpi_currenttime']
         ];

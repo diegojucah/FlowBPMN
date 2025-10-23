@@ -1,48 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <glpi_plugin>
     <name>flowBPMN</name>
-    <display_name>Flow BPMN</display_name>
+    <display_name>BPMN Flow</display_name>
     <version>1.0.0</version>
-    <apiversion>1.5</apiversion>
-    <author>Your Name</author>
+    <author>Diego Jucá - KactuX</author>
     <license>GPLv3+</license>
-    <homepage>https://github.com/yourusername/flowbpmn</homepage>
-    <description>BPMN Editor and Viewer for GLPI with support for tickets, changes, and problems</description>
+    <homepage>https://github.com/diegojucah/pluginBPMN</homepage>
+    <description>
+        <short>
+            <en>BPMN Editor for GLPI 11</en>
+            <pt_BR>Editor BPMN para GLPI 11</pt_BR>
+        </short>
+        <long>
+            <en>BPMN Editor and Viewer for GLPI with support for tickets, changes, and problems. Create, edit, version and export BPMN diagrams.</en>
+            <pt_BR>Editor e Visualizador BPMN para GLPI com suporte para chamados, mudanças e problemas. Crie, edite, versione e exporte diagramas BPMN.</pt_BR>
+        </long>
+    </description>
     <min_glpi_version>11.0.0</min_glpi_version>
     <max_glpi_version>11.99.99</max_glpi_version>
-    <url>https://github.com/yourusername/flowbpmn</url>
-    <email>your.email@example.com</email>
     
     <requirements>
-        <requirement type="php" version="7.4"/>
+        <requirement type="php" version="8.0"/>
         <requirement type="glpi" version="11.0.0" max_version="11.99.99"/>
     </requirements>
     
-    <class>PluginFlowBPMN</class>
-    
     <tables>
         <table name="glpi_plugin_flowbpmn_flows" version="1.0.0"/>
+        <table name="glpi_plugin_flowbpmn_versions" version="1.0.0"/>
+        <table name="glpi_plugin_flowbpmn_profiles" version="1.0.0"/>
+        <table name="glpi_plugin_flowbpmn_configs" version="1.0.0"/>
     </tables>
-    
-    <hooks>
-        <hook name="pre_item_form" file="hook.php" />
-        <hook name="item_add" file="hook.php" />
-        <hook name="item_update" file="hook.php" />
-        <hook name="item_delete" file="hook.php" />
-        <hook name="menu_entry" file="hook.php" />
-        <hook name="use_rules" file="hook.php" />
-        <hook name="getSearchOptions" file="hook.php" />
-    </hooks>
-    
-    <menu>
-        <page>front/config.form.php</page>
-    </menu>
-    
-    <sub_entry>
-        <name>flowBPMN</name>
-        <title>BPMN Editor</title>
-        <page>front/bpmn.php</page>
-        <config>true</config>
-    </sub_entry>
-    
 </glpi_plugin>

@@ -43,7 +43,7 @@ if (!$item->can($items_id, UPDATE)) {
 }
 
 // Save to database
-$bpmnFlow = new PluginMeuBpmnFlow();
+$bpmnFlow = new PluginFlowbpmnFlow();
 $existing = $bpmnFlow->find([
     'itemtype' => $itemtype,
     'items_id' => $items_id
@@ -108,7 +108,7 @@ function sendJsonResponse($success, $message = '', $data = []) {
     exit();
 }
 
-class PluginMeuBpmnFlow extends CommonDBTM {
+class PluginFlowbpmnFlow extends CommonDBTM {
     
     static $rightname = 'ticket';
     
@@ -116,14 +116,14 @@ class PluginMeuBpmnFlow extends CommonDBTM {
      * Get the table name for this item type
      */
     static function getTable($classname = null) {
-        return 'glpi_plugin_flowBPMN_flows';
+        return 'glpi_plugin_flowbpmn_flows';
     }
     
     /**
      * Get the name of this item type
      */
     static function getTypeName($nb = 0) {
-        return __('BPMN Flow', 'flowBPMN');
+        return __('BPMN Flow', 'flowbpmn');
     }
     
     /**
@@ -131,7 +131,7 @@ class PluginMeuBpmnFlow extends CommonDBTM {
      */
     function getTabNameForItem(CommonGLPI $item, $withtemplate = 0) {
         if (in_array($item->getType(), ['Ticket', 'Change', 'Problem'])) {
-            return __('BPMN', 'flowBPMN');
+            return __('BPMN', 'flowbpmn');
         }
         return '';
     }

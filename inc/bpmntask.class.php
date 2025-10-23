@@ -5,11 +5,11 @@ if (!defined('GLPI_ROOT')) {
 }
 
 /**
- * Class PluginMeuBpmnTask
+ * Class PluginFlowbpmnTask
  * 
  * Handles background tasks for the BPMN plugin
  */
-class PluginMeuBpmnTask extends CommonDBTM {
+class PluginFlowbpmnTask extends CommonDBTM {
     
     /**
      * @var int $dohistory Maintain history
@@ -20,7 +20,7 @@ class PluginMeuBpmnTask extends CommonDBTM {
      * Get the name of the type
      */
     static function getTypeName($nb = 0) {
-        return __('BPMN Tasks', 'flowBPMN');
+        return __('BPMN Tasks', 'flowbpmn');
     }
     
     /**
@@ -34,14 +34,15 @@ class PluginMeuBpmnTask extends CommonDBTM {
         
         // Get the number of days to keep versions from config or use default (30 days)
         $days_to_keep = (int)$task->fields['param'] ?: 30;
-        $max_versions = (int)PluginMeuBpmn::getConfigValue('max_versions', 10);
+        $config = new PluginFlowbpmnConfig();
+        $max_versions = (int)$config->getConfig('max_versions_per_item') ?: 10;
         
         // Calculate the cutoff date
         $cutoff_date = date('Y-m-d H:i:s', strtotime("-$days_to_keep days"));
         
         // First, clean up versions older than the cutoff date
         $result = $DB->delete(
-            'glpi_plugin_flowBPMN_versions',
+            'glpi_plugin_flowbpmn_versions',
             ['date_creation' => ['<', $cutoff_date]]
         );
         
@@ -56,9 +57,9 @@ class PluginMeuBpmnTask extends CommonDBTM {
         if ($max_versions > 0) {
             // Find flows with more than the maximum number of versions
             $flows = $DB->request([
-                'SELECT' => ['plugin_flowBPMN_flows_id', 'COUNT' => 'count'],
-                'FROM'   => 'glpi_plugin_flowBPMN_versions',
-                'GROUP'  => 'plugin_flowBPMN_flows_id',
+                'SELECT' => ['plugin_flowbpmn_flows_id', 'COUNT' => 'count'],
+                'FROM'   => 'glpi_plugin_flowbpmn_versions',
+                'GROUP'  => 'plugin_flowbpmn_flows_id',
                 'HAVING' => ['count' => ['>', $max_versions]]
             ]);
             
@@ -68,8 +69,8 @@ class PluginMeuBpmnTask extends CommonDBTM {
                 // Get the IDs of the oldest versions to delete
                 $versions_to_keep = $DB->request([
                     'SELECT' => 'id',
-                    'FROM'   => 'glpi_plugin_flowBPMN_versions',
-                    'WHERE'  => ['plugin_flowBPMN_flows_id' => $flow['plugin_flowBPMN_flows_id']],
+                    'FROM'   => 'glpi_plugin_flowbpmn_versions',
+                    'WHERE'  => ['plugin_flowbpmn_flows_id' => $flow['plugin_flowbpmn_flows_id']],
                     'ORDER'  => 'date_creation DESC',
                     'START'  => $max_versions,
                     'LIMIT'  => 1000 // Safety limit
@@ -82,14 +83,14 @@ class PluginMeuBpmnTask extends CommonDBTM {
                 
                 if (!empty($ids_to_delete)) {
                     $result = $DB->delete(
-                        'glpi_plugin_flowBPMN_versions',
+                        'glpi_plugin_flowbpmn_versions',
                         ['id' => $ids_to_delete]
                     );
                     
                     if ($result === false) {
                         $task->log(sprintf(
                             "Error cleaning up versions for flow %s: %s",
-                            $flow['plugin_flowBPMN_flows_id'],
+                            $flow['plugin_flowbpmn_flows_id'],
                             $DB->error()
                         ));
                         continue;
@@ -123,8 +124,8 @@ class PluginMeuBpmnTask extends CommonDBTM {
         switch ($name) {
             case 'bpmnCleanup':
                 return [
-                    'description' => __('Clean up old BPMN versions', 'flowBPMN'),
-                    'parameter'   => __('Maximum age in days (0 to disable)', 'flowBPMN')
+                    'description' => __('Clean up old BPMN versions', 'flowbpmn'),
+                    'parameter'   => __('Maximum age in days (0 to disable)', 'flowbpmn')
                 ];
         }
         

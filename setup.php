@@ -58,17 +58,16 @@ function plugin_init_flowbpmn() {
         
         Plugin::registerClass('PluginFlowbpmnConfig');
         
+        Plugin::registerClass('PluginFlowbpmnVersion');
+        
         // Configuration page
         $PLUGIN_HOOKS['config_page']['flowbpmn'] = 'front/config.form.php';
         
-        // Add CSS and JS
-        $PLUGIN_HOOKS['add_css']['flowbpmn'] = [
-            'css/flowbpmn.css'
-        ];
+        // Add CSS
+        $PLUGIN_HOOKS['add_css']['flowbpmn'] = ['css/flowbpmn.css'];
         
-        $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = [
-            'js/flowbpmn.js'
-        ];
+        // Add JavaScript
+        $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = ['js/flowbpmn.js'];
         
         // Menu entry
         if (Session::haveRight('config', UPDATE)) {
@@ -142,10 +141,11 @@ function plugin_flowbpmn_check_config($verbose = false) {
 function plugin_flowbpmn_install() {
     global $DB;
     
-    $migration = new Migration(PLUGIN_FLOWBPMN_VERSION);
-    
-    // Create flows table
-    if (!$DB->tableExists('glpi_plugin_flowbpmn_flows')) {
+    try {
+        $migration = new Migration(PLUGIN_FLOWBPMN_VERSION);
+        
+        // Create flows table
+        if (!$DB->tableExists('glpi_plugin_flowbpmn_flows')) {
         $query = "CREATE TABLE `glpi_plugin_flowbpmn_flows` (
             `id` int unsigned NOT NULL AUTO_INCREMENT,
             `items_id` int unsigned NOT NULL DEFAULT '0',
@@ -268,9 +268,14 @@ function plugin_flowbpmn_install() {
         }
     }
     
-    $migration->executeMigration();
-    
-    return true;
+        $migration->executeMigration();
+        
+        return true;
+        
+    } catch (Exception $e) {
+        error_log("flowBPMN install error: " . $e->getMessage());
+        return false;
+    }
 }
 
 /**
@@ -279,23 +284,36 @@ function plugin_flowbpmn_install() {
 function plugin_flowbpmn_uninstall() {
     global $DB;
     
-    $tables = [
-        'glpi_plugin_flowbpmn_versions',  // Drop versions first (has FK to flows)
-        'glpi_plugin_flowbpmn_flows',
-        'glpi_plugin_flowbpmn_profiles',
-        'glpi_plugin_flowbpmn_configs'
-    ];
-    
-    foreach ($tables as $table) {
-        if ($DB->tableExists($table)) {
-            try {
-                $DB->queryOrDie("DROP TABLE IF EXISTS `$table`", $DB->error());
-            } catch (Exception $e) {
-                // Log but continue - don't block uninstall
-                error_log("flowBPMN uninstall warning: Could not drop table $table - " . $e->getMessage());
+    try {
+        // Disable foreign key checks temporarily
+        $DB->query("SET FOREIGN_KEY_CHECKS = 0");
+        
+        $tables = [
+            'glpi_plugin_flowbpmn_versions',
+            'glpi_plugin_flowbpmn_flows',
+            'glpi_plugin_flowbpmn_profiles',
+            'glpi_plugin_flowbpmn_configs'
+        ];
+        
+        foreach ($tables as $table) {
+            if ($DB->tableExists($table)) {
+                $DB->query("DROP TABLE IF EXISTS `$table`");
             }
         }
+        
+        // Re-enable foreign key checks
+        $DB->query("SET FOREIGN_KEY_CHECKS = 1");
+        
+        return true;
+        
+    } catch (Exception $e) {
+        error_log("flowBPMN uninstall error: " . $e->getMessage());
+        // Force re-enable FK checks
+        try {
+            $DB->query("SET FOREIGN_KEY_CHECKS = 1");
+        } catch (Exception $e2) {
+            // Ignore
+        }
+        return false;
     }
-    
-    return true;
 }

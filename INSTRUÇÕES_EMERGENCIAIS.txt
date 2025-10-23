@@ -1,0 +1,181 @@
+╔════════════════════════════════════════════════════════════════════╗
+║                                                                    ║
+║  🚨 INSTRUÇÕES EMERGENCIAIS - RESOLVER ERRO 500                   ║
+║                                                                    ║
+╚════════════════════════════════════════════════════════════════════╝
+
+❌ PROBLEMA ATUAL:
+  • Erro 500: Internal Server Error
+  • Erro 404: flowbpmn.js não encontrado
+  • Plugin não desinstala/reinstala
+
+✅ CORREÇÕES APLICADAS:
+  • Try-catch em install/uninstall
+  • Verificações de $_SESSION
+  • Tratamento de erros robusto
+  • Scripts de limpeza criados
+
+════════════════════════════════════════════════════════════════════
+
+🔥 SOLUÇÃO RÁPIDA (EXECUTE AGORA):
+
+1. LIMPEZA COMPLETA E REINSTALAÇÃO:
+
+   cd /home/diego/glpi11/flowBPMN
+   ./LIMPAR_E_REINSTALAR.sh
+
+   OU com container específico:
+   
+   ./LIMPAR_E_REINSTALAR.sh 4a5500931c39
+
+2. O script fará AUTOMATICAMENTE:
+   ✓ Limpar todas as tabelas do banco (flowbpmn e flowBPMN)
+   ✓ Remover arquivos antigos
+   ✓ Limpar cache do GLPI
+   ✓ Criar novo ZIP
+   ✓ Copiar para Docker
+   ✓ Instalar com permissões corretas
+   ✓ Verificar sintaxe PHP
+   ✓ Mostrar logs de erro
+
+════════════════════════════════════════════════════════════════════
+
+🐛 SE AINDA HOUVER ERRO - DEBUG:
+
+1. Ver logs em tempo real:
+   
+   docker exec -it 4a5500931c39 tail -f /var/www/glpi/files/_log/php-errors.log
+
+2. Executar script de debug:
+   
+   ./DEBUG_DOCKER.sh
+
+3. Limpar manualmente o banco se necessário:
+   
+   docker exec -it 4a5500931c39 mysql -u root -proot glpi
+   
+   Depois execute:
+   
+   SET FOREIGN_KEY_CHECKS = 0;
+   DROP TABLE IF EXISTS glpi_plugin_flowbpmn_versions;
+   DROP TABLE IF EXISTS glpi_plugin_flowbpmn_flows;
+   DROP TABLE IF EXISTS glpi_plugin_flowbpmn_profiles;
+   DROP TABLE IF EXISTS glpi_plugin_flowbpmn_configs;
+   DROP TABLE IF EXISTS glpi_plugin_flowBPMN_versions;
+   DROP TABLE IF EXISTS glpi_plugin_flowBPMN_flows;
+   DROP TABLE IF EXISTS glpi_plugin_flowBPMN_config;
+   SET FOREIGN_KEY_CHECKS = 1;
+   EXIT;
+
+4. Depois executar novamente:
+   
+   ./LIMPAR_E_REINSTALAR.sh
+
+════════════════════════════════════════════════════════════════════
+
+📋 APÓS REINSTALAÇÃO:
+
+1. Acesse GLPI: http://localhost:8080
+
+2. Faça login
+
+3. Vá em: Configurar → Plugins
+
+4. Procure: "BPMN Flow v1.0.0"
+
+5. Clique em [Instalar]
+
+6. Se instalar com sucesso → Clique em [Ativar]
+
+7. Teste: Assistência → Chamados → [Abrir um] → Aba "BPMN Flow"
+
+════════════════════════════════════════════════════════════════════
+
+⚠️  ERROS COMUNS E SOLUÇÕES:
+
+ERRO: "Plugin not found"
+SOLUÇÃO: Verificar se copiou corretamente
+  docker exec 4a5500931c39 ls -la /var/www/glpi/plugins/flowBPMN/
+
+ERRO: "Permission denied"
+SOLUÇÃO: Ajustar permissões
+  docker exec 4a5500931c39 chown -R www-data:www-data /var/www/glpi/plugins/flowBPMN
+
+ERRO: "Table already exists"
+SOLUÇÃO: Limpar banco manualmente (ver seção DEBUG acima)
+
+ERRO: "Class not found"
+SOLUÇÃO: Verificar sintaxe PHP
+  docker exec 4a5500931c39 php -l /var/www/glpi/plugins/flowBPMN/setup.php
+
+════════════════════════════════════════════════════════════════════
+
+🎯 CHECKLIST FINAL:
+
+Antes de marcar como resolvido, verifique:
+
+☐ Script LIMPAR_E_REINSTALAR.sh executado sem erros
+☐ Plugin aparece na lista de plugins do GLPI
+☐ Plugin instala sem erro 500
+☐ Plugin ativa sem erros
+☐ Aba "BPMN Flow" aparece em Chamados
+☐ Editor BPMN carrega (sem erro 404 no JS)
+☐ Consegue salvar um diagrama
+☐ Plugin desinstala sem erros
+
+Se TODOS os itens acima estiverem OK → SUCESSO! ✅
+
+════════════════════════════════════════════════════════════════════
+
+📞 ÚLTIMA OPÇÃO - INSTALAÇÃO MANUAL PASSO A PASSO:
+
+Se o script falhar, faça manualmente:
+
+# 1. Entrar no container
+docker exec -it 4a5500931c39 bash
+
+# 2. Limpar banco
+mysql -u root -proot glpi << SQL
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS glpi_plugin_flowbpmn_versions;
+DROP TABLE IF EXISTS glpi_plugin_flowbpmn_flows;
+DROP TABLE IF EXISTS glpi_plugin_flowbpmn_profiles;
+DROP TABLE IF EXISTS glpi_plugin_flowbpmn_configs;
+SET FOREIGN_KEY_CHECKS = 1;
+SQL
+
+# 3. Remover plugin
+rm -rf /var/www/glpi/plugins/flowBPMN
+
+# 4. Sair do container
+exit
+
+# 5. Copiar plugin
+cd /home/diego/glpi11
+zip -r /tmp/flowBPMN.zip flowBPMN/
+docker cp /tmp/flowBPMN.zip 4a5500931c39:/tmp/
+
+# 6. Instalar
+docker exec -it 4a5500931c39 bash
+cd /tmp
+unzip -o flowBPMN.zip
+mv flowBPMN /var/www/glpi/plugins/
+chown -R www-data:www-data /var/www/glpi/plugins/flowBPMN
+exit
+
+# 7. Acessar GLPI e instalar via interface
+
+════════════════════════════════════════════════════════════════════
+
+✨ RESUMO:
+
+1. Execute: ./LIMPAR_E_REINSTALAR.sh
+2. Aguarde conclusão
+3. Acesse GLPI
+4. Instale o plugin
+5. Ative o plugin
+6. Teste a funcionalidade
+
+Se houver qualquer erro, execute ./DEBUG_DOCKER.sh para investigar.
+
+════════════════════════════════════════════════════════════════════

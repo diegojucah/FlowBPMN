@@ -21,7 +21,7 @@ if (!isset($_GET['id'])) {
 $version_id = (int)$_GET['id'];
 
 // Get the version
-$bpmnFlow = new PluginMeuBpmnFlow();
+$bpmnFlow = new PluginFlowbpmnFlow();
 if (!$bpmnFlow->getFromDB($version_id)) {
     sendJsonResponse(false, "Version not found");
 }
@@ -66,7 +66,7 @@ function sendJsonResponse($success, $message = '', $data = []) {
     exit();
 }
 
-class PluginMeuBpmnFlow extends CommonDBTM {
+class PluginFlowbpmnFlow extends CommonDBTM {
     
     static $rightname = 'ticket';
     
@@ -74,13 +74,13 @@ class PluginMeuBpmnFlow extends CommonDBTM {
      * Get the table name for this item type
      */
     static function getTable($classname = null) {
-        return 'glpi_plugin_flowBPMN_flows';
+        return 'glpi_plugin_flowbpmn_flows';
     }
     
     /**
      * Get the name of this item type
      */
     static function getTypeName($nb = 0) {
-        return __('BPMN Flow', 'flowBPMN');
+        return __('BPMN Flow', 'flowbpmn');
     }
 }

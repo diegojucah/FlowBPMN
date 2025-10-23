@@ -7,7 +7,7 @@ if (!defined('GLPI_ROOT')) {
 /**
  * Base class for Flow BPMN plugin
  */
-class PluginFlowBPMN extends CommonDBTM {
+class PluginFlowbpmn extends CommonDBTM {
     
     // Table name for the plugin
     public static $table_name = 'glpi_plugin_flowbpmn_flows';

@@ -229,6 +229,10 @@ class PluginFlowbpmnFlow extends CommonDBTM {
     function saveFlow($itemtype, $items_id, $bpmn_xml, $svg_content, $name = '') {
         global $DB;
         
+        if (!isset($_SESSION['glpi_currenttime'])) {
+            $_SESSION['glpi_currenttime'] = date('Y-m-d H:i:s');
+        }
+        
         $existing = $this->getForItem($itemtype, $items_id);
         $users_id = Session::getLoginUserID();
         

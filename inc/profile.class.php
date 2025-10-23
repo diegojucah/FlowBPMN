@@ -175,8 +175,9 @@ class PluginFlowbpmnProfile extends CommonDBTM {
         
         $rights = self::getProfileRights($profiles_id);
         
-        echo "<form method='post' action='" . Toolbox::getItemTypeFormURL(__CLASS__) . "'>";
+        echo "<form method='post' action='" . Plugin::getPhpDir('flowbpmn') . "/front/profile.form.php'>";
         echo "<input type='hidden' name='profiles_id' value='$profiles_id'>";
+        echo "<input type='hidden' name='_glpi_csrf_token' value='" . Session::getNewCSRFToken() . "'>";
         
         echo "<div class='spaced'>";
         echo "<table class='tab_cadre_fixe'>";
@@ -212,6 +213,53 @@ class PluginFlowbpmnProfile extends CommonDBTM {
         echo "</div>";
         
         Html::closeForm();
+    }
+    
+    /**
+     * Update profile rights
+     */
+    static function updateProfileRights($input) {
+        global $DB;
+        
+        if (!isset($input['profiles_id'])) {
+            return false;
+        }
+        
+        $profileId = (int)$input['profiles_id'];
+        
+        // Check if profile rights already exist
+        $existing = countElementsInTable(
+            self::getTable(),
+            ['profiles_id' => $profileId]
+        );
+        
+        $data = [
+            'profiles_id' => $profileId,
+            'can_view_ticket' => isset($input['can_view_ticket']) ? 1 : 0,
+            'can_edit_ticket' => isset($input['can_edit_ticket']) ? 1 : 0,
+            'can_delete_ticket' => isset($input['can_delete_ticket']) ? 1 : 0,
+            'can_restore_ticket' => isset($input['can_restore_ticket']) ? 1 : 0,
+            'can_view_problem' => isset($input['can_view_problem']) ? 1 : 0,
+            'can_edit_problem' => isset($input['can_edit_problem']) ? 1 : 0,
+            'can_delete_problem' => isset($input['can_delete_problem']) ? 1 : 0,
+            'can_restore_problem' => isset($input['can_restore_problem']) ? 1 : 0,
+            'can_view_change' => isset($input['can_view_change']) ? 1 : 0,
+            'can_edit_change' => isset($input['can_edit_change']) ? 1 : 0,
+            'can_delete_change' => isset($input['can_delete_change']) ? 1 : 0,
+            'can_restore_change' => isset($input['can_restore_change']) ? 1 : 0
+        ];
+        
+        if ($existing > 0) {
+            // Update existing
+            return $DB->update(
+                self::getTable(),
+                $data,
+                ['profiles_id' => $profileId]
+            );
+        } else {
+            // Insert new
+            return $DB->insert(self::getTable(), $data);
+        }
     }
     
     /**
