@@ -29,7 +29,7 @@ try {
             }
             
             // Check permissions
-            if (!PluginFlowbpmnProfile::canEdit($input['itemtype'])) {
+            if (!PluginFlowbpmnProfile::canEditFlow($input['itemtype'])) {
                 throw new Exception('Permission denied');
             }
             
@@ -57,7 +57,7 @@ try {
             }
             
             // Check permissions
-            if (!PluginFlowbpmnProfile::canView($input['itemtype'])) {
+            if (!PluginFlowbpmnProfile::canViewFlow($input['itemtype'])) {
                 throw new Exception('Permission denied');
             }
             

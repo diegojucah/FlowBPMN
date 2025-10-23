@@ -310,7 +310,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
     /**
      * Check if current user can view flows for itemtype
      */
-    static function canView($itemtype) {
+    static function canViewFlow($itemtype) {
         
         if (!isset($_SESSION['glpiactiveprofile']['id'])) {
             return false;
@@ -328,7 +328,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
     /**
      * Check if current user can edit flows for itemtype
      */
-    static function canEdit($itemtype) {
+    static function canEditFlow($itemtype) {
         
         if (!isset($_SESSION['glpiactiveprofile']['id'])) {
             return false;
@@ -346,7 +346,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
     /**
      * Check if current user can delete flows for itemtype
      */
-    static function canDelete($itemtype) {
+    static function canDeleteFlow($itemtype) {
         
         if (!isset($_SESSION['glpiactiveprofile']['id'])) {
             return false;
@@ -364,7 +364,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
     /**
      * Check if current user can restore flow versions for itemtype
      */
-    static function canRestore($itemtype) {
+    static function canRestoreFlow($itemtype) {
         
         if (!isset($_SESSION['glpiactiveprofile']['id'])) {
             return false;

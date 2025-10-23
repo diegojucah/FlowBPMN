@@ -54,7 +54,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             if (in_array($itemtype, ['Ticket', 'Problem', 'Change'])) {
                 
                 // Check permissions
-                if (!PluginFlowbpmnProfile::canView($itemtype)) {
+                if (!PluginFlowbpmnProfile::canViewFlow($itemtype)) {
                     return '';
                 }
                 
@@ -96,7 +96,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         $items_id = $item->getID();
         
         // Check if user can edit
-        $canEdit = PluginFlowbpmnProfile::canEdit($itemtype);
+        $canEdit = PluginFlowbpmnProfile::canEditFlow($itemtype);
         
         // Get existing flow
         $existing = $this->getForItem($itemtype, $items_id);
