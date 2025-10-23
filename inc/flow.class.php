@@ -63,7 +63,10 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     ['itemtype' => $itemtype, 'items_id' => $item->getID(), 'is_active' => 1]
                 );
                 
-                return self::createTabEntry(self::getTypeName(1), $nb);
+                return self::createTabEntry(
+                    '<i class="ti ti-git-fork"></i> ' . __('Fluxo BPMN', 'flowbpmn'),
+                    $nb
+                );
             }
         }
         
@@ -104,24 +107,24 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         echo "<div class='flowbpmn-container'>";
         
         // Toolbar
-        echo "<div class='flowbpmn-toolbar'>";
+        echo "<div class='flowbpmn-toolbar' style='display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; margin-bottom: 10px;'>";
         echo "<div class='flowbpmn-toolbar-left'>";
-        echo "<h3>" . __('BPMN Flow Editor', 'flowbpmn') . "</h3>";
+        echo "<h3 style='margin: 0;'><i class='ti ti-git-fork'></i> " . __('Editor de Fluxo BPMN', 'flowbpmn') . "</h3>";
         echo "</div>";
         
         if ($canEdit) {
             echo "<div class='flowbpmn-toolbar-right'>";
             echo "<button type='button' class='btn btn-primary' id='bpmn-save-btn'>";
-            echo "<i class='fas fa-save'></i> " . __('Save', 'flowbpmn');
+            echo "<i class='ti ti-device-floppy'></i> " . __('Salvar', 'flowbpmn');
             echo "</button>";
             
-            echo "<button type='button' class='btn btn-secondary' id='bpmn-export-btn'>";
-            echo "<i class='fas fa-download'></i> " . __('Export', 'flowbpmn');
+            echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-export-btn'>";
+            echo "<i class='ti ti-download'></i> " . __('Exportar', 'flowbpmn');
             echo "</button>";
             
             if ($existing) {
-                echo "<button type='button' class='btn btn-secondary' id='bpmn-versions-btn'>";
-                echo "<i class='fas fa-history'></i> " . __('Versions', 'flowbpmn');
+                echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-versions-btn'>";
+                echo "<i class='ti ti-history'></i> " . __('Versões', 'flowbpmn');
                 echo "</button>";
             }
             
@@ -129,16 +132,17 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         }
         echo "</div>";
         
-        // BPMN Canvas
+        // BPMN Canvas - Aumentado para 800px
         echo "<div id='bpmn-canvas' class='flowbpmn-canvas' 
+              style='height: 800px; width: 100%; border: 1px solid #dee2e6; background: white;'
               data-itemtype='" . $itemtype . "' 
               data-items-id='" . $items_id . "'
               data-can-edit='" . ($canEdit ? '1' : '0') . "'>";
         
         if (!$canEdit) {
-            echo "<div class='alert alert-info'>";
-            echo "<i class='fas fa-info-circle'></i> ";
-            echo __('You do not have permission to edit BPMN flows.', 'flowbpmn');
+            echo "<div class='alert alert-info' style='margin: 20px;'>";
+            echo "<i class='ti ti-info-circle'></i> ";
+            echo __('Você não tem permissão para editar fluxos BPMN.', 'flowbpmn');
             echo "</div>";
         }
         

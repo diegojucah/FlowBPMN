@@ -12,16 +12,23 @@
 $LANG['plugin_flowbpmn'] = [
     // General
     'BPMN Flow' => 'Fluxo BPMN',
+    'Fluxo BPMN' => 'Fluxo BPMN',
     'Flow Version' => 'Versão do Fluxo',
     'Flow Versions' => 'Versões do Fluxo',
     
     // Editor
     'BPMN Flow Editor' => 'Editor de Fluxo BPMN',
+    'Editor de Fluxo BPMN' => 'Editor de Fluxo BPMN',
     'Save' => 'Salvar',
+    'Salvar' => 'Salvar',
     'Export' => 'Exportar',
+    'Exportar' => 'Exportar',
     'Versions' => 'Versões',
+    'Versões' => 'Versões',
     'Loading BPMN Editor...' => 'Carregando Editor BPMN...',
+    'Carregando Editor BPMN...' => 'Carregando Editor BPMN...',
     'You do not have permission to edit BPMN flows.' => 'Você não tem permissão para editar fluxos BPMN.',
+    'Você não tem permissão para editar fluxos BPMN.' => 'Você não tem permissão para editar fluxos BPMN.',
     
     // Flow Information
     'Flow Information' => 'Informações do Fluxo',
@@ -31,15 +38,25 @@ $LANG['plugin_flowbpmn'] = [
     
     // Configuration
     'BPMN Flow Configuration' => 'Configuração do Fluxo BPMN',
+    'Configuração do Fluxo BPMN' => 'Configuração do Fluxo BPMN',
     'Automatically attach BPMN diagram to item' => 'Anexar diagrama BPMN automaticamente ao item',
+    'Anexar diagrama BPMN automaticamente ao item' => 'Anexar diagrama BPMN automaticamente ao item',
     'Maximum versions per flow' => 'Máximo de versões por fluxo',
+    'Máximo de versões por fluxo' => 'Máximo de versões por fluxo',
     '(0 = unlimited)' => '(0 = ilimitado)',
+    '(0 = ilimitado)' => '(0 = ilimitado)',
     'Export Options' => 'Opções de Exportação',
+    'Opções de Exportação' => 'Opções de Exportação',
     'Enable BPMN export' => 'Habilitar exportação BPMN',
+    'Habilitar exportação BPMN' => 'Habilitar exportação BPMN',
     'Enable SVG export' => 'Habilitar exportação SVG',
+    'Habilitar exportação SVG' => 'Habilitar exportação SVG',
     'Enable PNG export' => 'Habilitar exportação PNG',
+    'Habilitar exportação PNG' => 'Habilitar exportação PNG',
     'Configuration successfully updated' => 'Configuração atualizada com sucesso',
+    'Configuração atualizada com sucesso' => 'Configuração atualizada com sucesso',
     'Error updating configuration' => 'Erro ao atualizar configuração',
+    'Erro ao atualizar configuração' => 'Erro ao atualizar configuração',
     
     // Permissions
     'BPMN Flow Rights' => 'Direitos do Fluxo BPMN',
