@@ -161,7 +161,7 @@ function plugin_flowbpmn_install() {
             KEY `is_active` (`is_active`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
         
-        $DB->queryOrDie($query, $DB->error());
+        $DB->doQuery($query) or die($DB->error());
     }
     
     // Create versions table
@@ -181,7 +181,7 @@ function plugin_flowbpmn_install() {
             KEY `users_id` (`users_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
         
-        $DB->queryOrDie($query, $DB->error());
+        $DB->doQuery($query) or die($DB->error());
     }
     
     // Create config table
@@ -197,7 +197,7 @@ function plugin_flowbpmn_install() {
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
         
-        $DB->queryOrDie($query, $DB->error());
+        $DB->doQuery($query) or die($DB->error());
         
         // Insert default config
         $DB->insert('glpi_plugin_flowbpmn_configs', [
@@ -232,7 +232,7 @@ function plugin_flowbpmn_install() {
             UNIQUE KEY `profiles_id` (`profiles_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
         
-        $DB->queryOrDie($query, $DB->error());
+        $DB->doQuery($query) or die($DB->error());
         
         // Set default rights for existing profiles - Initialize directly to avoid class loading issues
         $profiles = $DB->request(['FROM' => 'glpi_profiles']);
@@ -248,7 +248,7 @@ function plugin_flowbpmn_install() {
                 $rights = ['view' => 1, 'edit' => 0, 'delete' => 0, 'restore' => 0];
             }
             
-            $DB->insertOrDie('glpi_plugin_flowbpmn_profiles', [
+            $DB->insert('glpi_plugin_flowbpmn_profiles', [
                 'profiles_id' => $profile['id'],
                 'can_view_ticket' => $rights['view'],
                 'can_edit_ticket' => $rights['edit'],
@@ -262,7 +262,7 @@ function plugin_flowbpmn_install() {
                 'can_edit_change' => $rights['edit'],
                 'can_delete_change' => $rights['delete'],
                 'can_restore_change' => $rights['restore']
-            ], $DB->error());
+            ]);
         }
     }
         
@@ -282,7 +282,7 @@ function plugin_flowbpmn_uninstall() {
     
     try {
         // Disable foreign key checks temporarily
-        $DB->query("SET FOREIGN_KEY_CHECKS = 0");
+        $DB->doQuery("SET FOREIGN_KEY_CHECKS = 0");
         
         $tables = [
             'glpi_plugin_flowbpmn_versions',
@@ -293,12 +293,12 @@ function plugin_flowbpmn_uninstall() {
         
         foreach ($tables as $table) {
             if ($DB->tableExists($table)) {
-                $DB->query("DROP TABLE IF EXISTS `$table`");
+                $DB->doQuery("DROP TABLE IF EXISTS `$table`");
             }
         }
         
         // Re-enable foreign key checks
-        $DB->query("SET FOREIGN_KEY_CHECKS = 1");
+        $DB->doQuery("SET FOREIGN_KEY_CHECKS = 1");
         
         return true;
         
@@ -306,7 +306,7 @@ function plugin_flowbpmn_uninstall() {
         error_log("flowBPMN uninstall error: " . $e->getMessage());
         // Force re-enable FK checks
         try {
-            $DB->query("SET FOREIGN_KEY_CHECKS = 1");
+            $DB->doQuery("SET FOREIGN_KEY_CHECKS = 1");
         } catch (Exception $e2) {
             // Ignore
         }
