@@ -172,6 +172,9 @@ class BpmnFlowEditor {
             const { xml } = await this.modeler.saveXML({ format: true });
             const { svg } = await this.modeler.saveSVG();
             
+            // Generate PNG for document attachment
+            const pngData = await this.generatePNG(svg);
+            
             const url = `${this.pluginUrl}/ajax/flow.php`;
             console.log('Saving to:', url);
             
@@ -187,6 +190,7 @@ class BpmnFlowEditor {
                     items_id: this.items_id,
                     bpmn_xml: xml,
                     svg_content: svg,
+                    png_data: pngData,
                     name: document.getElementById('flow-name')?.value || ''
                 })
             });
@@ -247,27 +251,44 @@ class BpmnFlowEditor {
         this.downloadFile(svg, 'diagram.svg', 'image/svg+xml');
     }
     
+    async generatePNG(svg) {
+        return new Promise((resolve) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(svgBlob);
+            
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                
+                const pngData = canvas.toDataURL('image/png');
+                URL.revokeObjectURL(url);
+                resolve(pngData);
+            };
+            
+            img.src = url;
+        });
+    }
+    
     async exportPNG() {
         const { svg } = await this.modeler.saveSVG();
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
+        const pngData = await this.generatePNG(svg);
         
-        const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(svgBlob);
+        // Convert base64 to blob
+        const base64Data = pngData.split(',')[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'image/png' });
         
-        img.onload = () => {
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-            
-            canvas.toBlob(blob => {
-                this.downloadFile(blob, 'diagram.png', 'image/png');
-                URL.revokeObjectURL(url);
-            });
-        };
-        
-        img.src = url;
+        this.downloadFile(blob, 'diagram.png', 'image/png');
     }
     
     downloadFile(data, filename, mimeType) {

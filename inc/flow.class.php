@@ -241,7 +241,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
     /**
      * Save or update flow
      */
-    function saveFlow($itemtype, $items_id, $bpmn_xml, $svg_content, $name = '') {
+    function saveFlow($itemtype, $items_id, $bpmn_xml, $svg_content, $name = '', $png_data = '') {
         global $DB;
         
         if (!isset($_SESSION['glpi_currenttime'])) {
@@ -271,6 +271,12 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             if ($this->update($input)) {
                 // Update item description with SVG if configured
                 $this->updateItemWithSvg($itemtype, $items_id, $svg_content);
+                
+                // Save PNG as document if provided
+                if (!empty($png_data)) {
+                    $this->savePNGAsDocument($itemtype, $items_id, $png_data, $name);
+                }
+                
                 return $input['id'];
             }
         } else {
@@ -281,8 +287,88 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             if ($id = $this->add($input)) {
                 // Update item description with SVG if configured
                 $this->updateItemWithSvg($itemtype, $items_id, $svg_content);
+                
+                // Save PNG as document if provided
+                if (!empty($png_data)) {
+                    $this->savePNGAsDocument($itemtype, $items_id, $png_data, $name);
+                }
+                
                 return $id;
             }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Save PNG as document attachment
+     */
+    private function savePNGAsDocument($itemtype, $items_id, $png_data, $name) {
+        
+        // Check if auto-attach is enabled
+        $config = new PluginFlowbpmnConfig();
+        if (!$config->getConfig('enable_auto_attach_image')) {
+            return false;
+        }
+        
+        try {
+            // Decode base64 PNG data
+            if (strpos($png_data, 'data:image/png;base64,') === 0) {
+                $png_data = substr($png_data, strlen('data:image/png;base64,'));
+            }
+            $png_binary = base64_decode($png_data);
+            
+            if ($png_binary === false) {
+                return false;
+            }
+            
+            // Generate unique filename
+            $filename = 'flowBPMN_' . $itemtype . '_' . $items_id . '_' . date('Ymd_His') . '.png';
+            $filepath = GLPI_TMP_DIR . '/' . $filename;
+            
+            // Save temporary file
+            if (file_put_contents($filepath, $png_binary) === false) {
+                return false;
+            }
+            
+            // Create document
+            $document = new Document();
+            $input = [
+                'itemtype' => $itemtype,
+                'items_id' => $items_id,
+                'name' => !empty($name) ? $name : 'Diagrama flowBPMN',
+                'filename' => $filename,
+                'filepath' => $filepath,
+                'mime' => 'image/png',
+                'users_id' => Session::getLoginUserID(),
+                'tickets_id' => ($itemtype == 'Ticket') ? $items_id : 0
+            ];
+            
+            $doc_id = $document->add($input);
+            
+            if ($doc_id) {
+                // Link document to item
+                $docItem = new Document_Item();
+                $docItem->add([
+                    'documents_id' => $doc_id,
+                    'itemtype' => $itemtype,
+                    'items_id' => $items_id,
+                    'users_id' => Session::getLoginUserID(),
+                    'date_creation' => $_SESSION['glpi_currenttime'],
+                    'date_mod' => $_SESSION['glpi_currenttime']
+                ]);
+                
+                // Clean up temp file
+                @unlink($filepath);
+                
+                return $doc_id;
+            }
+            
+            // Clean up on failure
+            @unlink($filepath);
+            
+        } catch (Exception $e) {
+            error_log('flowBPMN PNG save error: ' . $e->getMessage());
         }
         
         return false;
