@@ -142,8 +142,6 @@ function plugin_flowbpmn_install() {
     global $DB;
     
     try {
-        $migration = new Migration(PLUGIN_FLOWBPMN_VERSION);
-        
         // Create flows table
         if (!$DB->tableExists('glpi_plugin_flowbpmn_flows')) {
         $query = "CREATE TABLE `glpi_plugin_flowbpmn_flows` (
@@ -267,8 +265,6 @@ function plugin_flowbpmn_install() {
             ], $DB->error());
         }
     }
-    
-        $migration->executeMigration();
         
         return true;
         
