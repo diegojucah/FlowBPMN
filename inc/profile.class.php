@@ -165,12 +165,13 @@ class PluginFlowbpmnProfile extends CommonDBTM {
     /**
      * Show rights form for a profile
      */
-    function showForm($profiles_id) {
+    function showForm($ID, array $options = []) {
         
         if (!Session::haveRight('profile', READ)) {
             return false;
         }
         
+        $profiles_id = $ID;
         $canEdit = Session::haveRight('profile', UPDATE);
         
         $rights = self::getProfileRights($profiles_id);

@@ -117,7 +117,7 @@ class PluginFlowbpmnConfig extends CommonDBTM {
     /**
      * Show configuration form
      */
-    function showForm() {
+    function showForm($ID = 0, array $options = []) {
         
         if (!Session::haveRight('config', UPDATE)) {
             return false;
