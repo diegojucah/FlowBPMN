@@ -93,7 +93,7 @@ function plugin_version_flowbpmn() {
                 'max' => PLUGIN_FLOWBPMN_MAX_GLPI,
             ],
             'php' => [
-                'min' => '8.1',
+                'min' => '8.0',
             ]
         ]
     ];
@@ -120,9 +120,9 @@ function plugin_flowbpmn_check_prerequisites() {
         return false;
     }
     
-    // Check PHP version
-    if (version_compare(PHP_VERSION, '8.1', '<')) {
-        echo 'This plugin requires PHP 8.1 or higher.';
+    // Check PHP version - More flexible for GLPI 11
+    if (version_compare(PHP_VERSION, '8.0', '<')) {
+        echo 'This plugin requires PHP 8.0 or higher.';
         return false;
     }
     
@@ -236,8 +236,36 @@ function plugin_flowbpmn_install() {
         
         $DB->queryOrDie($query, $DB->error());
         
-        // Set default rights for existing profiles
-        PluginFlowbpmnProfile::initProfile();
+        // Set default rights for existing profiles - Initialize directly to avoid class loading issues
+        $profiles = $DB->request(['FROM' => 'glpi_profiles']);
+        foreach ($profiles as $profile) {
+            $profileName = strtolower($profile['name']);
+            
+            // Determine default rights based on profile
+            if ($profileName == 'super-admin' || $profileName == 'admin') {
+                $rights = ['view' => 1, 'edit' => 1, 'delete' => 1, 'restore' => 1];
+            } elseif ($profileName == 'technician') {
+                $rights = ['view' => 1, 'edit' => 1, 'delete' => 0, 'restore' => 0];
+            } else {
+                $rights = ['view' => 1, 'edit' => 0, 'delete' => 0, 'restore' => 0];
+            }
+            
+            $DB->insertOrDie('glpi_plugin_flowbpmn_profiles', [
+                'profiles_id' => $profile['id'],
+                'can_view_ticket' => $rights['view'],
+                'can_edit_ticket' => $rights['edit'],
+                'can_delete_ticket' => $rights['delete'],
+                'can_restore_ticket' => $rights['restore'],
+                'can_view_problem' => $rights['view'],
+                'can_edit_problem' => $rights['edit'],
+                'can_delete_problem' => $rights['delete'],
+                'can_restore_problem' => $rights['restore'],
+                'can_view_change' => $rights['view'],
+                'can_edit_change' => $rights['edit'],
+                'can_delete_change' => $rights['delete'],
+                'can_restore_change' => $rights['restore']
+            ], $DB->error());
+        }
     }
     
     $migration->executeMigration();
@@ -252,15 +280,20 @@ function plugin_flowbpmn_uninstall() {
     global $DB;
     
     $tables = [
+        'glpi_plugin_flowbpmn_versions',  // Drop versions first (has FK to flows)
         'glpi_plugin_flowbpmn_flows',
-        'glpi_plugin_flowbpmn_versions',
-        'glpi_plugin_flowbpmn_configs',
-        'glpi_plugin_flowbpmn_profiles'
+        'glpi_plugin_flowbpmn_profiles',
+        'glpi_plugin_flowbpmn_configs'
     ];
     
     foreach ($tables as $table) {
         if ($DB->tableExists($table)) {
-            $DB->queryOrDie("DROP TABLE IF EXISTS `$table`", $DB->error());
+            try {
+                $DB->queryOrDie("DROP TABLE IF EXISTS `$table`", $DB->error());
+            } catch (Exception $e) {
+                // Log but continue - don't block uninstall
+                error_log("flowBPMN uninstall warning: Could not drop table $table - " . $e->getMessage());
+            }
         }
     }
     
