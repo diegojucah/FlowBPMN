@@ -63,10 +63,8 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     ['itemtype' => $itemtype, 'items_id' => $item->getID(), 'is_active' => 1]
                 );
                 
-                return self::createTabEntry(
-                    '<i class="ti ti-git-fork"></i> FlowBPMN',
-                    $nb
-                );
+                $icon = '<i class="ti ti-git-fork"></i>';
+                return self::createTabEntry('FlowBPMN', $nb, '', $icon);
             }
         }
         
