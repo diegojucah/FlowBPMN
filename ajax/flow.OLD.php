@@ -4,10 +4,12 @@
  * -------------------------------------------------------------------------
  * flowBPMN Plugin for GLPI - AJAX Flow Handler
  * -------------------------------------------------------------------------
- * CRITICAL: Do NOT include vendor/autoload.php or inc/includes.php manually!
- * GLPI 11 autoloads everything automatically. Manual includes cause SessionExpiredException.
- * -------------------------------------------------------------------------
  */
+
+// Bootstrap GLPI
+chdir(dirname($_SERVER['SCRIPT_FILENAME']));
+require '../../../vendor/autoload.php';
+include ('../../../inc/includes.php');
 
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -22,12 +24,12 @@ try {
         case 'save':
             // Validate inputs
             if (empty($input['itemtype']) || empty($input['items_id']) || empty($input['bpmn_xml'])) {
-                throw new Exception('Parâmetros obrigatórios ausentes');
+                throw new Exception('Missing required parameters');
             }
             
             // Check permissions
             if (!PluginFlowbpmnProfile::canEditFlow($input['itemtype'])) {
-                throw new Exception('Permissão negada');
+                throw new Exception('Permission denied');
             }
             
             // Save flow
@@ -41,25 +43,21 @@ try {
             );
             
             if ($id) {
-                echo json_encode([
-                    'success' => true, 
-                    'id' => $id, 
-                    'message' => 'Fluxo flowBPMN salvo com sucesso!'
-                ]);
+                echo json_encode(['success' => true, 'id' => $id, 'message' => 'Fluxo salvo com sucesso!']);
             } else {
-                throw new Exception('Falha ao salvar fluxo');
+                throw new Exception('Failed to save flow');
             }
             break;
             
         case 'load':
             // Validate inputs
             if (empty($input['itemtype']) || empty($input['items_id'])) {
-                throw new Exception('Parâmetros obrigatórios ausentes');
+                throw new Exception('Missing required parameters');
             }
             
             // Check permissions
             if (!PluginFlowbpmnProfile::canViewFlow($input['itemtype'])) {
-                throw new Exception('Permissão negada');
+                throw new Exception('Permission denied');
             }
             
             // Load flow
@@ -69,40 +67,28 @@ try {
             echo json_encode(['success' => true, 'data' => $data]);
             break;
             
-        case 'versions':
-            // Get versions list
-            if (empty($input['itemtype']) || empty($input['items_id'])) {
-                throw new Exception('Parâmetros obrigatórios ausentes');
-            }
-            
-            $flow = new PluginFlowbpmnFlow();
-            $versions = $flow->getHistory($input['itemtype'], (int)$input['items_id']);
-            
-            echo json_encode(['success' => true, 'versions' => $versions]);
-            break;
-            
         case 'delete':
             // Validate inputs
             if (empty($input['id'])) {
-                throw new Exception('Parâmetros obrigatórios ausentes');
+                throw new Exception('Missing required parameters');
             }
             
-            // Check permissions
+            // Check permissions (simplified - would need itemtype check in real implementation)
             if (!Session::haveRight('plugin_flowbpmn', DELETE)) {
-                throw new Exception('Permissão negada');
+                throw new Exception('Permission denied');
             }
             
             // Delete flow
             $flow = new PluginFlowbpmnFlow();
             if ($flow->deleteFlow((int)$input['id'])) {
-                echo json_encode(['success' => true, 'message' => 'Fluxo excluído']);
+                echo json_encode(['success' => true]);
             } else {
-                throw new Exception('Falha ao excluir fluxo');
+                throw new Exception('Failed to delete flow');
             }
             break;
             
         default:
-            throw new Exception('Ação inválida');
+            throw new Exception('Invalid action');
     }
     
 } catch (Exception $e) {

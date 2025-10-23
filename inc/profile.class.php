@@ -143,7 +143,8 @@ class PluginFlowbpmnProfile extends CommonDBTM {
     function getTabNameForItem(CommonGLPI $item, $withtemplate = 0) {
         
         if ($item->getType() == 'Profile') {
-            return self::createTabEntry(self::getTypeName());
+            $icon = '<i class="ti ti-git-fork"></i>';
+            return self::createTabEntry('Permissões flowBPMN', 0, '', $icon);
         }
         
         return '';

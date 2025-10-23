@@ -64,7 +64,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                 );
                 
                 $icon = '<i class="ti ti-git-fork"></i>';
-                return self::createTabEntry('FlowBPMN', $nb, '', $icon);
+                return self::createTabEntry('flowBPMN', $nb, '', $icon);
             }
         }
         
@@ -116,9 +116,22 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "<i class='ti ti-device-floppy'></i> " . __('Salvar', 'flowbpmn');
             echo "</button>";
             
-            echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-export-btn'>";
-            echo "<i class='ti ti-download'></i> " . __('Exportar', 'flowbpmn');
+            // Export buttons group
+            echo "<div class='btn-group ms-2' role='group'>";
+            
+            echo "<button type='button' class='btn btn-sm btn-outline-secondary' id='bpmn-export-png-btn' title='Exportar como PNG'>";
+            echo "<i class='ti ti-photo'></i> PNG";
             echo "</button>";
+            
+            echo "<button type='button' class='btn btn-sm btn-outline-secondary' id='bpmn-export-svg-btn' title='Exportar como SVG'>";
+            echo "<i class='ti ti-code'></i> SVG";
+            echo "</button>";
+            
+            echo "<button type='button' class='btn btn-sm btn-outline-secondary' id='bpmn-export-bpmn-btn' title='Exportar como BPMN XML'>";
+            echo "<i class='ti ti-file-code'></i> BPMN";
+            echo "</button>";
+            
+            echo "</div>";
             
             if ($existing) {
                 echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-versions-btn'>";

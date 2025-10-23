@@ -4,10 +4,10 @@
  * -------------------------------------------------------------------------
  * flowBPMN Plugin for GLPI - AJAX Flow Handler
  * -------------------------------------------------------------------------
- * CRITICAL: Do NOT include vendor/autoload.php or inc/includes.php manually!
- * GLPI 11 autoloads everything automatically. Manual includes cause SessionExpiredException.
- * -------------------------------------------------------------------------
  */
+
+require '../../../vendor/autoload.php';
+include '../../../inc/includes.php';
 
 header('Content-Type: application/json; charset=UTF-8');
 

@@ -4,10 +4,10 @@
  * -------------------------------------------------------------------------
  * flowBPMN Plugin for GLPI - Configuration Form
  * -------------------------------------------------------------------------
- * CRITICAL: Do NOT include vendor/autoload.php or inc/includes.php manually!
- * GLPI 11 autoloads everything automatically. Manual includes cause SessionExpiredException.
- * -------------------------------------------------------------------------
  */
+
+require '../../../vendor/autoload.php';
+include '../../../inc/includes.php';
 
 Session::checkRight('config', UPDATE);
 

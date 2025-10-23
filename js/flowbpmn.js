@@ -142,10 +142,22 @@ class BpmnFlowEditor {
             saveBtn.addEventListener('click', () => this.saveDiagram());
         }
         
-        // Export button  
-        const exportBtn = document.getElementById('bpmn-export-btn');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', () => this.showExportModal());
+        // Export PNG button
+        const exportPngBtn = document.getElementById('bpmn-export-png-btn');
+        if (exportPngBtn) {
+            exportPngBtn.addEventListener('click', () => this.exportPNG());
+        }
+        
+        // Export SVG button
+        const exportSvgBtn = document.getElementById('bpmn-export-svg-btn');
+        if (exportSvgBtn) {
+            exportSvgBtn.addEventListener('click', () => this.exportSVG());
+        }
+        
+        // Export BPMN button
+        const exportBpmnBtn = document.getElementById('bpmn-export-bpmn-btn');
+        if (exportBpmnBtn) {
+            exportBpmnBtn.addEventListener('click', () => this.exportBPMN());
         }
         
         // Versions button
