@@ -6,12 +6,7 @@
  * -------------------------------------------------------------------------
  */
 
-// Define GLPI root for proper includes
-if (!defined('GLPI_ROOT')) {
-    define('GLPI_ROOT', dirname(__DIR__, 3));
-}
-
-include (GLPI_ROOT . '/inc/includes.php');
+include ('../../../inc/includes.php');
 
 Session::checkRight('config', UPDATE);
 
