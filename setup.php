@@ -40,26 +40,28 @@ define('PLUGIN_FLOWBPMN_MAX_GLPI', '11.99.99');
  * Initialize plugin
  */
 function plugin_init_flowbpmn() {
-    global $PLUGIN_HOOKS, $LANG;
+    global $PLUGIN_HOOKS;
 
     $PLUGIN_HOOKS['csrf_compliant']['flowbpmn'] = true;
 
     $plugin = new Plugin();
     if ($plugin->isInstalled('flowbpmn') && $plugin->isActivated('flowbpmn')) {
 
-        // Load translations
-        $plugin_dir = GLPI_ROOT . '/plugins/flowbpmn';
-        $locale = $_SESSION['glpilanguage'] ?? 'en_GB';
+        // Load translations - simplified approach
+        if (isset($_SESSION['glpilanguage'])) {
+            $plugin_dir = Plugin::getPhpDir('flowbpmn', false);
+            $locale = $_SESSION['glpilanguage'];
 
-        // Try to load locale file
-        $locale_file = $plugin_dir . '/locales/' . $locale . '.php';
-        if (file_exists($locale_file)) {
-            include_once($locale_file);
-        } else {
-            // Fallback to pt_BR if locale not found
-            $locale_file = $plugin_dir . '/locales/pt_BR.php';
+            // Try to load locale file
+            $locale_file = $plugin_dir . '/locales/' . $locale . '.php';
             if (file_exists($locale_file)) {
                 include_once($locale_file);
+            } else {
+                // Fallback to pt_BR
+                $locale_file = $plugin_dir . '/locales/pt_BR.php';
+                if (file_exists($locale_file)) {
+                    include_once($locale_file);
+                }
             }
         }
 

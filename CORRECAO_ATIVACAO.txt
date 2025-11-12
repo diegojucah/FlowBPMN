@@ -1,0 +1,98 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║   🔧 CORREÇÃO: Problema de Ativação/Desativação             ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+❌ PROBLEMA IDENTIFICADO:
+
+O plugin estava sendo ativado e imediatamente desativado devido a um
+erro no sistema de traduções. As variáveis globais $TRANSLATE e $LANG
+estavam causando conflito durante a inicialização.
+
+
+✅ CORREÇÃO APLICADA:
+
+1️⃣  setup.php:
+   - Removida variável global $LANG desnecessária
+   - Simplificado carregamento de traduções
+   - Adicionado verificação de $_SESSION antes de carregar
+   - Usando Plugin::getPhpDir() para melhor compatibilidade
+
+2️⃣  locales/pt_BR.php:
+   - Removido sistema complexo de registro de traduções
+   - Simplificado para usar apenas $LANG['plugin_flowbpmn']
+   - Removidas manipulações de $TRANSLATE que causavam erro
+
+
+═══════════════════════════════════════════════════════════════
+
+🚀 COMO TESTAR AGORA:
+
+1. Acesse: http://localhost:8080
+
+2. Vá em: Configuração → Plugins
+
+3. Encontre: BPMN Flow
+
+4. Clique em "Desinstalar" (se estiver instalado)
+   Confirme a desinstalação
+
+5. Clique em "Instalar"
+   Aguarde conclusão
+
+6. Clique em "Ativar"
+   ⭐ AGORA DEVE FICAR ATIVADO! ⭐
+
+7. Verifique se aparece: "Plug-in BPMN Flow foi ativado!"
+   E NÃO aparece: "Plug-in BPMN Flow foi desativado!"
+
+
+═══════════════════════════════════════════════════════════════
+
+✅ O QUE VOCÊ DEVE VER:
+
+Status: ✅ Instalado
+Status: ✅ Ativado
+
+Sem mensagens de erro!
+
+
+═══════════════════════════════════════════════════════════════
+
+🐛 SE AINDA HOUVER PROBLEMA:
+
+1. Ver logs em tempo real:
+   sudo docker exec 4a5500931c39 tail -f /var/log/apache2/error.log
+
+2. Ativar o plugin com a janela de logs aberta
+
+3. Copie qualquer erro que aparecer e me mostre
+
+
+═══════════════════════════════════════════════════════════════
+
+📦 ARQUIVOS CORRIGIDOS E SINCRONIZADOS:
+
+✅ setup.php → Sistema de traduções simplificado
+✅ locales/pt_BR.php → Traduções simplificadas
+✅ Permissões ajustadas
+✅ Sintaxe verificada (0 erros)
+
+
+═══════════════════════════════════════════════════════════════
+
+💡 POR QUE ISSO ACONTECEU?
+
+O GLPI tem um sistema específico de carregamento de traduções.
+Ao tentar usar variáveis globais complexas ($TRANSLATE), estava
+causando um erro fatal silencioso que desativava o plugin.
+
+A solução foi simplificar para usar apenas o método padrão do GLPI:
+$LANG['plugin_flowbpmn'][...] 
+
+
+═══════════════════════════════════════════════════════════════
+
+✨ TESTE AGORA E ME AVISE O RESULTADO! ✨
+

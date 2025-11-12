@@ -9,13 +9,8 @@
  * -------------------------------------------------------------------------
  */
 
-// Register translations globally for __() function
-global $TRANSLATE;
-if (!isset($TRANSLATE)) {
-    $TRANSLATE = [];
-}
-
-$plugin_translations = [
+// Translation file for Brazilian Portuguese
+$LANG['plugin_flowbpmn'] = [
     // General
     'flowBPMN' => 'flowBPMN',
     'BPMN Flow' => 'Fluxo BPMN',
@@ -111,13 +106,3 @@ $plugin_translations = [
     'Failed to delete flow' => 'Falha ao excluir fluxo',
     'Invalid action' => 'Ação inválida'
 ];
-
-// Register translations for __() function
-foreach ($plugin_translations as $key => $value) {
-    $TRANSLATE['flowbpmn'][$key] = $value;
-}
-
-// Keep backward compatibility with old LANG array
-$LANG['plugin_flowbpmn'] = $plugin_translations;
-
-return $plugin_translations;
