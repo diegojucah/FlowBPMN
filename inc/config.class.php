@@ -49,11 +49,17 @@ class PluginFlowbpmnConfig extends CommonDBTM {
     
     static function getMenuContent() {
         $menu = [];
-        
+
         $menu['title'] = self::getMenuName();
         $menu['page']  = '/plugins/flowbpmn/front/config.form.php';
-        $menu['icon']  = 'fas fa-diagram-project';
-        
+
+        // Compatibility with both GLPI 10.x and 11.x
+        if (version_compare(GLPI_VERSION, '11.0', 'ge')) {
+            $menu['icon'] = 'ti ti-git-fork';
+        } else {
+            $menu['icon'] = 'fas fa-project-diagram';
+        }
+
         return $menu;
     }
     

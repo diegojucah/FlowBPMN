@@ -6,6 +6,9 @@
  * -------------------------------------------------------------------------
  */
 
+// Start output buffering to prevent any unwanted output
+ob_start();
+
 // Define GLPI root for proper includes
 if (!defined('GLPI_ROOT')) {
     define('GLPI_ROOT', dirname(__DIR__, 3));
@@ -13,6 +16,8 @@ if (!defined('GLPI_ROOT')) {
 
 include (GLPI_ROOT . '/inc/includes.php');
 
+// Clean any previous output and set headers
+ob_end_clean();
 header('Content-Type: application/json; charset=UTF-8');
 
 Session::checkLoginUser();

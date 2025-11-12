@@ -9,13 +9,20 @@
  * -------------------------------------------------------------------------
  */
 
-$LANG['plugin_flowbpmn'] = [
+// Register translations globally for __() function
+global $TRANSLATE;
+if (!isset($TRANSLATE)) {
+    $TRANSLATE = [];
+}
+
+$plugin_translations = [
     // General
+    'flowBPMN' => 'flowBPMN',
     'BPMN Flow' => 'Fluxo BPMN',
     'Fluxo BPMN' => 'Fluxo BPMN',
     'Flow Version' => 'Versão do Fluxo',
     'Flow Versions' => 'Versões do Fluxo',
-    
+
     // Editor
     'BPMN Flow Editor' => 'Editor de Fluxo BPMN',
     'Editor de Fluxo BPMN' => 'Editor de Fluxo BPMN',
@@ -29,13 +36,13 @@ $LANG['plugin_flowbpmn'] = [
     'Carregando Editor BPMN...' => 'Carregando Editor BPMN...',
     'You do not have permission to edit BPMN flows.' => 'Você não tem permissão para editar fluxos BPMN.',
     'Você não tem permissão para editar fluxos BPMN.' => 'Você não tem permissão para editar fluxos BPMN.',
-    
+
     // Flow Information
     'Flow Information' => 'Informações do Fluxo',
     'Name' => 'Nome',
     'Last modified' => 'Última modificação',
     'Created by' => 'Criado por',
-    
+
     // Configuration
     'BPMN Flow Configuration' => 'Configuração do Fluxo BPMN',
     'Configuração do Fluxo BPMN' => 'Configuração do Fluxo BPMN',
@@ -57,10 +64,10 @@ $LANG['plugin_flowbpmn'] = [
     'Configuração atualizada com sucesso' => 'Configuração atualizada com sucesso',
     'Error updating configuration' => 'Erro ao atualizar configuração',
     'Erro ao atualizar configuração' => 'Erro ao atualizar configuração',
-    
+
     // Permissions
     'BPMN Flow Rights' => 'Direitos do Fluxo BPMN',
-    'BPMN Flow Rights Management' => 'Gerenciamento de Direitos do Fluxo BPMN',
+    'BPMN Flow Rights Management' => 'Gerenciamento de Permissões flowBPMN',
     'Item Type' => 'Tipo de Item',
     'View' => 'Visualizar',
     'Edit' => 'Editar',
@@ -68,7 +75,7 @@ $LANG['plugin_flowbpmn'] = [
     'Restore' => 'Restaurar',
     'Profile rights successfully updated' => 'Direitos de perfil atualizados com sucesso',
     'Error updating profile rights' => 'Erro ao atualizar direitos de perfil',
-    
+
     // Versions
     'Version %d' => 'Versão %d',
     'Flow Version' => 'Versão do Fluxo',
@@ -105,4 +112,12 @@ $LANG['plugin_flowbpmn'] = [
     'Invalid action' => 'Ação inválida'
 ];
 
-return $LANG['plugin_flowbpmn'];
+// Register translations for __() function
+foreach ($plugin_translations as $key => $value) {
+    $TRANSLATE['flowbpmn'][$key] = $value;
+}
+
+// Keep backward compatibility with old LANG array
+$LANG['plugin_flowbpmn'] = $plugin_translations;
+
+return $plugin_translations;

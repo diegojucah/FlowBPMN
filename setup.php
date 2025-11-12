@@ -40,35 +40,51 @@ define('PLUGIN_FLOWBPMN_MAX_GLPI', '11.99.99');
  * Initialize plugin
  */
 function plugin_init_flowbpmn() {
-    global $PLUGIN_HOOKS;
+    global $PLUGIN_HOOKS, $LANG;
 
     $PLUGIN_HOOKS['csrf_compliant']['flowbpmn'] = true;
-    
+
     $plugin = new Plugin();
     if ($plugin->isInstalled('flowbpmn') && $plugin->isActivated('flowbpmn')) {
-        
+
+        // Load translations
+        $plugin_dir = GLPI_ROOT . '/plugins/flowbpmn';
+        $locale = $_SESSION['glpilanguage'] ?? 'en_GB';
+
+        // Try to load locale file
+        $locale_file = $plugin_dir . '/locales/' . $locale . '.php';
+        if (file_exists($locale_file)) {
+            include_once($locale_file);
+        } else {
+            // Fallback to pt_BR if locale not found
+            $locale_file = $plugin_dir . '/locales/pt_BR.php';
+            if (file_exists($locale_file)) {
+                include_once($locale_file);
+            }
+        }
+
         // Register plugin classes
         Plugin::registerClass('PluginFlowbpmnFlow', [
             'addtabon' => ['Ticket', 'Problem', 'Change']
         ]);
-        
+
         Plugin::registerClass('PluginFlowbpmnProfile', [
             'addtabon' => ['Profile']
         ]);
-        
+
         Plugin::registerClass('PluginFlowbpmnConfig');
-        
+
         Plugin::registerClass('PluginFlowbpmnVersion');
-        
+
         // Configuration page
         $PLUGIN_HOOKS['config_page']['flowbpmn'] = 'front/config.form.php';
-        
+
         // Add CSS
         $PLUGIN_HOOKS['add_css']['flowbpmn'] = ['css/flowbpmn.css'];
-        
+
         // Add JavaScript
         $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = ['js/flowbpmn.js'];
-        
+
         // Menu entry
         if (Session::haveRight('config', UPDATE)) {
             $PLUGIN_HOOKS['menu_toadd']['flowbpmn'] = ['config' => 'PluginFlowbpmnConfig'];

@@ -40,7 +40,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
     static $rightname = 'profile';
     
     static function getTypeName($nb = 0) {
-        return __('BPMN Flow Rights', 'flowbpmn');
+        return __('flowBPMN', 'flowbpmn');
     }
     
     /**
@@ -147,7 +147,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
             if (version_compare(GLPI_VERSION, '11.0', 'ge')) {
                 // GLPI 11.x - uses icon parameter
                 return self::createTabEntry(
-                    __('flowBPMN Rights', 'flowbpmn'),
+                    __('flowBPMN', 'flowbpmn'),
                     0,
                     $item::getType(),
                     'ti ti-git-fork'
@@ -155,7 +155,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
             } else {
                 // GLPI 10.x - icon in label
                 $icon = '<i class="fas fa-project-diagram"></i> ';
-                return self::createTabEntry($icon . __('flowBPMN Rights', 'flowbpmn'));
+                return self::createTabEntry($icon . __('flowBPMN', 'flowbpmn'));
             }
         }
 
