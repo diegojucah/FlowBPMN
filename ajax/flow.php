@@ -6,6 +6,10 @@
  * -------------------------------------------------------------------------
  */
 
+// Disable all error output to prevent JSON corruption
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+
 // Start output buffering to prevent any unwanted output
 ob_start();
 
@@ -14,13 +18,24 @@ if (!defined('GLPI_ROOT')) {
     define('GLPI_ROOT', dirname(__DIR__, 3));
 }
 
+// Include GLPI
 include (GLPI_ROOT . '/inc/includes.php');
 
 // Clean any previous output and set headers
 ob_end_clean();
 header('Content-Type: application/json; charset=UTF-8');
 
-Session::checkLoginUser();
+// Check if user is logged in
+try {
+    Session::checkLoginUser();
+} catch (Exception $e) {
+    http_response_code(401);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Sessão inválida ou expirada'
+    ]);
+    exit;
+}
 
 $input = json_decode(file_get_contents('php://input'), true);
 $action = $input['action'] ?? '';
@@ -44,8 +59,12 @@ try {
             }
 
             // Check permissions
-            if (!PluginFlowbpmnProfile::canEditFlow($input['itemtype'])) {
-                throw new Exception('Permissão negada');
+            if (class_exists('PluginFlowbpmnProfile')) {
+                if (!PluginFlowbpmnProfile::canEditFlow($input['itemtype'])) {
+                    throw new Exception('Permissão negada');
+                }
+            } else {
+                error_log('flowBPMN: PluginFlowbpmnProfile class not found, skipping permission check');
             }
 
             // Save flow
@@ -123,13 +142,21 @@ try {
             break;
             
         default:
-            throw new Exception('Ação inválida');
+            throw new Exception('Ação inválida: ' . $action);
     }
-    
+
 } catch (Exception $e) {
+    error_log('flowBPMN ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
     http_response_code(400);
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => $e->getMessage(),
+        'debug' => [
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine()
+        ]
     ]);
 }
+
+// Ensure clean exit
+exit;

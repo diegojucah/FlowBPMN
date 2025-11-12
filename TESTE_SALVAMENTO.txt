@@ -1,0 +1,157 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║   🔍 TESTE DE SALVAMENTO - Logs Detalhados Ativados         ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+✅ ARQUIVOS ATUALIZADOS COM LOGS DE DEBUG:
+
+- ajax/flow.php → Logs detalhados de erro
+- inc/flow.class.php → Logs em cada etapa do salvamento
+
+
+═══════════════════════════════════════════════════════════════
+
+🚀 COMO TESTAR (PASSO A PASSO):
+
+1️⃣  ABRA O TERMINAL e execute este comando:
+
+    sudo docker exec 4a5500931c39 tail -f /var/log/apache2/error.log | grep flowBPMN
+
+    ⚠️ DEIXE ESTE TERMINAL ABERTO!
+    Você verá os logs aparecerem em tempo real
+
+
+2️⃣  ABRA OUTRA ABA DO NAVEGADOR:
+
+    http://localhost:8080
+
+
+3️⃣  CRIE UM TICKET DE TESTE:
+
+    - Menu: Assistência → Tickets
+    - Clique no botão "+"
+    - Título: "Teste flowBPMN - Salvamento"
+    - Descrição: "Testando salvamento com logs"
+    - Clique em "Adicionar"
+
+
+4️⃣  ABRA O TICKET CRIADO:
+
+    - Clique na aba "flowBPMN"
+    - Aguarde o editor carregar (~2-3 segundos)
+
+
+5️⃣  DESENHE UM DIAGRAMA SIMPLES:
+
+    - Arraste um "Start Event" (círculo verde)
+    - Arraste uma "Task" (retângulo)
+    - Arraste um "End Event" (círculo vermelho)
+    - Conecte os elementos clicando e arrastando
+
+
+6️⃣  SALVE O DIAGRAMA:
+
+    - Clique no botão "Salvar" (canto superior direito)
+    - OBSERVE O TERMINAL COM OS LOGS!
+
+
+═══════════════════════════════════════════════════════════════
+
+📋 O QUE VOCÊ DEVE VER NOS LOGS:
+
+✅ LOGS DE SUCESSO (se tudo funcionar):
+
+flowBPMN save request: itemtype=Ticket, items_id=123
+flowBPMN saveFlow: Starting - itemtype=Ticket, items_id=123
+flowBPMN saveFlow: Existing flow: no
+flowBPMN saveFlow: Creating new flow
+flowBPMN saveFlow: Flow created with ID: 1
+flowBPMN saveFlow: Saving PNG document
+flowBPMN: Flow saved successfully with ID: 1
+
+
+❌ LOGS DE ERRO (se houver problema):
+
+flowBPMN ERROR: [mensagem de erro]
+flowBPMN saveFlow: Failed to create flow in database
+
+
+═══════════════════════════════════════════════════════════════
+
+💡 O QUE FAZER DEPOIS:
+
+🟢 SE SALVAR COM SUCESSO:
+
+1. Verifique se a mensagem apareceu:
+   "Fluxo flowBPMN salvo com sucesso!"
+
+2. Role a página do ticket até "Documentos"
+   Deve ter um PNG anexado
+
+3. Verifique se o botão "Versões" apareceu na toolbar
+
+
+🔴 SE DER ERRO:
+
+1. COPIE TODOS OS LOGS que apareceram no terminal
+
+2. COPIE a mensagem de erro que apareceu no navegador
+
+3. TIRE UM PRINT da tela (F12 → Console → veja se há erros JavaScript)
+
+4. ME ENVIE ESSAS INFORMAÇÕES
+
+
+═══════════════════════════════════════════════════════════════
+
+🐛 POSSÍVEIS ERROS E SOLUÇÕES:
+
+ERRO: "Sessão inválida ou expirada"
+→ Faça logout e login novamente no GLPI
+
+
+ERRO: "Permissão negada"
+→ Vá em Configuração → Perfis → [Seu Perfil] → flowBPMN
+→ Marque todas as permissões como "Sim"
+
+
+ERRO: "Failed to create flow in database"
+→ Problema com a tabela do banco de dados
+→ Pode precisar reinstalar o plugin
+
+
+ERRO: "PluginFlowbpmnProfile class not found"
+→ Classes do plugin não estão carregando
+→ Veja se o plugin está ativado
+
+
+═══════════════════════════════════════════════════════════════
+
+📝 CHECKLIST DE TESTE:
+
+[ ] Terminal aberto com logs em tempo real
+[ ] GLPI acessado (http://localhost:8080)
+[ ] Ticket criado
+[ ] Aba flowBPMN acessada
+[ ] Editor BPMN carregou
+[ ] Diagrama desenhado
+[ ] Botão "Salvar" clicado
+[ ] Logs capturados
+[ ] Resultado documentado
+
+
+═══════════════════════════════════════════════════════════════
+
+🎯 OBJETIVO DESTE TESTE:
+
+Vamos identificar EXATAMENTE onde o salvamento está falhando.
+Os logs vão mostrar em qual etapa o processo para.
+
+Com essas informações, poderei corrigir o problema específico!
+
+
+═══════════════════════════════════════════════════════════════
+
+✨ EXECUTE AGORA E ME AVISE O RESULTADO! ✨
+

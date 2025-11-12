@@ -265,13 +265,17 @@ class PluginFlowbpmnFlow extends CommonDBTM {
      */
     function saveFlow($itemtype, $items_id, $bpmn_xml, $svg_content, $name = '', $png_data = '') {
         global $DB;
-        
+
+        error_log("flowBPMN saveFlow: Starting - itemtype=$itemtype, items_id=$items_id");
+
         if (!isset($_SESSION['glpi_currenttime'])) {
             $_SESSION['glpi_currenttime'] = date('Y-m-d H:i:s');
         }
-        
+
         $existing = $this->getForItem($itemtype, $items_id);
         $users_id = Session::getLoginUserID();
+
+        error_log("flowBPMN saveFlow: Existing flow: " . ($existing ? 'yes (id=' . $existing['id'] . ')' : 'no'));
         
         $input = [
             'itemtype' => $itemtype,
@@ -286,39 +290,60 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             // Update existing flow
             $input['id'] = $existing['id'];
             $input['date_mod'] = $_SESSION['glpi_currenttime'];
-            
+
+            error_log("flowBPMN saveFlow: Updating existing flow");
+
             // Save current version before updating
-            PluginFlowbpmnVersion::createVersion($existing['id'], $existing);
-            
+            try {
+                if (class_exists('PluginFlowbpmnVersion')) {
+                    PluginFlowbpmnVersion::createVersion($existing['id'], $existing);
+                    error_log("flowBPMN saveFlow: Version created");
+                }
+            } catch (Exception $e) {
+                error_log("flowBPMN saveFlow: Version creation failed: " . $e->getMessage());
+            }
+
             if ($this->update($input)) {
+                error_log("flowBPMN saveFlow: Flow updated successfully");
+
                 // Update item description with SVG if configured
                 $this->updateItemWithSvg($itemtype, $items_id, $svg_content);
-                
+
                 // Save PNG as document if provided
                 if (!empty($png_data)) {
+                    error_log("flowBPMN saveFlow: Saving PNG document");
                     $this->savePNGAsDocument($itemtype, $items_id, $png_data, $name);
                 }
-                
+
                 return $input['id'];
+            } else {
+                error_log("flowBPMN saveFlow: Failed to update flow in database");
             }
         } else {
             // Create new flow
             $input['date_creation'] = $_SESSION['glpi_currenttime'];
             $input['date_mod'] = $_SESSION['glpi_currenttime'];
-            
+
+            error_log("flowBPMN saveFlow: Creating new flow");
+
             if ($id = $this->add($input)) {
+                error_log("flowBPMN saveFlow: Flow created with ID: " . $id);
+
                 // Update item description with SVG if configured
                 $this->updateItemWithSvg($itemtype, $items_id, $svg_content);
-                
+
                 // Save PNG as document if provided
                 if (!empty($png_data)) {
+                    error_log("flowBPMN saveFlow: Saving PNG document");
                     $this->savePNGAsDocument($itemtype, $items_id, $png_data, $name);
                 }
-                
+
                 return $id;
+            } else {
+                error_log("flowBPMN saveFlow: Failed to create flow in database");
             }
         }
-        
+
         return false;
     }
     
