@@ -71,7 +71,30 @@ $LANG['plugin_flowbpmn'] = [
     
     // Versions
     'Version %d' => 'Versão %d',
-    
+    'Flow Version' => 'Versão do Fluxo',
+    'Flow Versions' => 'Versões do Fluxo',
+    'Version restored successfully' => 'Versão restaurada com sucesso',
+    'Failed to restore version' => 'Falha ao restaurar versão',
+    'Version not found' => 'Versão não encontrada',
+    'Flow not found' => 'Fluxo não encontrado',
+    'Version does not belong to this flow' => 'Versão não pertence a este fluxo',
+    'Invalid item type' => 'Tipo de item inválido',
+
+    // Export
+    'Export as PNG' => 'Exportar como PNG',
+    'Export as SVG' => 'Exportar como SVG',
+    'Export as BPMN XML' => 'Exportar como BPMN XML',
+
+    // Document
+    'flowBPMN Diagram' => 'Diagrama flowBPMN',
+
+    // Config updates
+    'flowBPMN configuration updated successfully' => 'Configuração do flowBPMN atualizada com sucesso',
+    'Error updating flowBPMN configuration' => 'Erro ao atualizar configuração do flowBPMN',
+    'flowBPMN Configuration' => 'Configuração do flowBPMN',
+    'flowBPMN Rights' => 'Permissões do flowBPMN',
+    'You do not have permission to edit BPMN flows' => 'Você não tem permissão para editar fluxos BPMN',
+
     // Messages
     'BPMN diagram saved successfully!' => 'Diagrama BPMN salvo com sucesso!',
     'Error saving diagram' => 'Erro ao salvar diagrama',

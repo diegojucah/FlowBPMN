@@ -118,65 +118,69 @@ class PluginFlowbpmnConfig extends CommonDBTM {
      * Show configuration form
      */
     function showForm($ID = 0, array $options = []) {
-        
+
         if (!Session::haveRight('config', UPDATE)) {
             return false;
         }
-        
+
         $config = self::getConfigValues();
-        
+
+        // Detect GLPI version for proper URL handling
+        $plugin_dir = Plugin::getWebDir('flowbpmn', false);
+
         echo "<div class='center'>";
-        echo "<form name='form' action='" . Plugin::getPhpDir('flowbpmn') . "/front/config.form.php' method='post'>";
-        
+        echo "<form name='form' action='{$plugin_dir}/front/config.form.php' method='post'>";
+        echo Html::hidden('_glpi_csrf_token', ['value' => Session::getNewCSRFToken()]);
+
         echo "<table class='tab_cadre_fixe'>";
-        echo "<tr><th colspan='2'>" . __('BPMN Flow Configuration', 'flowbpmn') . "</th></tr>";
-        
+        echo "<tr><th colspan='2'><i class='ti ti-git-fork'></i> " . __('BPMN Flow Configuration', 'flowbpmn') . "</th></tr>";
+
         // Auto attach image
         echo "<tr class='tab_bg_1'>";
         echo "<td>" . __('Automatically attach BPMN diagram to item', 'flowbpmn') . "</td>";
         echo "<td>";
         Dropdown::showYesNo('enable_auto_attach_image', $config['enable_auto_attach_image']);
         echo "</td></tr>";
-        
+
         // Max versions
         echo "<tr class='tab_bg_1'>";
         echo "<td>" . __('Maximum versions per flow', 'flowbpmn') . "</td>";
         echo "<td>";
-        echo "<input type='number' name='max_versions_per_item' value='" . 
-             $config['max_versions_per_item'] . "' min='1' max='100'>";
+        echo "<input type='number' name='max_versions_per_item' class='form-control' value='" .
+             $config['max_versions_per_item'] . "' min='0' max='100' style='width: 100px; display: inline-block;'>";
         echo " <span class='text-muted'>" . __('(0 = unlimited)', 'flowbpmn') . "</span>";
         echo "</td></tr>";
-        
+
         // Export options
         echo "<tr><th colspan='2'>" . __('Export Options', 'flowbpmn') . "</th></tr>";
-        
+
         echo "<tr class='tab_bg_1'>";
         echo "<td>" . __('Enable BPMN export', 'flowbpmn') . "</td>";
         echo "<td>";
         Dropdown::showYesNo('enable_export_bpmn', $config['enable_export_bpmn']);
         echo "</td></tr>";
-        
+
         echo "<tr class='tab_bg_1'>";
         echo "<td>" . __('Enable SVG export', 'flowbpmn') . "</td>";
         echo "<td>";
         Dropdown::showYesNo('enable_export_svg', $config['enable_export_svg']);
         echo "</td></tr>";
-        
+
         echo "<tr class='tab_bg_1'>";
         echo "<td>" . __('Enable PNG export', 'flowbpmn') . "</td>";
         echo "<td>";
         Dropdown::showYesNo('enable_export_png', $config['enable_export_png']);
         echo "</td></tr>";
-        
+
         // Submit button
         echo "<tr class='tab_bg_2'>";
         echo "<td class='center' colspan='2'>";
         echo "<input type='submit' name='update' class='btn btn-primary' value='" . _sx('button', 'Save') . "'>";
         echo "</td>";
         echo "</tr>";
-        
+
         echo "</table>";
-        
+
         Html::closeForm();
         echo "</div>";
     }

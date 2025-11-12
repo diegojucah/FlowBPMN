@@ -33,7 +33,7 @@ if (!defined('GLPI_ROOT')) {
 }
 
 define('PLUGIN_FLOWBPMN_VERSION', '1.0.0');
-define('PLUGIN_FLOWBPMN_MIN_GLPI', '11.0.0');
+define('PLUGIN_FLOWBPMN_MIN_GLPI', '10.0.0');
 define('PLUGIN_FLOWBPMN_MAX_GLPI', '11.99.99');
 
 /**
@@ -92,7 +92,7 @@ function plugin_version_flowbpmn() {
                 'max' => PLUGIN_FLOWBPMN_MAX_GLPI,
             ],
             'php' => [
-                'min' => '8.0',
+                'min' => '7.4',
             ]
         ]
     ];
@@ -119,9 +119,9 @@ function plugin_flowbpmn_check_prerequisites() {
         return false;
     }
     
-    // Check PHP version - More flexible for GLPI 11
-    if (version_compare(PHP_VERSION, '8.0', '<')) {
-        echo 'This plugin requires PHP 8.0 or higher.';
+    // Check PHP version - Compatible with GLPI 10.x and 11.x
+    if (version_compare(PHP_VERSION, '7.4', '<')) {
+        echo 'This plugin requires PHP 7.4 or higher.';
         return false;
     }
     

@@ -47,27 +47,39 @@ class PluginFlowbpmnFlow extends CommonDBTM {
      * Get tab name for an item
      */
     function getTabNameForItem(CommonGLPI $item, $withtemplate = 0) {
-        
+
         if (!$withtemplate) {
             $itemtype = $item->getType();
-            
+
             if (in_array($itemtype, ['Ticket', 'Problem', 'Change'])) {
-                
+
                 // Check permissions
                 if (!PluginFlowbpmnProfile::canViewFlow($itemtype)) {
                     return '';
                 }
-                
+
                 $nb = countElementsInTable(
                     self::getTable(),
                     ['itemtype' => $itemtype, 'items_id' => $item->getID(), 'is_active' => 1]
                 );
-                
-                $icon = '<i class="ti ti-git-fork"></i>';
-                return self::createTabEntry('flowBPMN', $nb, '', $icon);
+
+                // Compatibility with both GLPI 10.x and 11.x
+                if (version_compare(GLPI_VERSION, '11.0', 'ge')) {
+                    // GLPI 11.x - uses icon parameter
+                    return self::createTabEntry(
+                        'flowBPMN',
+                        $nb,
+                        $item::getType(),
+                        'ti ti-git-fork'
+                    );
+                } else {
+                    // GLPI 10.x - icon in label
+                    $icon = '<i class="fas fa-project-diagram"></i> ';
+                    return self::createTabEntry($icon . 'flowBPMN', $nb);
+                }
             }
         }
-        
+
         return '';
     }
     
@@ -92,99 +104,109 @@ class PluginFlowbpmnFlow extends CommonDBTM {
      */
     function showForItem(CommonDBTM $item) {
         global $CFG_GLPI;
-        
+
         $itemtype = $item->getType();
         $items_id = $item->getID();
-        
+
         // Check if user can edit
         $canEdit = PluginFlowbpmnProfile::canEditFlow($itemtype);
-        
+
         // Get existing flow
         $existing = $this->getForItem($itemtype, $items_id);
-        
+
+        // Detect GLPI version for icon compatibility
+        $isGLPI11 = version_compare(GLPI_VERSION, '11.0', 'ge');
+        $iconClass = $isGLPI11 ? 'ti ti-git-fork' : 'fas fa-project-diagram';
+        $saveIcon = $isGLPI11 ? 'ti ti-device-floppy' : 'fas fa-save';
+        $historyIcon = $isGLPI11 ? 'ti ti-history' : 'fas fa-history';
+        $photoIcon = $isGLPI11 ? 'ti ti-photo' : 'fas fa-image';
+        $codeIcon = $isGLPI11 ? 'ti ti-code' : 'fas fa-code';
+        $fileIcon = $isGLPI11 ? 'ti ti-file-code' : 'fas fa-file-code';
+        $infoIcon = $isGLPI11 ? 'ti ti-info-circle' : 'fas fa-info-circle';
+
         echo "<div class='flowbpmn-container'>";
-        
+
         // Toolbar
         echo "<div class='flowbpmn-toolbar' style='display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; margin-bottom: 10px;'>";
         echo "<div class='flowbpmn-toolbar-left'>";
-        echo "<h3 style='margin: 0;'><i class='ti ti-git-fork'></i> Editor flowBPMN</h3>";
+        echo "<h3 style='margin: 0;'><i class='{$iconClass}'></i> Editor flowBPMN</h3>";
         echo "</div>";
-        
+
         if ($canEdit) {
             echo "<div class='flowbpmn-toolbar-right'>";
             echo "<button type='button' class='btn btn-primary' id='bpmn-save-btn'>";
-            echo "<i class='ti ti-device-floppy'></i> " . __('Salvar', 'flowbpmn');
+            echo "<i class='{$saveIcon}'></i> " . __('Save', 'flowbpmn');
             echo "</button>";
-            
+
             // Export buttons group
             echo "<div class='btn-group ms-2' role='group'>";
-            
-            echo "<button type='button' class='btn btn-sm btn-outline-secondary' id='bpmn-export-png-btn' title='Exportar como PNG'>";
-            echo "<i class='ti ti-photo'></i> PNG";
+
+            echo "<button type='button' class='btn btn-sm btn-outline-secondary' id='bpmn-export-png-btn' title='" . __('Export as PNG', 'flowbpmn') . "'>";
+            echo "<i class='{$photoIcon}'></i> PNG";
             echo "</button>";
-            
-            echo "<button type='button' class='btn btn-sm btn-outline-secondary' id='bpmn-export-svg-btn' title='Exportar como SVG'>";
-            echo "<i class='ti ti-code'></i> SVG";
+
+            echo "<button type='button' class='btn btn-sm btn-outline-secondary' id='bpmn-export-svg-btn' title='" . __('Export as SVG', 'flowbpmn') . "'>";
+            echo "<i class='{$codeIcon}'></i> SVG";
             echo "</button>";
-            
-            echo "<button type='button' class='btn btn-sm btn-outline-secondary' id='bpmn-export-bpmn-btn' title='Exportar como BPMN XML'>";
-            echo "<i class='ti ti-file-code'></i> BPMN";
+
+            echo "<button type='button' class='btn btn-sm btn-outline-secondary' id='bpmn-export-bpmn-btn' title='" . __('Export as BPMN XML', 'flowbpmn') . "'>";
+            echo "<i class='{$fileIcon}'></i> BPMN";
             echo "</button>";
-            
+
             echo "</div>";
-            
+
             if ($existing) {
                 echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-versions-btn'>";
-                echo "<i class='ti ti-history'></i> " . __('Versões', 'flowbpmn');
+                echo "<i class='{$historyIcon}'></i> " . __('Versions', 'flowbpmn');
                 echo "</button>";
             }
-            
+
             echo "</div>";
         }
         echo "</div>";
-        
-        // BPMN Canvas - Aumentado para 800px
-        echo "<div id='bpmn-canvas' class='flowbpmn-canvas' 
+
+        // BPMN Canvas - Increased to 800px
+        echo "<div id='bpmn-canvas' class='flowbpmn-canvas'
               style='height: 800px; width: 100%; border: 1px solid #dee2e6; background: white;'
-              data-itemtype='" . $itemtype . "' 
+              data-itemtype='" . $itemtype . "'
               data-items-id='" . $items_id . "'
               data-can-edit='" . ($canEdit ? '1' : '0') . "'>";
-        
+
         if (!$canEdit) {
             echo "<div class='alert alert-info' style='margin: 20px;'>";
-            echo "<i class='ti ti-info-circle'></i> ";
-            echo __('Você não tem permissão para editar fluxos BPMN.', 'flowbpmn');
+            echo "<i class='{$infoIcon}'></i> ";
+            echo __('You do not have permission to edit BPMN flows', 'flowbpmn');
             echo "</div>";
         }
-        
+
         echo "</div>";
-        
+
         // Properties panel
         if ($existing && $canEdit) {
-            echo "<div class='flowbpmn-properties'>";
+            echo "<div class='flowbpmn-properties' style='margin-top: 15px;'>";
             echo "<h4>" . __('Flow Information', 'flowbpmn') . "</h4>";
-            
+
             echo "<div class='form-group'>";
             echo "<label>" . __('Name', 'flowbpmn') . "</label>";
-            echo "<input type='text' class='form-control' id='flow-name' value='" . 
+            echo "<input type='text' class='form-control' id='flow-name' value='" .
                  htmlspecialchars($existing['name'] ?? '') . "'>";
             echo "</div>";
-            
+
             echo "<div class='form-group'>";
             echo "<label>" . __('Last modified', 'flowbpmn') . "</label>";
             echo "<p>" . Html::convDateTime($existing['date_mod']) . "</p>";
             echo "</div>";
-            
+
             echo "<div class='form-group'>";
             echo "<label>" . __('Created by', 'flowbpmn') . "</label>";
             echo "<p>" . getUserName($existing['users_id']) . "</p>";
             echo "</div>";
-            
+
             echo "</div>";
         }
-        
+
         echo "</div>"; // End container
-        
+
         // Load bpmn-js and initialize editor
         $this->loadBpmnEditor($existing);
     }
@@ -304,73 +326,122 @@ class PluginFlowbpmnFlow extends CommonDBTM {
      * Save PNG as document attachment
      */
     private function savePNGAsDocument($itemtype, $items_id, $png_data, $name) {
-        
+
         // Check if auto-attach is enabled
         $config = new PluginFlowbpmnConfig();
         if (!$config->getConfig('enable_auto_attach_image')) {
             return false;
         }
-        
+
         try {
             // Decode base64 PNG data
             if (strpos($png_data, 'data:image/png;base64,') === 0) {
                 $png_data = substr($png_data, strlen('data:image/png;base64,'));
             }
             $png_binary = base64_decode($png_data);
-            
+
             if ($png_binary === false) {
                 return false;
             }
-            
+
             // Generate unique filename
             $filename = 'flowBPMN_' . $itemtype . '_' . $items_id . '_' . date('Ymd_His') . '.png';
-            $filepath = GLPI_TMP_DIR . '/' . $filename;
-            
-            // Save temporary file
-            if (file_put_contents($filepath, $png_binary) === false) {
-                return false;
-            }
-            
-            // Create document
-            $document = new Document();
-            $input = [
-                'itemtype' => $itemtype,
-                'items_id' => $items_id,
-                'name' => !empty($name) ? $name : 'Diagrama flowBPMN',
-                'filename' => $filename,
-                'filepath' => $filepath,
-                'mime' => 'image/png',
-                'users_id' => Session::getLoginUserID(),
-                'tickets_id' => ($itemtype == 'Ticket') ? $items_id : 0
-            ];
-            
-            $doc_id = $document->add($input);
-            
-            if ($doc_id) {
-                // Link document to item
-                $docItem = new Document_Item();
-                $docItem->add([
-                    'documents_id' => $doc_id,
+
+            // Compatibility with both GLPI 10.x and 11.x
+            // In GLPI 11.x, documents are managed differently
+            if (version_compare(GLPI_VERSION, '11.0', 'ge')) {
+                // GLPI 11.x - Use document upload system
+                $filepath = GLPI_TMP_DIR . '/' . $filename;
+
+                // Save temporary file
+                if (file_put_contents($filepath, $png_binary) === false) {
+                    return false;
+                }
+
+                // Create document using proper file handling
+                $document = new Document();
+                $input = [
+                    '_filename' => [$filename],
+                    '_tag_filename' => [$filename],
+                    '_prefix_filename' => [''],
+                    'name' => !empty($name) ? $name : __('flowBPMN Diagram', 'flowbpmn'),
+                    'users_id' => Session::getLoginUserID(),
+                ];
+
+                // Add the document
+                $doc_id = $document->add($input);
+
+                if ($doc_id) {
+                    // Link document to item
+                    $docItem = new Document_Item();
+                    $docItem->add([
+                        'documents_id' => $doc_id,
+                        'itemtype' => $itemtype,
+                        'items_id' => $items_id,
+                        'users_id' => Session::getLoginUserID()
+                    ]);
+
+                    // Clean up temp file
+                    @unlink($filepath);
+
+                    return $doc_id;
+                }
+
+                // Clean up on failure
+                @unlink($filepath);
+
+            } else {
+                // GLPI 10.x - Legacy method
+                $filepath = GLPI_TMP_DIR . '/' . $filename;
+
+                // Save temporary file
+                if (file_put_contents($filepath, $png_binary) === false) {
+                    return false;
+                }
+
+                // Create document
+                $document = new Document();
+                $input = [
                     'itemtype' => $itemtype,
                     'items_id' => $items_id,
+                    'name' => !empty($name) ? $name : __('flowBPMN Diagram', 'flowbpmn'),
+                    'filename' => $filename,
+                    'filepath' => $filepath,
+                    'mime' => 'image/png',
                     'users_id' => Session::getLoginUserID(),
-                    'date_creation' => $_SESSION['glpi_currenttime'],
-                    'date_mod' => $_SESSION['glpi_currenttime']
-                ]);
-                
-                // Clean up temp file
+                ];
+
+                // For tickets in GLPI 10.x
+                if ($itemtype == 'Ticket') {
+                    $input['tickets_id'] = $items_id;
+                }
+
+                $doc_id = $document->add($input);
+
+                if ($doc_id) {
+                    // Link document to item
+                    $docItem = new Document_Item();
+                    $docItem->add([
+                        'documents_id' => $doc_id,
+                        'itemtype' => $itemtype,
+                        'items_id' => $items_id,
+                        'users_id' => Session::getLoginUserID()
+                    ]);
+
+                    // Clean up temp file
+                    @unlink($filepath);
+
+                    return $doc_id;
+                }
+
+                // Clean up on failure
                 @unlink($filepath);
-                
-                return $doc_id;
             }
-            
-            // Clean up on failure
-            @unlink($filepath);
-            
+
         } catch (Exception $e) {
             error_log('flowBPMN PNG save error: ' . $e->getMessage());
         }
-        
+
         return false;
     }
     

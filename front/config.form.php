@@ -18,29 +18,32 @@ Session::checkRight('config', UPDATE);
 // Handle form submission
 if (isset($_POST['update'])) {
     Session::checkRight('config', UPDATE);
-    
+
+    // Verify CSRF token
+    Session::checkCSRF($_POST);
+
     $config = new PluginFlowbpmnConfig();
-    
-    if ($config->updateConfig($_POST)) {
+
+    if (PluginFlowbpmnConfig::updateConfig($_POST)) {
         Session::addMessageAfterRedirect(
-            'Configuração do flowBPMN atualizada com sucesso',
+            __('flowBPMN configuration updated successfully', 'flowbpmn'),
             false,
             INFO
         );
     } else {
         Session::addMessageAfterRedirect(
-            'Erro ao atualizar configuração do flowBPMN',
+            __('Error updating flowBPMN configuration', 'flowbpmn'),
             false,
             ERROR
         );
     }
-    
+
     Html::back();
 }
 
 // Display page
 Html::header(
-    'Configuração do flowBPMN',
+    __('flowBPMN Configuration', 'flowbpmn'),
     $_SERVER['PHP_SELF'],
     'config',
     'PluginFlowbpmnConfig'

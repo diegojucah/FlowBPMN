@@ -303,8 +303,181 @@ class BpmnFlowEditor {
         URL.revokeObjectURL(url);
     }
     
-    showVersionsModal() {
-        alert('Versions feature - View and restore previous versions');
+    async showVersionsModal() {
+        try {
+            const pluginUrl = this.pluginUrl || '/plugins/flowbpmn';
+            const url = `${pluginUrl}/ajax/bpmn_versions.php?itemtype=${this.itemtype}&items_id=${this.items_id}`;
+
+            const response = await fetch(url);
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to load versions');
+            }
+
+            // Create modal HTML
+            const modalHtml = this.createVersionsModalHTML(result);
+
+            // Check if modal already exists
+            let modal = document.getElementById('flowbpmn-versions-modal');
+            if (modal) {
+                modal.remove();
+            }
+
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // Show modal (GLPI 11.x uses Bootstrap 5)
+            modal = document.getElementById('flowbpmn-versions-modal');
+            if (typeof bootstrap !== 'undefined') {
+                // Bootstrap 5 (GLPI 11.x)
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+            } else {
+                // Fallback for GLPI 10.x
+                $(modal).modal('show');
+            }
+
+            // Bind version actions
+            this.bindVersionActions(result.current.id, result.canRestore);
+
+        } catch (err) {
+            console.error('Error loading versions:', err);
+            this.showError('Erro ao carregar versões: ' + err.message);
+        }
+    }
+
+    createVersionsModalHTML(data) {
+        const current = data.current;
+        const versions = data.versions;
+
+        let html = `
+        <div class="modal fade" id="flowbpmn-versions-modal" tabindex="-1" aria-labelledby="flowbpmnVersionsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="flowbpmnVersionsModalLabel">
+                            <i class="ti ti-history"></i> Histórico de Versões - flowBPMN
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <strong>Versão Atual:</strong> ${current.name || 'Sem nome'}<br>
+                            <strong>Última modificação:</strong> ${current.date_mod_formatted} por ${current.user_name}
+                        </div>
+
+                        ${versions.length === 0 ?
+                            '<div class="alert alert-warning">Nenhuma versão anterior disponível.</div>' :
+                            `<div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Versão</th>
+                                            <th>Nome</th>
+                                            <th>Data</th>
+                                            <th>Usuário</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${versions.map(v => `
+                                            <tr>
+                                                <td><span class="badge bg-secondary">v${v.version_number}</span></td>
+                                                <td>${v.name || v.comment || '-'}</td>
+                                                <td>${v.date_creation_formatted}</td>
+                                                <td>${v.user_name}</td>
+                                                <td>
+                                                    ${data.canRestore ?
+                                                        `<button type="button" class="btn btn-sm btn-primary flowbpmn-restore-version"
+                                                                data-version-id="${v.id}">
+                                                            <i class="ti ti-refresh"></i> Restaurar
+                                                        </button>` :
+                                                        '<span class="text-muted">Sem permissão</span>'
+                                                    }
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>`
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+        return html;
+    }
+
+    bindVersionActions(currentFlowId, canRestore) {
+        if (!canRestore) return;
+
+        const restoreButtons = document.querySelectorAll('.flowbpmn-restore-version');
+        restoreButtons.forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const versionId = e.currentTarget.dataset.versionId;
+
+                if (!confirm('Tem certeza que deseja restaurar esta versão? A versão atual será salva no histórico.')) {
+                    return;
+                }
+
+                try {
+                    await this.restoreVersion(currentFlowId, versionId);
+                } catch (err) {
+                    console.error('Error restoring version:', err);
+                    this.showError('Erro ao restaurar versão: ' + err.message);
+                }
+            });
+        });
+    }
+
+    async restoreVersion(flowId, versionId) {
+        const pluginUrl = this.pluginUrl || '/plugins/flowbpmn';
+        const url = `${pluginUrl}/ajax/bpmn_restore.php`;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                flow_id: flowId,
+                version_id: versionId
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Reload diagram with restored version
+            if (result.bpmn_xml) {
+                await this.loadDiagram(result.bpmn_xml);
+            }
+
+            this.showSuccess('Versão restaurada com sucesso!');
+
+            // Close modal
+            const modal = document.getElementById('flowbpmn-versions-modal');
+            if (modal) {
+                if (typeof bootstrap !== 'undefined') {
+                    bootstrap.Modal.getInstance(modal).hide();
+                } else {
+                    $(modal).modal('hide');
+                }
+            }
+
+            // Reload page to update everything
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            throw new Error(result.message || 'Failed to restore version');
+        }
     }
     
     showLoading() {
