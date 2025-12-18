@@ -36,7 +36,11 @@ if (!defined('GLPI_ROOT')) {
  * Version class - Manages BPMN flow versions
  */
 class PluginFlowbpmnVersion extends CommonDBTM {
-    
+
+    static function getTable($classname = null) {
+        return 'glpi_plugin_flowbpmn_versions';
+    }
+
     static function getTypeName($nb = 0) {
         return _n('Flow Version', 'Flow Versions', $nb, 'flowbpmn');
     }

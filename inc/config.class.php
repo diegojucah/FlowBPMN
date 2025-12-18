@@ -36,9 +36,13 @@ if (!defined('GLPI_ROOT')) {
  * Config class - Manages plugin configuration
  */
 class PluginFlowbpmnConfig extends CommonDBTM {
-    
+
     static $rightname = 'config';
-    
+
+    static function getTable($classname = null) {
+        return 'glpi_plugin_flowbpmn_configs';
+    }
+
     static function getTypeName($nb = 0) {
         return 'Configuração do flowBPMN';
     }

@@ -32,7 +32,7 @@ if (!defined('GLPI_ROOT')) {
     die("Sorry. You can't access directly to this file");
 }
 
-define('PLUGIN_FLOWBPMN_VERSION', '1.0.0');
+define('PLUGIN_FLOWBPMN_VERSION', '2.0.0');
 define('PLUGIN_FLOWBPMN_MIN_GLPI', '10.0.0');
 define('PLUGIN_FLOWBPMN_MAX_GLPI', '11.99.99');
 
@@ -160,29 +160,42 @@ function plugin_flowbpmn_install() {
     global $DB;
     
     try {
-        // Create flows table
+        // Create flows table with all mandatory GLPI fields
         if (!$DB->tableExists('glpi_plugin_flowbpmn_flows')) {
         $query = "CREATE TABLE `glpi_plugin_flowbpmn_flows` (
             `id` int unsigned NOT NULL AUTO_INCREMENT,
+            `entities_id` int unsigned NOT NULL DEFAULT '0',
+            `is_recursive` tinyint NOT NULL DEFAULT '0',
             `items_id` int unsigned NOT NULL DEFAULT '0',
             `itemtype` varchar(100) NOT NULL,
             `name` varchar(255) DEFAULT NULL,
+            `comment` text,
             `bpmn_xml` longtext,
             `svg_content` longtext,
             `is_active` tinyint NOT NULL DEFAULT '1',
+            `is_deleted` tinyint NOT NULL DEFAULT '0',
             `users_id` int unsigned NOT NULL DEFAULT '0',
+            `users_id_tech` int unsigned NOT NULL DEFAULT '0',
+            `groups_id_tech` int unsigned NOT NULL DEFAULT '0',
             `date_creation` timestamp NULL DEFAULT NULL,
             `date_mod` timestamp NULL DEFAULT NULL,
             PRIMARY KEY (`id`),
             KEY `item` (`itemtype`, `items_id`),
+            KEY `entities_id` (`entities_id`),
+            KEY `is_recursive` (`is_recursive`),
+            KEY `is_active` (`is_active`),
+            KEY `is_deleted` (`is_deleted`),
             KEY `users_id` (`users_id`),
-            KEY `is_active` (`is_active`)
+            KEY `users_id_tech` (`users_id_tech`),
+            KEY `groups_id_tech` (`groups_id_tech`),
+            KEY `date_creation` (`date_creation`),
+            KEY `date_mod` (`date_mod`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
-        
+
         $DB->doQuery($query) or die($DB->error());
     }
     
-    // Create versions table
+    // Create versions table with foreign key
     if (!$DB->tableExists('glpi_plugin_flowbpmn_versions')) {
         $query = "CREATE TABLE `glpi_plugin_flowbpmn_versions` (
             `id` int unsigned NOT NULL AUTO_INCREMENT,
@@ -196,40 +209,62 @@ function plugin_flowbpmn_install() {
             `date_creation` timestamp NULL DEFAULT NULL,
             PRIMARY KEY (`id`),
             KEY `plugin_flowbpmn_flows_id` (`plugin_flowbpmn_flows_id`),
-            KEY `users_id` (`users_id`)
+            KEY `version_number` (`version_number`),
+            KEY `users_id` (`users_id`),
+            KEY `date_creation` (`date_creation`),
+            CONSTRAINT `glpi_plugin_flowbpmn_versions_ibfk_1`
+                FOREIGN KEY (`plugin_flowbpmn_flows_id`)
+                REFERENCES `glpi_plugin_flowbpmn_flows` (`id`)
+                ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
-        
+
         $DB->doQuery($query) or die($DB->error());
     }
     
-    // Create config table
+    // Create config table with enhanced settings
     if (!$DB->tableExists('glpi_plugin_flowbpmn_configs')) {
         $query = "CREATE TABLE `glpi_plugin_flowbpmn_configs` (
             `id` int unsigned NOT NULL AUTO_INCREMENT,
             `enable_auto_attach_image` tinyint NOT NULL DEFAULT '1',
+            `enable_auto_attach_xml` tinyint NOT NULL DEFAULT '0',
             `max_versions_per_item` int unsigned NOT NULL DEFAULT '10',
+            `enable_version_cleanup` tinyint NOT NULL DEFAULT '1',
             `enable_export_bpmn` tinyint NOT NULL DEFAULT '1',
             `enable_export_svg` tinyint NOT NULL DEFAULT '1',
             `enable_export_png` tinyint NOT NULL DEFAULT '1',
+            `default_canvas_height` int unsigned NOT NULL DEFAULT '800',
+            `enable_grid` tinyint NOT NULL DEFAULT '1',
+            `grid_size` int unsigned NOT NULL DEFAULT '10',
+            `enable_notifications` tinyint NOT NULL DEFAULT '0',
             `date_mod` timestamp NULL DEFAULT NULL,
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
-        
+
         $DB->doQuery($query) or die($DB->error());
-        
+
         // Insert default config
+        if (!isset($_SESSION['glpi_currenttime'])) {
+            $_SESSION['glpi_currenttime'] = date('Y-m-d H:i:s');
+        }
+
         $DB->insert('glpi_plugin_flowbpmn_configs', [
             'id' => 1,
             'enable_auto_attach_image' => 1,
+            'enable_auto_attach_xml' => 0,
             'max_versions_per_item' => 10,
+            'enable_version_cleanup' => 1,
             'enable_export_bpmn' => 1,
             'enable_export_svg' => 1,
             'enable_export_png' => 1,
+            'default_canvas_height' => 800,
+            'enable_grid' => 1,
+            'grid_size' => 10,
+            'enable_notifications' => 0,
             'date_mod' => $_SESSION['glpi_currenttime']
         ]);
     }
     
-    // Create profiles table
+    // Create profiles table with foreign key
     if (!$DB->tableExists('glpi_plugin_flowbpmn_profiles')) {
         $query = "CREATE TABLE `glpi_plugin_flowbpmn_profiles` (
             `id` int unsigned NOT NULL AUTO_INCREMENT,
@@ -247,9 +282,13 @@ function plugin_flowbpmn_install() {
             `can_delete_change` tinyint NOT NULL DEFAULT '0',
             `can_restore_change` tinyint NOT NULL DEFAULT '0',
             PRIMARY KEY (`id`),
-            UNIQUE KEY `profiles_id` (`profiles_id`)
+            UNIQUE KEY `profiles_id` (`profiles_id`),
+            CONSTRAINT `glpi_plugin_flowbpmn_profiles_ibfk_1`
+                FOREIGN KEY (`profiles_id`)
+                REFERENCES `glpi_profiles` (`id`)
+                ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
-        
+
         $DB->doQuery($query) or die($DB->error());
         
         // Set default rights for existing profiles - Initialize directly to avoid class loading issues

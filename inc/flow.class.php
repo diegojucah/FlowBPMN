@@ -36,13 +36,133 @@ if (!defined('GLPI_ROOT')) {
  * Main flow class - Manages BPMN flows
  */
 class PluginFlowbpmnFlow extends CommonDBTM {
-    
+
     static $rightname = 'plugin_flowbpmn';
-    
-    static function getTypeName($nb = 0) {
-        return 'FlowBPMN';
+
+    static function getTable($classname = null) {
+        return 'glpi_plugin_flowbpmn_flows';
     }
-    
+
+    static function getTypeName($nb = 0) {
+        return _n('BPMN Flow', 'BPMN Flows', $nb, 'flowbpmn');
+    }
+
+    /**
+     * Define search options for the item
+     *
+     * @return array Search options
+     */
+    function getSearchOptions() {
+        $tab = parent::getSearchOptions();
+
+        $tab[] = [
+            'id'                 => '2',
+            'table'              => $this->getTable(),
+            'field'              => 'id',
+            'name'               => __('ID'),
+            'massiveaction'      => false,
+            'datatype'           => 'number'
+        ];
+
+        $tab[] = [
+            'id'                 => '3',
+            'table'              => $this->getTable(),
+            'field'              => 'name',
+            'name'               => __('Name'),
+            'datatype'           => 'itemlink',
+            'massiveaction'      => false
+        ];
+
+        $tab[] = [
+            'id'                 => '4',
+            'table'              => $this->getTable(),
+            'field'              => 'comment',
+            'name'               => __('Comments'),
+            'datatype'           => 'text'
+        ];
+
+        $tab[] = [
+            'id'                 => '5',
+            'table'              => $this->getTable(),
+            'field'              => 'itemtype',
+            'name'               => __('Item type', 'flowbpmn'),
+            'datatype'           => 'itemtypename',
+            'massiveaction'      => false
+        ];
+
+        $tab[] = [
+            'id'                 => '6',
+            'table'              => $this->getTable(),
+            'field'              => 'items_id',
+            'name'               => __('Associated item ID', 'flowbpmn'),
+            'datatype'           => 'integer',
+            'massiveaction'      => false
+        ];
+
+        $tab[] = [
+            'id'                 => '7',
+            'table'              => $this->getTable(),
+            'field'              => 'is_active',
+            'name'               => __('Active'),
+            'datatype'           => 'bool'
+        ];
+
+        $tab[] = [
+            'id'                 => '8',
+            'table'              => 'glpi_entities',
+            'field'              => 'completename',
+            'name'               => __('Entity'),
+            'datatype'           => 'dropdown'
+        ];
+
+        $tab[] = [
+            'id'                 => '9',
+            'table'              => 'glpi_users',
+            'field'              => 'name',
+            'linkfield'          => 'users_id',
+            'name'               => __('Creator'),
+            'datatype'           => 'dropdown'
+        ];
+
+        $tab[] = [
+            'id'                 => '10',
+            'table'              => 'glpi_users',
+            'field'              => 'name',
+            'linkfield'          => 'users_id_tech',
+            'name'               => __('Technician in charge', 'flowbpmn'),
+            'datatype'           => 'dropdown'
+        ];
+
+        $tab[] = [
+            'id'                 => '11',
+            'table'              => 'glpi_groups',
+            'field'              => 'completename',
+            'linkfield'          => 'groups_id_tech',
+            'name'               => __('Group in charge', 'flowbpmn'),
+            'datatype'           => 'dropdown'
+        ];
+
+        $tab[] = [
+            'id'                 => '12',
+            'table'              => $this->getTable(),
+            'field'              => 'date_creation',
+            'name'               => __('Creation date'),
+            'datatype'           => 'datetime',
+            'massiveaction'      => false
+        ];
+
+        $tab[] = [
+            'id'                 => '13',
+            'table'              => $this->getTable(),
+            'field'              => 'date_mod',
+            'name'               => __('Last update'),
+            'datatype'           => 'datetime',
+            'massiveaction'      => false
+        ];
+
+        return $tab;
+    }
+
     /**
      * Get tab name for an item
      */

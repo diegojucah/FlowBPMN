@@ -36,9 +36,13 @@ if (!defined('GLPI_ROOT')) {
  * Profile class - Manages permissions for BPMN flows
  */
 class PluginFlowbpmnProfile extends CommonDBTM {
-    
+
     static $rightname = 'profile';
-    
+
+    static function getTable($classname = null) {
+        return 'glpi_plugin_flowbpmn_profiles';
+    }
+
     static function getTypeName($nb = 0) {
         return __('flowBPMN', 'flowbpmn');
     }
