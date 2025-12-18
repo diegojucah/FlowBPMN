@@ -178,24 +178,24 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     return '';
                 }
 
-                $nb = countElementsInTable(
-                    self::getTable(),
-                    ['itemtype' => $itemtype, 'items_id' => $item->getID(), 'is_active' => 1]
-                );
+                // Counter removed - using versionamento for tracking changes
+                // Counter removed - using versionamento for tracking changes
+                // Counter removed - using versionamento for tracking changes
+                // Counter removed - using versionamento for tracking changes
 
                 // Compatibility with both GLPI 10.x and 11.x
                 if (version_compare(GLPI_VERSION, '11.0', 'ge')) {
                     // GLPI 11.x - uses icon parameter
                     return self::createTabEntry(
-                        'flowBPMN',
-                        $nb,
+                        'FlowBPMN',
+                        0,
                         $item::getType(),
                         'ti ti-git-fork'
                     );
                 } else {
                     // GLPI 10.x - icon in label
                     $icon = '<i class="fas fa-project-diagram"></i> ';
-                    return self::createTabEntry($icon . 'flowBPMN', $nb);
+                    return self::createTabEntry($icon . 'FlowBPMN', 0);
                 }
             }
         }
@@ -249,7 +249,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         // Toolbar
         echo "<div class='flowbpmn-toolbar' style='display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; margin-bottom: 10px;'>";
         echo "<div class='flowbpmn-toolbar-left'>";
-        echo "<h3 style='margin: 0;'><i class='{$iconClass}'></i> Editor flowBPMN</h3>";
+        echo "<h3 style='margin: 0;'><i class='{$iconClass}'></i> Editor FlowBPMN</h3>";
         echo "</div>";
 
         if ($canEdit) {
