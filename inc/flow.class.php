@@ -295,7 +295,11 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     $versionCount = PluginFlowbpmnVersion::countVersions($existing['id']);
                 }
                 
-                echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-versions-btn'>";
+                // Desabilitar botão se houver apenas 1 versão
+                $disabled = ($versionCount <= 1) ? 'disabled' : '';
+                $btnClass = ($versionCount <= 1) ? 'btn btn-secondary ms-2 disabled' : 'btn btn-secondary ms-2';
+                
+                echo "<button type='button' class='{$btnClass}' id='bpmn-versions-btn' {$disabled}>";
                 echo "<i class='{$historyIcon}'></i> Versões";
                 if ($versionCount > 0) {
                      echo " <span class='badge bg-light text-dark ms-1'>{$versionCount}</span>";
