@@ -74,8 +74,6 @@ function plugin_init_flowbpmn() {
             'addtabon' => ['Profile']
         ]);
 
-        Plugin::registerClass('PluginFlowbpmnConfig');
-
         Plugin::registerClass('PluginFlowbpmnVersion');
 
         // Add CSS
