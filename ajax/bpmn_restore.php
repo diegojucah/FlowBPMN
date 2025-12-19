@@ -25,6 +25,7 @@ $db->set_charset('utf8mb4');
 
 // Get Input
 $rawInput = file_get_contents("php://input");
+error_log("flowBPMN restore input: " . $rawInput);
 $input = json_decode($rawInput, true);
 
 try {

@@ -544,30 +544,48 @@ class BpmnFlowEditor {
     }
 
     async restoreVersion(flowId, versionId) {
+        console.log('Restoring version:', { flowId, versionId });
         const pluginUrl = this.pluginUrl || '/plugins/flowbpmn';
         const url = `${pluginUrl}/ajax/bpmn_restore.php`;
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                flow_id: flowId,
-                version_id: versionId
-            })
-        });
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    flow_id: flowId,
+                    version_id: versionId
+                })
+            });
 
-        if (result.success) {
-            alert('Versão restaurada com sucesso!');
-            const currentUrl = new URL(window.location.href);
-            // Redirect to main item tab to show timeline/documents
-            currentUrl.searchParams.set('forcetab', this.itemtype + '$1');
-            currentUrl.searchParams.set('_ts', new Date().getTime());
-            window.location.href = currentUrl.toString();
-        } else {
-            throw new Error(result.message || 'Failed to restore version');
+            const text = await response.text();
+            console.log('Restore response:', text);
+
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch (e) {
+                throw new Error('Invalid JSON from server: ' + text.substring(0, 100));
+            }
+
+            if (result.success) {
+                alert('Versão restaurada com sucesso!');
+                const currentUrl = new URL(window.location.href);
+                // Redirect to main item tab to show timeline/documents
+                const tab = this.itemtype ? (this.itemtype + '$1') : 'PluginFlowbpmnFlow$1';
+                currentUrl.searchParams.set('forcetab', tab);
+                currentUrl.searchParams.set('_ts', new Date().getTime());
+                window.location.href = currentUrl.toString();
+            } else {
+                throw new Error(result.message || 'Falha ao restaurar versão');
+            }
+        } catch (err) {
+            console.error('Error in restoreVersion:', err);
+            // Re-throw so bindVersionActions can catch it
+            throw err;
         }
     }
 
