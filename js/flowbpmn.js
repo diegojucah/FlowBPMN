@@ -642,9 +642,12 @@ class BpmnFlowEditor {
                 await this.modeler.importXML(result.bpmn_xml);
 
                 // Fechar modal de versões
-                const modal = bootstrap.Modal.getInstance(document.getElementById('bpmn-versions-modal'));
-                if (modal) {
-                    modal.hide();
+                const modalElement = document.getElementById('flowbpmn-versions-modal');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                    }
                 }
 
                 // Mostrar mensagem de sucesso
