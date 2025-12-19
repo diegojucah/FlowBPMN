@@ -78,19 +78,11 @@ function plugin_init_flowbpmn() {
 
         Plugin::registerClass('PluginFlowbpmnVersion');
 
-        // Configuration page
-        $PLUGIN_HOOKS['config_page']['flowbpmn'] = 'front/config.form.php';
-
         // Add CSS
         $PLUGIN_HOOKS['add_css']['flowbpmn'] = ['css/flowbpmn.css'];
 
         // Add JavaScript with cache buster
         $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = ['js/flowbpmn.js?v=2.0.6'];
-
-        // Menu entry
-        if (Session::haveRight('config', UPDATE)) {
-            $PLUGIN_HOOKS['menu_toadd']['flowbpmn'] = ['config' => 'PluginFlowbpmnConfig'];
-        }
     }
 }
 
