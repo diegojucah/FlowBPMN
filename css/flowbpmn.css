@@ -245,7 +245,14 @@
     border-right: 1px solid #ccc !important;
 }
 
-/* Ajustar viewport para não ficar sob a palette */
+/* Toolbar do editor acima do canvas */
+.flowbpmn-toolbar {
+    position: relative !important;
+    z-index: 100 !important;
+    background: #fff !important;
+}
+
+/* Ocultar logo bpmn.io (créditos no README) */
 .flowbpmn-container .bjs-powered-by {
-    left: 90px !important;
+    display: none !important;
 }
