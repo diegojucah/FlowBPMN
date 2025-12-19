@@ -329,8 +329,37 @@ class BpmnFlowEditor {
         this.downloadFile(blob, 'diagram.png', 'image/png');
     }
 
-    downloadFile(data, filename, mimeType) {
+    async downloadFile(data, filename, mimeType) {
         const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType });
+
+        try {
+            // Tentar usar File System Access API (navegadores modernos)
+            if ('showSaveFilePicker' in window) {
+                const options = {
+                    suggestedName: filename,
+                    types: [{
+                        description: this.getFileDescription(mimeType),
+                        accept: { [mimeType]: [this.getFileExtension(filename)] }
+                    }]
+                };
+
+                const handle = await window.showSaveFilePicker(options);
+                const writable = await handle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+
+                this.showSuccess('Arquivo salvo com sucesso!');
+                return;
+            }
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                // Usuário cancelou o dialog
+                return;
+            }
+            console.warn('File System Access API falhou, usando fallback:', err);
+        }
+
+        // Fallback para navegadores antigos (download automático)
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -339,6 +368,19 @@ class BpmnFlowEditor {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    }
+
+    getFileDescription(mimeType) {
+        const descriptions = {
+            'image/png': 'Imagem PNG',
+            'image/svg+xml': 'Imagem SVG',
+            'application/bpmn+xml': 'Diagrama BPMN'
+        };
+        return descriptions[mimeType] || 'Arquivo';
+    }
+
+    getFileExtension(filename) {
+        return '.' + filename.split('.').pop();
     }
 
     async showVersionsModal() {
