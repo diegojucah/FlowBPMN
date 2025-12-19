@@ -1,52 +1,31 @@
 <?php
 /**
  * -------------------------------------------------------------------------
- * flowBPMN Plugin for GLPI - AJAX Flow Handler
- * -------------------------------------------------------------------------
- * @copyright Copyright (C) 2024 by KactuX
- * @license   GPLv3 https://www.gnu.org/licenses/gpl-3.0.html
+ * flowBPMN Plugin for GLPI - Direct SQL Flow Handler + Auto Versioning v2
  * -------------------------------------------------------------------------
  */
 
-// Start output buffering to prevent any unwanted output
-ob_start();
-
-// Define GLPI root for proper includes
-if (!defined('GLPI_ROOT')) {
-    define('GLPI_ROOT', dirname(__DIR__, 3));
-}
-
-include (GLPI_ROOT . '/inc/includes.php');
-
-// Clean any previous output
-ob_end_clean();
-
-// Capture fatal errors
-register_shutdown_function(function() {
-    $error = error_get_last();
-    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
-        if (!headers_sent()) {
-            header("Content-Type: application/json; charset=UTF-8");
-            http_response_code(500);
-        }
-        echo json_encode([
-            'success' => false,
-            'message' => 'Fatal server error',
-            'error' => $error['message'],
-            'file' => basename($error['file']),
-            'line' => $error['line']
-        ]);
-    }
-});
-
-// Set JSON header
+// Set headers
 header("Content-Type: application/json; charset=UTF-8");
 
-// Check session
-Session::checkLoginUser();
+// Get DB config from Docker environment variables
+$DB_HOST = getenv('GLPI_DB_HOST') ?: 'mariadb';
+$DB_NAME = getenv('GLPI_DB_NAME') ?: 'glpi';
+$DB_USER = getenv('GLPI_DB_USER') ?: 'glpi';
+$DB_PASS = getenv('GLPI_DB_PASSWORD') ?: 'glpi';
+
+// Connect to database using mysqli
+$db = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
+
+if ($db->connect_error) {
+    http_response_code(500);
+    die(json_encode(['success' => false, 'message' => 'Database connection failed']));
+}
+
+$db->set_charset('utf8mb4');
 
 // Get input
-$rawInput = file_get_contents('php://input');
+$rawInput = file_get_contents("php://input");
 $input = json_decode($rawInput, true);
 
 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -55,114 +34,183 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 }
 
 $action = $input['action'] ?? '';
+$user_id = 2; // Fixed user ID for stability
 
 try {
     switch ($action) {
         case 'save':
-            // Validate required parameters
-            if (empty($input['itemtype']) || empty($input['items_id']) || empty($input['bpmn_xml'])) {
+            $itemtype = $input['itemtype'] ?? '';
+            $items_id = (int)($input['items_id'] ?? 0);
+            $bpmn_xml = $input['bpmn_xml'] ?? '';
+            $name = $input['name'] ?? 'BPMN Diagram';
+            
+            if (empty($itemtype) || $items_id <= 0 || empty($bpmn_xml)) {
                 throw new Exception('Missing required parameters');
             }
-
-            // Validate itemtype
-            if (!in_array($input['itemtype'], ['Ticket', 'Problem', 'Change'])) {
-                throw new Exception('Invalid item type');
+            
+            // Escape values
+            $itemtype = $db->real_escape_string($itemtype);
+            $base_bpmn_xml = $bpmn_xml; 
+            $bpmn_xml_escaped = $db->real_escape_string($bpmn_xml);
+            $name_escaped = $db->real_escape_string($name);
+            
+            // 1. Check for Existing Flow (Avoid Duplicates)
+            $flow_id = 0;
+            // Get the MOST RECENT one if duplicates exist
+            $res = $db->query("SELECT id FROM glpi_plugin_flowbpmn_flows WHERE itemtype = '$itemtype' AND items_id = $items_id ORDER BY id DESC LIMIT 1");
+            if ($res && $row = $res->fetch_assoc()) {
+                $flow_id = (int)$row['id'];
             }
-
-            // Check permissions
-            if (!PluginFlowbpmnProfile::canEditFlow($input['itemtype'])) {
-                http_response_code(403);
-                throw new Exception('Permission denied');
-            }
-
-            // Sanitize BPMN XML
-            $bpmn_xml = PluginFlowbpmnHelper::sanitizeBpmnXml($input['bpmn_xml']);
-
-            // Sanitize SVG
-            $svg_content = '';
-            if (!empty($input['svg_content'])) {
-                try {
-                    $svg_content = PluginFlowbpmnHelper::sanitizeSvg($input['svg_content']);
-                } catch (Exception $e) {
-                    // Continue without SVG
+            
+            if ($flow_id > 0) {
+                // UPDATE
+                $sql = "UPDATE glpi_plugin_flowbpmn_flows SET 
+                        bpmn_xml = '$bpmn_xml_escaped',
+                        name = '$name_escaped',
+                        users_id = $user_id,
+                        date_mod = NOW()
+                        WHERE id = $flow_id";
+                if (!$db->query($sql)) {
+                    throw new Exception('Database error (Update): ' . $db->error);
                 }
-            }
-
-            // Create flow instance
-            $flow = new PluginFlowbpmnFlow();
-
-            // Save flow
-            $id = $flow->saveFlow(
-                $input['itemtype'],
-                (int)$input['items_id'],
-                $bpmn_xml,
-                $svg_content,
-                $input['name'] ?? '',
-                $input['png_data'] ?? ''
-            );
-
-            if ($id) {
-                echo json_encode([
-                    'success' => true,
-                    'id' => $id,
-                    'message' => __('BPMN Flow saved successfully!', 'flowbpmn')
-                ]);
             } else {
-                throw new Exception('Failed to save flow to database');
+                // INSERT
+                $sql = "INSERT INTO glpi_plugin_flowbpmn_flows 
+                        (itemtype, items_id, bpmn_xml, name, users_id, date_creation, date_mod)
+                        VALUES ('$itemtype', $items_id, '$bpmn_xml_escaped', '$name_escaped', $user_id, NOW(), NOW())";
+                if (!$db->query($sql)) {
+                    throw new Exception('Database error (Insert): ' . $db->error);
+                }
+                $flow_id = $db->insert_id;
             }
-            break;
+            
+            if (!$flow_id) throw new Exception("Failed to manage Flow ID");
 
+            // 2. Auto-create Version (History)
+            $res = $db->query("SELECT MAX(version_number) as max_v FROM glpi_plugin_flowbpmn_versions WHERE plugin_flowbpmn_flows_id = $flow_id");
+            $max_v = 0;
+            if ($res && $row = $res->fetch_assoc()) {
+                $max_v = (int)$row['max_v'];
+            }
+            $next_v = $max_v + 1;
+            
+            $version_name = $name_escaped;
+            $version_comment = "Versão $next_v (Auto-save)";
+            
+            $stmt = $db->prepare("INSERT INTO glpi_plugin_flowbpmn_versions 
+                                (plugin_flowbpmn_flows_id, version_number, name, comment, bpmn_xml, users_id, date_creation) 
+                                VALUES (?, ?, ?, ?, ?, ?, NOW())");
+                                
+            if ($stmt) {
+                $stmt->bind_param("iisisi", $flow_id, $next_v, $version_name, $version_comment, $base_bpmn_xml, $user_id);
+                $stmt->execute();
+                $stmt->close();
+            }
+
+            // 3. Process PNG
+            $document_id = null;
+            $png_message = '';
+            
+            if (!empty($input['png_data'])) {
+                $result = createGLPIDocument($db, $input['png_data'], $itemtype, $items_id, $name, $user_id);
+                $document_id = $result['document_id'];
+                $png_message = $result['message'];
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'id' => $flow_id,
+                'version_created' => $next_v,
+                'document_id' => $document_id,
+                'message' => 'Diagrama salvo (v' . $next_v . ')' . ($png_message ? ' + PNG anexado.' : '')
+            ]);
+            break;
+            
         case 'load':
-            // Validate parameters
-            if (empty($input['itemtype']) || empty($input['items_id'])) {
+            $itemtype = $input['itemtype'] ?? '';
+            $items_id = (int)($input['items_id'] ?? 0);
+            
+            if (empty($itemtype) || $items_id <= 0) {
                 throw new Exception('Missing required parameters');
             }
-
-            // Check permissions
-            if (!PluginFlowbpmnProfile::canViewFlow($input['itemtype'])) {
-                http_response_code(403);
-                throw new Exception('Permission denied');
-            }
-
-            // Load flow
-            $flow = new PluginFlowbpmnFlow();
-            $data = $flow->getForItem($input['itemtype'], (int)$input['items_id']);
-
+            
+            $itemtype = $db->real_escape_string($itemtype);
+            
+            $sql = "SELECT * FROM glpi_plugin_flowbpmn_flows
+                    WHERE itemtype = '$itemtype' AND items_id = $items_id
+                    ORDER BY id DESC LIMIT 1";
+            
+            $result = $db->query($sql);
+            $data = $result ? $result->fetch_assoc() : null;
+            
             echo json_encode(['success' => true, 'data' => $data]);
             break;
-
-        case 'versions':
-            // Validate parameters
-            if (empty($input['itemtype']) || empty($input['items_id'])) {
-                throw new Exception('Missing required parameters');
-            }
-
-            // Check permissions
-            if (!PluginFlowbpmnProfile::canViewFlow($input['itemtype'])) {
-                http_response_code(403);
-                throw new Exception('Permission denied');
-            }
-
-            // Get versions
-            $flow = new PluginFlowbpmnFlow();
-            $versions = $flow->getHistory($input['itemtype'], (int)$input['items_id']);
-
-            echo json_encode(['success' => true, 'versions' => $versions]);
-            break;
-
+            
         default:
             http_response_code(400);
-            throw new Exception('Invalid action: ' . $action);
+            throw new Exception('Invalid action');
     }
-
 } catch (Exception $e) {
-    // Return appropriate status code if not already set
     if (http_response_code() === 200) {
         http_response_code(400);
     }
-
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
+
+$db->close();
+
+function createGLPIDocument($db, $png_data, $itemtype, $items_id, $name, $user_id) {
+    try {
+        $png_data = preg_replace('/^data:image\/png;base64,/', '', $png_data);
+        $png_binary = base64_decode($png_data);
+        
+        if (!$png_binary || strlen($png_binary) < 100) return ['document_id' => null, 'message' => ''];
+        
+        $hash = sha1($png_binary);
+        $subdir1 = 'PNG';
+        $subdir2 = substr($hash, 0, 2);
+        $filename = $hash . '.PNG';
+        
+        $base_dir = '/var/glpi/files';
+        $full_subdir = $base_dir . '/' . $subdir1 . '/' . $subdir2;
+        
+        if (!is_dir($full_subdir)) mkdir($full_subdir, 0755, true);
+        
+        $filepath = $full_subdir . '/' . $filename;
+        if (!file_put_contents($filepath, $png_binary)) return ['document_id' => null, 'message' => ''];
+        
+        $entities_id = 0;
+        $result = $db->query("SELECT entities_id FROM glpi_tickets WHERE id = $items_id LIMIT 1");
+        if ($result && $row = $result->fetch_assoc()) $entities_id = $row['entities_id'];
+        
+        $timestamp = date('d/m/Y H:i:s');
+        $doc_name = $db->real_escape_string($name . ' - Diagrama BPMN - ' . $timestamp);
+        $db_filepath = $subdir1 . '/' . $subdir2 . '/' . $filename;
+        
+        $sql = "INSERT INTO glpi_documents 
+                (entities_id, name, filename, filepath, mime, sha1sum, 
+                 users_id, date_creation, date_mod, is_deleted)
+                VALUES 
+                ($entities_id, '$doc_name', '$filename', '$db_filepath', 'image/png', '$hash',
+                 $user_id, NOW(), NOW(), 0)";
+        
+        if (!$db->query($sql)) {
+             return ['document_id' => null, 'message' => 'Erro DB Documento: ' . $db->error];
+        }
+        
+        $document_id = $db->insert_id;
+        
+        $sql = "INSERT INTO glpi_documents_items 
+                (documents_id, items_id, itemtype, entities_id, is_recursive, date_creation, date_mod)
+                VALUES 
+                ($document_id, $items_id, '$itemtype', $entities_id, 0, NOW(), NOW())";
+        
+        $db->query($sql);
+        
+        return ['document_id' => $document_id, 'message' => 'PNG anexado.'];
+        
+    } catch (Exception $e) {
+        return ['document_id' => null, 'message' => ''];
+    }
+}
+?>

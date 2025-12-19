@@ -276,8 +276,21 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "</div>";
 
             if ($existing) {
+                // Get version count - Force include class
+                $versionCount = 0;
+                if (!class_exists('PluginFlowbpmnVersion')) {
+                     include_once(GLPI_ROOT . '/plugins/flowbpmn/inc/version.class.php');
+                }
+                
+                if (class_exists('PluginFlowbpmnVersion')) {
+                    $versionCount = PluginFlowbpmnVersion::countVersions($existing['id']);
+                }
+                
                 echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-versions-btn'>";
-                echo "<i class='{$historyIcon}'></i> " . __('Versions', 'flowbpmn');
+                echo "<i class='{$historyIcon}'></i> Versões";
+                if ($versionCount > 0) {
+                     echo " <span class='badge bg-light text-dark ms-1'>{$versionCount}</span>";
+                }
                 echo "</button>";
             }
 
@@ -301,29 +314,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
 
         echo "</div>";
 
-        // Properties panel
-        if ($existing && $canEdit) {
-            echo "<div class='flowbpmn-properties' style='margin-top: 15px;'>";
-            echo "<h4>" . __('Flow Information', 'flowbpmn') . "</h4>";
 
-            echo "<div class='form-group'>";
-            echo "<label>" . __('Name', 'flowbpmn') . "</label>";
-            echo "<input type='text' class='form-control' id='flow-name' value='" .
-                 htmlspecialchars($existing['name'] ?? '') . "'>";
-            echo "</div>";
-
-            echo "<div class='form-group'>";
-            echo "<label>" . __('Last modified', 'flowbpmn') . "</label>";
-            echo "<p>" . Html::convDateTime($existing['date_mod']) . "</p>";
-            echo "</div>";
-
-            echo "<div class='form-group'>";
-            echo "<label>" . __('Created by', 'flowbpmn') . "</label>";
-            echo "<p>" . getUserName($existing['users_id']) . "</p>";
-            echo "</div>";
-
-            echo "</div>";
-        }
 
         echo "</div>"; // End container
 
@@ -489,8 +480,9 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                 return false;
             }
 
-            // Generate unique filename
-            $filename = 'flowBPMN_' . $itemtype . '_' . $items_id . '_' . date('Ymd_His') . '.png';
+            // Generate unique filename with timestamp
+            $timestamp = date('Y-m-d H-i-s');
+            $filename = 'diagrama-' . $timestamp . '.png';
 
             // Compatibility with both GLPI 10.x and 11.x
             // In GLPI 11.x, documents are managed differently
@@ -519,7 +511,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                 $input = [
                     '_filename' => [$filename],
                     '_only_if_upload_succeed' => true,
-                    'name' => !empty($name) ? $name : __('flowBPMN Diagram', 'flowbpmn'),
+                    'name' => 'Diagrama BPMN - ' . date('d/m/Y H:i:s'),
                     'users_id' => Session::getLoginUserID(),
                     'entities_id' => $_SESSION['glpiactive_entity'] ?? 0,
                 ];
@@ -533,11 +525,12 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                 if ($doc_id) {
                     // Link document to item
                     $docItem = new Document_Item();
+                    $users_id = Session::getLoginUserID();
                     $docItem->add([
                         'documents_id' => $doc_id,
                         'itemtype' => $itemtype,
                         'items_id' => $items_id,
-                        'users_id' => Session::getLoginUserID(),
+                        'users_id' => $users_id,
                         'entities_id' => $_SESSION['glpiactive_entity'] ?? 0
                     ]);
 
@@ -581,11 +574,12 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                 if ($doc_id) {
                     // Link document to item
                     $docItem = new Document_Item();
+                    $users_id = Session::getLoginUserID();
                     $docItem->add([
                         'documents_id' => $doc_id,
                         'itemtype' => $itemtype,
                         'items_id' => $items_id,
-                        'users_id' => Session::getLoginUserID()
+                        'users_id' => $users_id
                     ]);
 
                     // Clean up temp file
