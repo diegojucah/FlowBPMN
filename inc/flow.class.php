@@ -259,19 +259,19 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             
             // Botão Salvar
             echo "<button type='button' class='btn btn-primary' id='bpmn-save-btn'>";
-            echo "<i class='{$saveIcon}'></i> " . __('Save', 'flowbpmn');
+            echo "<i class='{$saveIcon}'></i> Salvar";
             echo "</button>";
 
             // Botão Importar
             echo "<button type='button' class='btn btn-success ms-2' id='bpmn-import-btn'>";
-            echo "<i class='{$uploadIcon}'></i> " . __('Import', 'flowbpmn');
+            echo "<i class='{$uploadIcon}'></i> Importar";
             echo "</button>";
             echo "<input type='file' id='bpmn-file-input' accept='.bpmn,.xml' style='display: none;'>";
 
             // Botão Exportar com Dropdown
             echo "<div class='btn-group ms-2' role='group'>";
             echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
-            echo "<i class='{$downloadIcon}'></i> " . __('Export', 'flowbpmn');
+            echo "<i class='{$downloadIcon}'></i> Exportar";
             echo "</button>";
             echo "<ul class='dropdown-menu'>";
             echo "<li><a class='dropdown-item' href='#' id='export-png-option'>";
@@ -296,7 +296,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                 }
                 
                 echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-versions-btn'>";
-                echo "<i class='{$historyIcon}'></i> " . __('Versions', 'flowbpmn');
+                echo "<i class='{$historyIcon}'></i> Versões";
                 if ($versionCount > 0) {
                      echo " <span class='badge bg-light text-dark ms-1'>{$versionCount}</span>";
                 }
