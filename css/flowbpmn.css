@@ -231,8 +231,13 @@
 }
 
 /* Garantir que o canvas tenha espaço para a palette */
-.flowbpmn-container .djs-container .djs-canvas {
-    padding-left: 80px !important;
+.flowbpmn-container .djs-canvas {
+    margin-left: 80px !important;
+}
+
+/* Ajustar viewport para não ficar sob a palette */
+.flowbpmn-container .djs-canvas>svg {
+    margin-left: 0 !important;
 }
 
 /* Palette sempre visível e não sobrepondo */
@@ -243,6 +248,7 @@
     z-index: 10 !important;
     background: #fff !important;
     border-right: 1px solid #ccc !important;
+    width: 80px !important;
 }
 
 /* Toolbar do editor acima do canvas */

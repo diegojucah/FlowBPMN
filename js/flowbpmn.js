@@ -639,17 +639,13 @@ class BpmnFlowEditor {
 
             if (result.success) {
                 alert('Versão restaurada com sucesso!');
-                // Redirecionar para aba principal (comportamento idêntico para Ticket, Problem e Change)
+                // Redirecionar para aba FlowBPMN para mostrar diagrama restaurado
                 const origin = window.location.origin;
                 const formFile = this.itemtype.toLowerCase() + '.form.php';
                 let targetUrl = `${origin}/front/${formFile}?id=${this.items_id}`;
 
-                // Ticket usa $1, Problem e Change usam $main
-                if (this.itemtype === 'Ticket') {
-                    targetUrl += '&forcetab=Ticket$1';
-                } else {
-                    targetUrl += `&forcetab=${this.itemtype}$main`;
-                }
+                // Redirecionar para aba FlowBPMN
+                targetUrl += '&forcetab=PluginFlowbpmnFlow$1';
 
                 console.log('Redirecionando para:', targetUrl);
                 targetUrl += `&_ts=${new Date().getTime()}`;
