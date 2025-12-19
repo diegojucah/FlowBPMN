@@ -216,8 +216,11 @@ class BpmnFlowEditor {
             }
 
             if (result.success) {
-                // this.showSuccess('Diagrama BPMN salvo com sucesso!'); <-- Removed manual success to instant reload
-                window.location.reload();
+                // Force redirect to current tab to guarantee update and cache busting
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('forcetab', 'PluginFlowbpmnFlow$1');
+                currentUrl.searchParams.set('_ts', new Date().getTime()); // Prevent cache
+                window.location.href = currentUrl.toString();
             } else {
                 throw new Error(result.message || 'Falha ao salvar');
             }
@@ -555,11 +558,12 @@ class BpmnFlowEditor {
             })
         });
 
-        const result = await response.json();
-
         if (result.success) {
             alert('Versão restaurada com sucesso!');
-            window.location.reload();
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('forcetab', 'PluginFlowbpmnFlow$1');
+            currentUrl.searchParams.set('_ts', new Date().getTime());
+            window.location.href = currentUrl.toString();
         } else {
             throw new Error(result.message || 'Failed to restore version');
         }
