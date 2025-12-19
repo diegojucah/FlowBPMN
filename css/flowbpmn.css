@@ -1,9 +1,9 @@
-
 /* FlowBPMN Custom Styles */
 
 .flowbpmn-versions-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    /* Allows approx 4 items on large modal */
     gap: 20px;
     padding: 10px;
 }
@@ -20,7 +20,7 @@
 
 .flowbpmn-version-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .flowbpmn-version-preview {
@@ -83,8 +83,16 @@
 
 /* Modal tweaks */
 #flowbpmn-versions-modal .modal-dialog {
-    max-width: 90%;
+    max-width: 1200px;
+    margin: 50px auto;
+    /* Center horizontally, add top margin */
 }
+
+#flowbpmn-versions-modal {
+    z-index: 1060 !important;
+    /* Ensure it is above the backdrop (usually 1050) */
+}
+
 #flowbpmn-versions-modal .modal-body {
     background-color: #f5f7fa;
 }

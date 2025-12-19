@@ -127,7 +127,7 @@ try {
             if ($stmt) {
                 // i = integer, s = string (parameters: flow_id, version_num, name, comment, bpmn_xml, svg_content, users_id)
                 $svg_content = $input['svg_content'] ?? '';
-                $stmt->bind_param("iisisii", $flow_id, $next_v, $version_name, $version_comment, $base_bpmn_xml, $svg_content, $user_id);
+                $stmt->bind_param("iissssi", $flow_id, $next_v, $version_name, $version_comment, $base_bpmn_xml, $svg_content, $user_id);
                 $stmt->execute();
                 $stmt->close();
             }

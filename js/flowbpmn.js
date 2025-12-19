@@ -170,7 +170,10 @@ class BpmnFlowEditor {
     async saveDiagram() {
         try {
             const { xml } = await this.modeler.saveXML({ format: true });
-            const { svg } = await this.modeler.saveSVG();
+            const saveSvgResult = await this.modeler.saveSVG();
+            const svg = saveSvgResult.svg;
+            console.log('Generated SVG length:', svg ? svg.length : 'null');
+
 
             // Generate PNG for document attachment
             const pngData = await this.generatePNG(svg);
@@ -383,7 +386,8 @@ class BpmnFlowEditor {
     createVersionCard(version, canRestore) {
         // Thumbnail logic
         let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> Sem pré-visualização</div>';
-        if (version.svg_content) {
+        // Check if content exists and is not just "0" (DB default/error) and looks like SVG
+        if (version.svg_content && version.svg_content !== '0' && version.svg_content.length > 50) {
             thumbnail = version.svg_content; // Directly embed SVG
         }
 

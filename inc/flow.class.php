@@ -328,6 +328,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
     private function loadBpmnEditor($existingFlow = null) {
         
         $pluginDir = Plugin::getWebDir('flowbpmn');
+        echo Html::css('plugins/flowbpmn/css/flowbpmn.css');
         $bpmnXml = $existingFlow['bpmn_xml'] ?? null;
         
         // Encode XML for JavaScript
