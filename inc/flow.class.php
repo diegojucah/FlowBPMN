@@ -283,7 +283,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "</ul>";
             echo "</div>";
 
-            // Botão Versões
+            // Botão Versões - só aparece quando houver 2+ versões
             if ($existing) {
                 // Get version count - Force include class
                 $versionCount = 0;
@@ -295,16 +295,13 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     $versionCount = PluginFlowbpmnVersion::countVersions($existing['id']);
                 }
                 
-                // Desabilitar botão se houver apenas 1 versão
-                $disabled = ($versionCount <= 1) ? 'disabled' : '';
-                $btnClass = ($versionCount <= 1) ? 'btn btn-secondary ms-2 disabled' : 'btn btn-secondary ms-2';
-                
-                echo "<button type='button' class='{$btnClass}' id='bpmn-versions-btn' {$disabled}>";
-                echo "<i class='{$historyIcon}'></i> Versões";
-                if ($versionCount > 0) {
-                     echo " <span class='badge bg-light text-dark ms-1'>{$versionCount}</span>";
+                // Só renderizar botão se houver 2+ versões
+                if ($versionCount > 1) {
+                    echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-versions-btn'>";
+                    echo "<i class='{$historyIcon}'></i> Versões";
+                    echo " <span class='badge bg-light text-dark ms-1'>{$versionCount}</span>";
+                    echo "</button>";
                 }
-                echo "</button>";
             }
 
             echo "</div>";
