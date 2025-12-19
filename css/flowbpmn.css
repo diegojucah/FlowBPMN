@@ -89,6 +89,8 @@
 /* Full Image Modal */
 #flowbpmn-image-modal {
     background: rgba(0, 0, 0, 0.9) !important;
+    z-index: 1080 !important;
+    /* Higher than versions modal (1060) */
 }
 
 #flowbpmn-image-modal .modal-content {
