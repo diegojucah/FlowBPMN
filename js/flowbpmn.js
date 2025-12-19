@@ -216,13 +216,21 @@ class BpmnFlowEditor {
             }
 
             if (result.success) {
-                // Force redirect to main item tab (e.g., Ticket$1, Problem$1)
-                const currentUrl = new URL(window.location.href);
-                const targetTab = this.itemtype + '$1';
-                console.log('Redirecting to tab:', targetTab);
-                currentUrl.searchParams.set('forcetab', targetTab);
-                currentUrl.searchParams.set('_ts', new Date().getTime());
-                window.location.href = currentUrl.toString();
+                // Redirecionar para aba principal (comportamento idêntico para Ticket, Problem e Change)
+                const origin = window.location.origin;
+                const formFile = this.itemtype.toLowerCase() + '.form.php';
+                let targetUrl = `${origin}/front/${formFile}?id=${this.items_id}`;
+                
+                // Ticket usa $1, Problem e Change usam $main
+                if (this.itemtype === 'Ticket') {
+                    targetUrl += '&forcetab=Ticket$1';
+                } else {
+                    targetUrl += `&forcetab=${this.itemtype}$main`;
+                }
+                
+                console.log('Redirecionando para:', targetUrl);
+                targetUrl += `&_ts=${new Date().getTime()}`;
+                window.location.href = targetUrl;
             } else {
                 throw new Error(result.message || 'Falha ao salvar');
             }
@@ -574,12 +582,21 @@ class BpmnFlowEditor {
 
             if (result.success) {
                 alert('Versão restaurada com sucesso!');
-                const currentUrl = new URL(window.location.href);
-                // Force Main tab
-                const targetTab = this.itemtype ? (this.itemtype + '$1') : 'PluginFlowbpmnFlow$1';
-                currentUrl.searchParams.set('forcetab', targetTab);
-                currentUrl.searchParams.set('_ts', new Date().getTime());
-                window.location.href = currentUrl.toString();
+                // Redirecionar para aba principal (comportamento idêntico para Ticket, Problem e Change)
+                const origin = window.location.origin;
+                const formFile = this.itemtype.toLowerCase() + '.form.php';
+                let targetUrl = `${origin}/front/${formFile}?id=${this.items_id}`;
+                
+                // Ticket usa $1, Problem e Change usam $main
+                if (this.itemtype === 'Ticket') {
+                    targetUrl += '&forcetab=Ticket$1';
+                } else {
+                    targetUrl += `&forcetab=${this.itemtype}$main`;
+                }
+                
+                console.log('Redirecionando para:', targetUrl);
+                targetUrl += `&_ts=${new Date().getTime()}`;
+                window.location.href = targetUrl;
             } else {
                 throw new Error(result.message || 'Falha ao restaurar versão');
             }
