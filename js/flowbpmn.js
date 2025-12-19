@@ -170,9 +170,15 @@ class BpmnFlowEditor {
     async saveDiagram() {
         try {
             const { xml } = await this.modeler.saveXML({ format: true });
-            const saveSvgResult = await this.modeler.saveSVG();
-            const svg = saveSvgResult.svg;
-            console.log('Generated SVG length:', svg ? svg.length : 'null');
+
+            // Robust SVG generation handling for different bpmn-js versions
+            let svg = '';
+            try {
+                const result = await this.modeler.saveSVG();
+                svg = result.svg || result; // Handle {svg: string} or raw string
+            } catch (svgErr) {
+                console.error('Error generating SVG:', svgErr);
+            }
 
 
             // Generate PNG for document attachment
