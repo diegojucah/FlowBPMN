@@ -639,17 +639,8 @@ class BpmnFlowEditor {
 
             if (result.success) {
                 alert('Versão restaurada com sucesso!');
-                // Redirecionar para aba FlowBPMN para mostrar diagrama restaurado
-                const origin = window.location.origin;
-                const formFile = this.itemtype.toLowerCase() + '.form.php';
-                let targetUrl = `${origin}/front/${formFile}?id=${this.items_id}`;
-
-                // Redirecionar para aba FlowBPMN
-                targetUrl += '&forcetab=PluginFlowbpmnFlow$1';
-
-                console.log('Redirecionando para:', targetUrl);
-                targetUrl += `&_ts=${new Date().getTime()}`;
-                window.location.href = targetUrl;
+                // Recarregar a página para mostrar diagrama restaurado
+                window.location.reload();
             } else {
                 throw new Error(result.message || 'Falha ao restaurar versão');
             }
