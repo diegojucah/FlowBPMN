@@ -32,7 +32,7 @@ if (!defined('GLPI_ROOT')) {
     die("Sorry. You can't access directly to this file");
 }
 
-define('PLUGIN_FLOWBPMN_VERSION', '2.0.5');
+define('PLUGIN_FLOWBPMN_VERSION', '2.0.6');
 define('PLUGIN_FLOWBPMN_MIN_GLPI', '10.0.0');
 define('PLUGIN_FLOWBPMN_MAX_GLPI', '11.99.99');
 
@@ -85,7 +85,7 @@ function plugin_init_flowbpmn() {
         $PLUGIN_HOOKS['add_css']['flowbpmn'] = ['css/flowbpmn.css'];
 
         // Add JavaScript with cache buster
-        $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = ['js/flowbpmn.js?v=2.0.5'];
+        $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = ['js/flowbpmn.js?v=2.0.6'];
 
         // Menu entry
         if (Session::haveRight('config', UPDATE)) {

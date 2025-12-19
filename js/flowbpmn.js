@@ -142,22 +142,37 @@ class BpmnFlowEditor {
             saveBtn.addEventListener('click', () => this.saveDiagram());
         }
 
-        // Export PNG button
-        const exportPngBtn = document.getElementById('bpmn-export-png-btn');
-        if (exportPngBtn) {
-            exportPngBtn.addEventListener('click', () => this.exportPNG());
+        // Import button
+        const importBtn = document.getElementById('bpmn-import-btn');
+        const fileInput = document.getElementById('bpmn-file-input');
+        if (importBtn && fileInput && this.canEdit) {
+            importBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => this.importDiagram(e));
         }
 
-        // Export SVG button
-        const exportSvgBtn = document.getElementById('bpmn-export-svg-btn');
-        if (exportSvgBtn) {
-            exportSvgBtn.addEventListener('click', () => this.exportSVG());
+        // Export dropdown options
+        const exportPngOption = document.getElementById('export-png-option');
+        if (exportPngOption) {
+            exportPngOption.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.exportPNG();
+            });
         }
 
-        // Export BPMN button
-        const exportBpmnBtn = document.getElementById('bpmn-export-bpmn-btn');
-        if (exportBpmnBtn) {
-            exportBpmnBtn.addEventListener('click', () => this.exportBPMN());
+        const exportSvgOption = document.getElementById('export-svg-option');
+        if (exportSvgOption) {
+            exportSvgOption.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.exportSVG();
+            });
+        }
+
+        const exportBpmnOption = document.getElementById('export-bpmn-option');
+        if (exportBpmnOption) {
+            exportBpmnOption.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.exportBPMN();
+            });
         }
 
         // Versions button
@@ -220,14 +235,14 @@ class BpmnFlowEditor {
                 const origin = window.location.origin;
                 const formFile = this.itemtype.toLowerCase() + '.form.php';
                 let targetUrl = `${origin}/front/${formFile}?id=${this.items_id}`;
-                
+
                 // Ticket usa $1, Problem e Change usam $main
                 if (this.itemtype === 'Ticket') {
                     targetUrl += '&forcetab=Ticket$1';
                 } else {
                     targetUrl += `&forcetab=${this.itemtype}$main`;
                 }
-                
+
                 console.log('Redirecionando para:', targetUrl);
                 targetUrl += `&_ts=${new Date().getTime()}`;
                 window.location.href = targetUrl;
@@ -586,14 +601,14 @@ class BpmnFlowEditor {
                 const origin = window.location.origin;
                 const formFile = this.itemtype.toLowerCase() + '.form.php';
                 let targetUrl = `${origin}/front/${formFile}?id=${this.items_id}`;
-                
+
                 // Ticket usa $1, Problem e Change usam $main
                 if (this.itemtype === 'Ticket') {
                     targetUrl += '&forcetab=Ticket$1';
                 } else {
                     targetUrl += `&forcetab=${this.itemtype}$main`;
                 }
-                
+
                 console.log('Redirecionando para:', targetUrl);
                 targetUrl += `&_ts=${new Date().getTime()}`;
                 window.location.href = targetUrl;
@@ -604,6 +619,56 @@ class BpmnFlowEditor {
             console.error('Error in restoreVersion:', err);
             // Re-throw so bindVersionActions can catch it
             throw err;
+        }
+    }
+
+    async importDiagram(event) {
+        try {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validar extensão
+            const validExtensions = ['.bpmn', '.xml'];
+            const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            if (!validExtensions.includes(fileExtension)) {
+                this.showError('Formato inválido. Use arquivos .bpmn ou .xml');
+                return;
+            }
+
+            // Ler arquivo
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const xml = e.target.result;
+
+                    // Importar no modeler
+                    await this.modeler.importXML(xml);
+
+                    // Ajustar zoom
+                    const canvas = this.modeler.get('canvas');
+                    canvas.zoom('fit-viewport');
+
+                    // Feedback visual
+                    this.showSuccess('Diagrama importado com sucesso!');
+
+                    // Limpar input para permitir reimportação do mesmo arquivo
+                    event.target.value = '';
+
+                } catch (err) {
+                    console.error('Erro ao importar diagrama:', err);
+                    this.showError('Erro ao importar diagrama: ' + err.message);
+                }
+            };
+
+            reader.onerror = () => {
+                this.showError('Erro ao ler arquivo');
+            };
+
+            reader.readAsText(file);
+
+        } catch (err) {
+            console.error('Erro no processo de importação:', err);
+            this.showError('Erro ao processar arquivo: ' + err.message);
         }
     }
 
@@ -622,10 +687,14 @@ class BpmnFlowEditor {
     }
 
     showSuccess(message) {
-        if (typeof displayAjaxMessageAfterRedirect === 'function') {
+        // Usar toast do GLPI se disponível
+        if (typeof glpi_toast !== 'undefined') {
+            glpi_toast('success', message);
+        } else if (typeof displayAjaxMessageAfterRedirect === 'function') {
             displayAjaxMessageAfterRedirect();
+        } else {
+            alert(message);
         }
-        alert(message); // Fallback
     }
 
     showError(message) {

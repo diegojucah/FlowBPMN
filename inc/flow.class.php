@@ -234,15 +234,17 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         // Get existing flow
         $existing = $this->getForItem($itemtype, $items_id);
 
+
         // Detect GLPI version for icon compatibility
         $isGLPI11 = version_compare(GLPI_VERSION, '11.0', 'ge');
         $iconClass = $isGLPI11 ? 'ti ti-git-fork' : 'fas fa-project-diagram';
         $saveIcon = $isGLPI11 ? 'ti ti-device-floppy' : 'fas fa-save';
+        $uploadIcon = $isGLPI11 ? 'ti ti-upload' : 'fas fa-upload';
+        $downloadIcon = $isGLPI11 ? 'ti ti-download' : 'fas fa-download';
         $historyIcon = $isGLPI11 ? 'ti ti-history' : 'fas fa-history';
         $photoIcon = $isGLPI11 ? 'ti ti-photo' : 'fas fa-image';
         $codeIcon = $isGLPI11 ? 'ti ti-code' : 'fas fa-code';
         $fileIcon = $isGLPI11 ? 'ti ti-file-code' : 'fas fa-file-code';
-        $infoIcon = $isGLPI11 ? 'ti ti-info-circle' : 'fas fa-info-circle';
 
         echo "<div class='flowbpmn-container'>";
 
@@ -254,27 +256,34 @@ class PluginFlowbpmnFlow extends CommonDBTM {
 
         if ($canEdit) {
             echo "<div class='flowbpmn-toolbar-right'>";
+            
+            // Botão Salvar
             echo "<button type='button' class='btn btn-primary' id='bpmn-save-btn'>";
             echo "<i class='{$saveIcon}'></i> " . __('Save', 'flowbpmn');
             echo "</button>";
 
-            // Export buttons group
+            // Botão Importar
+            echo "<button type='button' class='btn btn-success ms-2' id='bpmn-import-btn'>";
+            echo "<i class='{$uploadIcon}'></i> " . __('Import', 'flowbpmn');
+            echo "</button>";
+            echo "<input type='file' id='bpmn-file-input' accept='.bpmn,.xml' style='display: none;'>";
+
+            // Botão Exportar com Dropdown
             echo "<div class='btn-group ms-2' role='group'>";
-
-            echo "<button type='button' class='btn btn-sm btn-outline-secondary' id='bpmn-export-png-btn' title='" . __('Export as PNG', 'flowbpmn') . "'>";
-            echo "<i class='{$photoIcon}'></i> PNG";
+            echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
+            echo "<i class='{$downloadIcon}'></i> " . __('Export', 'flowbpmn');
             echo "</button>";
-
-            echo "<button type='button' class='btn btn-sm btn-outline-secondary' id='bpmn-export-svg-btn' title='" . __('Export as SVG', 'flowbpmn') . "'>";
-            echo "<i class='{$codeIcon}'></i> SVG";
-            echo "</button>";
-
-            echo "<button type='button' class='btn btn-sm btn-outline-secondary' id='bpmn-export-bpmn-btn' title='" . __('Export as BPMN XML', 'flowbpmn') . "'>";
-            echo "<i class='{$fileIcon}'></i> BPMN";
-            echo "</button>";
-
+            echo "<ul class='dropdown-menu'>";
+            echo "<li><a class='dropdown-item' href='#' id='export-png-option'>";
+            echo "<i class='{$photoIcon}'></i> PNG</a></li>";
+            echo "<li><a class='dropdown-item' href='#' id='export-svg-option'>";
+            echo "<i class='{$codeIcon}'></i> SVG</a></li>";
+            echo "<li><a class='dropdown-item' href='#' id='export-bpmn-option'>";
+            echo "<i class='{$fileIcon}'></i> BPMN</a></li>";
+            echo "</ul>";
             echo "</div>";
 
+            // Botão Versões
             if ($existing) {
                 // Get version count - Force include class
                 $versionCount = 0;
@@ -287,7 +296,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                 }
                 
                 echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-versions-btn'>";
-                echo "<i class='{$historyIcon}'></i> Versões";
+                echo "<i class='{$historyIcon}'></i> " . __('Versions', 'flowbpmn');
                 if ($versionCount > 0) {
                      echo " <span class='badge bg-light text-dark ms-1'>{$versionCount}</span>";
                 }
