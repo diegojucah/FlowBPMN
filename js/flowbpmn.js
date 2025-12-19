@@ -365,7 +365,7 @@ class BpmnFlowEditor {
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="flowbpmnVersionsModalLabel">
-                            <i class="ti ti-history"></i> FlowBPMN
+                            <i class="ti ti-history"></i> Histórico de Versões - FlowBPMN
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -384,6 +384,18 @@ class BpmnFlowEditor {
                     </div>
                 </div>
             </div>
+        </div>
+        
+        <!-- Image Preview Modal -->
+        <div class="modal fade" id="flowbpmn-image-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-fullscreen p-5">
+                <div class="modal-content">
+                    <div class="modal-body d-flex justify-content-center align-items-center position-relative">
+                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                         <div id="flowbpmn-image-container"></div>
+                    </div>
+                </div>
+            </div>
         </div>`;
 
         return html;
@@ -392,15 +404,26 @@ class BpmnFlowEditor {
     createVersionCard(version, canRestore) {
         // Thumbnail logic
         let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> Sem pré-visualização</div>';
+        let svgData = '';
+
         // Check if content exists and is not just "0" (DB default/error) and looks like SVG
         if (version.svg_content && version.svg_content !== '0' && version.svg_content.length > 50) {
             thumbnail = version.svg_content; // Directly embed SVG
+            svgData = encodeURIComponent(version.svg_content);
         }
 
         return `
-        <div class="flowbpmn-version-card">
+        <div class="flowbpmn-version-card" id="version-card-${version.id}">
             <div class="flowbpmn-version-preview">
                 ${thumbnail}
+                <div class="flowbpmn-version-overlay">
+                    <button type="button" class="btn-flowbpmn-action flowbpmn-view-image" data-svg="${svgData}">
+                        <i class="ti ti-eye"></i> Ver
+                    </button>
+                    <button type="button" class="btn-flowbpmn-action flowbpmn-delete-version" data-version-id="${version.id}">
+                        <i class="ti ti-trash"></i> Excluir
+                    </button>
+                </div>
             </div>
             <div class="flowbpmn-version-info">
                 <div class="flowbpmn-version-header">
@@ -416,9 +439,9 @@ class BpmnFlowEditor {
 
                 <div class="flowbpmn-actions">
                     ${canRestore ?
-                `<button type="button" class="btn btn-sm btn-primary flowbpmn-restore-version"
+                `<button type="button" class="btn btn-sm btn-primary flowbpmn-restore-version btn-flowbpmn-restore"
                                 data-version-id="${version.id}">
-                            <i class="ti ti-refresh"></i>
+                            <i class="ti ti-refresh"></i> Restaurar
                         </button>` : ''
             }
                 </div>
@@ -427,17 +450,14 @@ class BpmnFlowEditor {
     }
 
     bindVersionActions(currentFlowId, canRestore) {
-        if (!canRestore) return;
-
+        // Restore Action
         const restoreButtons = document.querySelectorAll('.flowbpmn-restore-version');
         restoreButtons.forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const versionId = e.currentTarget.dataset.versionId;
-
                 if (!confirm('Tem certeza que deseja restaurar esta versão? A versão atual será salva no histórico.')) {
                     return;
                 }
-
                 try {
                     await this.restoreVersion(currentFlowId, versionId);
                 } catch (err) {
@@ -446,6 +466,74 @@ class BpmnFlowEditor {
                 }
             });
         });
+
+        // View Action
+        const viewBtns = document.querySelectorAll('.flowbpmn-view-image');
+        viewBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const svgContent = decodeURIComponent(e.currentTarget.dataset.svg);
+                if (svgContent) {
+                    const container = document.getElementById('flowbpmn-image-container');
+                    container.innerHTML = svgContent;
+
+                    // Fix SVG size for modal
+                    const svgEl = container.querySelector('svg');
+                    if (svgEl) {
+                        svgEl.setAttribute('width', '100%');
+                        svgEl.setAttribute('height', '100%');
+                        svgEl.style.maxWidth = '90vw';
+                        svgEl.style.maxHeight = '90vh';
+                    }
+
+                    const imgModal = new bootstrap.Modal(document.getElementById('flowbpmn-image-modal'));
+                    imgModal.show();
+                } else {
+                    alert('Imagem indisponível para esta versão.');
+                }
+            });
+        });
+
+        // Delete Action
+        const deleteBtns = document.querySelectorAll('.flowbpmn-delete-version');
+        deleteBtns.forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const versionId = e.currentTarget.dataset.versionId;
+                if (confirm('Tem certeza que deseja excluir esta versão permanentemente?')) {
+                    await this.deleteVersion(versionId);
+                }
+            });
+        });
+    }
+
+    async deleteVersion(versionId) {
+        try {
+            const response = await fetch(`${this.pluginUrl}/ajax/flow.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'delete_version',
+                    version_id: versionId
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                // Remove card from DOM with animation
+                const card = document.getElementById(`version-card-${versionId}`);
+                if (card) {
+                    card.style.transition = 'opacity 0.5s';
+                    card.style.opacity = '0';
+                    setTimeout(() => card.remove(), 500);
+                }
+            } else {
+                alert('Erro ao excluir: ' + result.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Erro de conexão ao tentar excluir.');
+        }
     }
 
     async restoreVersion(flowId, versionId) {

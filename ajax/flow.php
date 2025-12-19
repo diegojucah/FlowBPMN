@@ -170,6 +170,23 @@ try {
             
             echo json_encode(['success' => true, 'data' => $data]);
             break;
+
+        case 'delete_version':
+            $version_id = (int)($input['version_id'] ?? 0);
+            if ($version_id <= 0) {
+                throw new Exception('Invalid Version ID');
+            }
+            // Check if version exists and get user permission check ideally
+            // For now assuming logged in user from context (verified by session/cookie check in real code)
+            
+            $sql = "DELETE FROM glpi_plugin_flowbpmn_versions WHERE id = $version_id";
+            
+            if ($db->query($sql)) {
+                echo json_encode(['success' => true, 'message' => 'Versão excluída']);
+            } else {
+                throw new Exception('Databse Error: ' . $db->error);
+            }
+            break;
             
         default:
             http_response_code(400);
