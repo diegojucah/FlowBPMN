@@ -216,7 +216,8 @@ class BpmnFlowEditor {
             }
 
             if (result.success) {
-                this.showSuccess('Diagrama BPMN salvo com sucesso!');
+                // this.showSuccess('Diagrama BPMN salvo com sucesso!'); <-- Removed manual success to instant reload
+                window.location.reload();
             } else {
                 throw new Error(result.message || 'Falha ao salvar');
             }
@@ -557,27 +558,8 @@ class BpmnFlowEditor {
         const result = await response.json();
 
         if (result.success) {
-            // Reload diagram with restored version
-            if (result.bpmn_xml) {
-                await this.loadDiagram(result.bpmn_xml);
-            }
-
-            this.showSuccess('Versão restaurada com sucesso!');
-
-            // Close modal
-            const modal = document.getElementById('flowbpmn-versions-modal');
-            if (modal) {
-                if (typeof bootstrap !== 'undefined') {
-                    bootstrap.Modal.getInstance(modal).hide();
-                } else {
-                    $(modal).modal('hide');
-                }
-            }
-
-            // Reload page to update everything
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
+            alert('Versão restaurada com sucesso!');
+            window.location.reload();
         } else {
             throw new Error(result.message || 'Failed to restore version');
         }
