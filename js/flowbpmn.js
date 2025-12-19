@@ -485,7 +485,7 @@ class BpmnFlowEditor {
                         svgEl.style.width = '100%';
                         svgEl.style.height = 'auto';
                         svgEl.style.maxWidth = '100%';
-                        svgEl.style.maxHeight = '75vh'; // Leave space for padding
+                        // svgEl.style.maxHeight = '75vh'; // Removed to allow full height expansion
                     }
 
                     const imgModal = new bootstrap.Modal(document.getElementById('flowbpmn-image-modal'));
