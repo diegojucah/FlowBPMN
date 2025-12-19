@@ -216,11 +216,12 @@ class BpmnFlowEditor {
             }
 
             if (result.success) {
-                // Force redirect to current tab to guarantee update and cache busting
+                // Force redirect to main item tab (e.g., Ticket$1, Problem$1)
                 const currentUrl = new URL(window.location.href);
-                // Clear forcetab to redirect to the default main tab (Process/Timeline)
-                currentUrl.searchParams.delete('forcetab');
-                currentUrl.searchParams.set('_ts', new Date().getTime()); // Prevent cache
+                const targetTab = this.itemtype + '$1';
+                console.log('Redirecting to tab:', targetTab);
+                currentUrl.searchParams.set('forcetab', targetTab);
+                currentUrl.searchParams.set('_ts', new Date().getTime());
                 window.location.href = currentUrl.toString();
             } else {
                 throw new Error(result.message || 'Falha ao salvar');
@@ -574,8 +575,9 @@ class BpmnFlowEditor {
             if (result.success) {
                 alert('Versão restaurada com sucesso!');
                 const currentUrl = new URL(window.location.href);
-                // Clear forcetab to redirect to default main tab
-                currentUrl.searchParams.delete('forcetab');
+                // Force Main tab
+                const targetTab = this.itemtype ? (this.itemtype + '$1') : 'PluginFlowbpmnFlow$1';
+                currentUrl.searchParams.set('forcetab', targetTab);
                 currentUrl.searchParams.set('_ts', new Date().getTime());
                 window.location.href = currentUrl.toString();
             } else {
