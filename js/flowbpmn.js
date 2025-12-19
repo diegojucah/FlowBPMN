@@ -637,23 +637,22 @@ class BpmnFlowEditor {
                 throw new Error('Invalid JSON from server: ' + text.substring(0, 100));
             }
 
-            if (result.success) {
-                alert('Versão restaurada com sucesso!');
-                // Redirecionar para aba principal (comportamento idêntico para Ticket, Problem e Change)
-                const origin = window.location.origin;
-                const formFile = this.itemtype.toLowerCase() + '.form.php';
-                let targetUrl = `${origin}/front/${formFile}?id=${this.items_id}`;
+            if (result.success && result.bpmn_xml) {
+                // Importar XML diretamente no editor
+                await this.modeler.importXML(result.bpmn_xml);
 
-                // Ticket usa $1, Problem e Change usam $main
-                if (this.itemtype === 'Ticket') {
-                    targetUrl += '&forcetab=Ticket$1';
-                } else {
-                    targetUrl += `&forcetab=${this.itemtype}$main`;
+                // Fechar modal de versões
+                const modal = bootstrap.Modal.getInstance(document.getElementById('bpmn-versions-modal'));
+                if (modal) {
+                    modal.hide();
                 }
 
-                console.log('Redirecionando para:', targetUrl);
-                targetUrl += `&_ts=${new Date().getTime()}`;
-                window.location.href = targetUrl;
+                // Mostrar mensagem de sucesso
+                this.showSuccess('Versão restaurada! Você pode editar e salvar novamente.');
+
+                // Ajustar zoom para caber na tela
+                const canvas = this.modeler.get('canvas');
+                canvas.zoom('fit-viewport');
             } else {
                 throw new Error(result.message || 'Falha ao restaurar versão');
             }
