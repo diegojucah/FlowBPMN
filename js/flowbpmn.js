@@ -638,7 +638,6 @@ class BpmnFlowEditor {
             }
 
             if (result.success) {
-                alert('Versão restaurada com sucesso!');
                 // Recarregar a página para mostrar diagrama restaurado
                 window.location.reload();
             } else {
