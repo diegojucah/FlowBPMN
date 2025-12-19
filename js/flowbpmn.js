@@ -480,10 +480,12 @@ class BpmnFlowEditor {
                     // Fix SVG size for modal
                     const svgEl = container.querySelector('svg');
                     if (svgEl) {
-                        svgEl.setAttribute('width', '100%');
-                        svgEl.setAttribute('height', '100%');
-                        svgEl.style.maxWidth = '90vw';
-                        svgEl.style.maxHeight = '90vh';
+                        svgEl.removeAttribute('width');
+                        svgEl.removeAttribute('height');
+                        svgEl.style.width = '100%';
+                        svgEl.style.height = 'auto';
+                        svgEl.style.maxWidth = '100%';
+                        svgEl.style.maxHeight = '75vh'; // Leave space for padding
                     }
 
                     const imgModal = new bootstrap.Modal(document.getElementById('flowbpmn-image-modal'));
