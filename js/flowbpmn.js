@@ -388,11 +388,11 @@ class BpmnFlowEditor {
         
         <!-- Image Preview Modal -->
         <div class="modal fade" id="flowbpmn-image-modal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-fullscreen p-5">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-body d-flex justify-content-center align-items-center position-relative">
-                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                         <div id="flowbpmn-image-container"></div>
+                    <div class="modal-body position-relative">
+                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px; z-index: 10;"></button>
+                         <div id="flowbpmn-image-container" class="d-flex justify-content-center"></div>
                     </div>
                 </div>
             </div>
