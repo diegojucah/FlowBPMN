@@ -211,7 +211,7 @@
 
 /* Modal tweaks */
 #flowbpmn-versions-modal .modal-dialog {
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 50px auto;
     /* Center horizontally, add top margin */
 }
