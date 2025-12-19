@@ -121,12 +121,13 @@ try {
             $version_comment = "Versão $next_v (Auto-save)";
             
             $stmt = $db->prepare("INSERT INTO glpi_plugin_flowbpmn_versions 
-                                (plugin_flowbpmn_flows_id, version_number, name, comment, bpmn_xml, users_id, date_creation) 
-                                VALUES (?, ?, ?, ?, ?, ?, NOW())");
+                                (plugin_flowbpmn_flows_id, version_number, name, comment, bpmn_xml, svg_content, users_id, date_creation) 
+                                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
                                 
             if ($stmt) {
-                // i = integer, s = string
-                $stmt->bind_param("iisisi", $flow_id, $next_v, $version_name, $version_comment, $base_bpmn_xml, $user_id);
+                // i = integer, s = string (parameters: flow_id, version_num, name, comment, bpmn_xml, svg_content, users_id)
+                $svg_content = $input['svg_content'] ?? '';
+                $stmt->bind_param("iisisii", $flow_id, $next_v, $version_name, $version_comment, $base_bpmn_xml, $svg_content, $user_id);
                 $stmt->execute();
                 $stmt->close();
             }

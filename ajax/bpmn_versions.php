@@ -83,7 +83,8 @@ try {
             'users_id' => $v['users_id'],
             'user_name' => $v['user_name'] ?: 'Unknown',
             'date_creation' => $v['date_creation'],
-            'date_creation_formatted' => formatDate($v['date_creation'])
+            'date_creation_formatted' => formatDate($v['date_creation']),
+            'svg_content' => $v['svg_content'] ?? null
         ];
     }
 

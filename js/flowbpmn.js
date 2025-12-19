@@ -348,60 +348,27 @@ class BpmnFlowEditor {
     }
 
     createVersionsModalHTML(data) {
-        const current = data.current;
         const versions = data.versions;
 
         let html = `
         <div class="modal fade" id="flowbpmn-versions-modal" tabindex="-1" aria-labelledby="flowbpmnVersionsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-xl">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="flowbpmnVersionsModalLabel">
-                            <i class="ti ti-history"></i> Histórico de Versões - FlowBPMN
+                            <i class="ti ti-history"></i> FlowBPMN
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="alert alert-info">
-                            <strong>Versão Atual:</strong> ${current.name || 'Sem nome'}<br>
-                            <strong>Última modificação:</strong> ${current.date_mod_formatted} por ${current.user_name}
-                        </div>
-
+                        
                         ${versions.length === 0 ?
                 '<div class="alert alert-warning">Nenhuma versão anterior disponível.</div>' :
-                `<div class="table-responsive">
-                                <table class="table table-striped table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Versão</th>
-                                            <th>Nome</th>
-                                            <th>Data</th>
-                                            <th>Usuário</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${versions.map(v => `
-                                            <tr>
-                                                <td><span class="badge bg-secondary">v${v.version_number}</span></td>
-                                                <td>${v.name || v.comment || '-'}</td>
-                                                <td>${v.date_creation_formatted}</td>
-                                                <td>${v.user_name}</td>
-                                                <td>
-                                                    ${data.canRestore ?
-                        `<button type="button" class="btn btn-sm btn-primary flowbpmn-restore-version"
-                                                                data-version-id="${v.id}">
-                                                            <i class="ti ti-refresh"></i> Restaurar
-                                                        </button>` :
-                        '<span class="text-muted">Sem permissão</span>'
-                    }
-                                                </td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
+                `<div class="flowbpmn-versions-grid">
+                                ${versions.map(v => this.createVersionCard(v, data.canRestore)).join('')}
                             </div>`
             }
+
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
@@ -411,6 +378,42 @@ class BpmnFlowEditor {
         </div>`;
 
         return html;
+    }
+
+    createVersionCard(version, canRestore) {
+        // Thumbnail logic
+        let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> Sem pré-visualização</div>';
+        if (version.svg_content) {
+            thumbnail = version.svg_content; // Directly embed SVG
+        }
+
+        return `
+        <div class="flowbpmn-version-card">
+            <div class="flowbpmn-version-preview">
+                ${thumbnail}
+            </div>
+            <div class="flowbpmn-version-info">
+                <div class="flowbpmn-version-header">
+                    <span class="flowbpmn-badge">v${version.version_number}</span>
+                </div>
+                
+                <div class="flowbpmn-meta" title="Data da modificação">
+                    <i class="ti ti-calendar"></i> ${version.date_creation_formatted}
+                </div>
+                <div class="flowbpmn-meta" title="Usuário responsável">
+                    <i class="ti ti-user"></i> ${version.user_name}
+                </div>
+
+                <div class="flowbpmn-actions">
+                    ${canRestore ?
+                `<button type="button" class="btn btn-sm btn-primary flowbpmn-restore-version"
+                                data-version-id="${version.id}">
+                            <i class="ti ti-refresh"></i>
+                        </button>` : ''
+            }
+                </div>
+            </div>
+        </div>`;
     }
 
     bindVersionActions(currentFlowId, canRestore) {

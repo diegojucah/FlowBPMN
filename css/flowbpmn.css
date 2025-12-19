@@ -1,210 +1,49 @@
-/**
- * -------------------------------------------------------------------------
- * flowBPMN Plugin for GLPI - Stylesheet
- * -------------------------------------------------------------------------
- * @copyright Copyright (C) 2024 by KactuX
- * @license   GPLv3 https://www.gnu.org/licenses/gpl-3.0.html
- * @link      https://github.com/diegojucah/pluginBPMN
- * -------------------------------------------------------------------------
- */
 
-/* Main Container */
-.flowbpmn-container {
-    background: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin: 15px 0;
+/* FlowBPMN Custom Styles */
+
+.flowbpmn-versions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+.flowbpmn-version-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
     overflow: hidden;
-}
-
-/* Toolbar */
-.flowbpmn-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #ddd;
-}
-
-.flowbpmn-toolbar-left h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-}
-
-.flowbpmn-toolbar-right {
-    display: flex;
-    gap: 8px;
-}
-
-.flowbpmn-toolbar-right .btn {
-    padding: 6px 12px;
-    font-size: 13px;
-}
-
-.flowbpmn-toolbar-right .btn i {
-    margin-right: 4px;
-}
-
-/* Canvas */
-.flowbpmn-canvas {
-    position: relative;
-    width: 100%;
-    min-height: 500px;
+    transition: transform 0.2s, box-shadow 0.2s;
     background: #fff;
+    display: flex;
+    flex-direction: column;
 }
 
-#bpmn-canvas {
+.flowbpmn-version-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.flowbpmn-version-preview {
+    height: 180px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #eee;
+    overflow: hidden;
+    padding: 10px;
+}
+
+.flowbpmn-version-preview svg {
+    width: 100%;
     height: 100%;
 }
 
-/* Properties Panel */
-.flowbpmn-properties {
+.flowbpmn-version-info {
     padding: 15px;
-    background: #f8f9fa;
-    border-top: 1px solid #ddd;
-}
-
-.flowbpmn-properties h4 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #333;
-}
-
-.flowbpmn-properties .form-group {
-    margin-bottom: 15px;
-}
-
-.flowbpmn-properties label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    font-size: 13px;
-    color: #666;
-}
-
-.flowbpmn-properties input[type="text"],
-.flowbpmn-properties textarea {
-    width: 100%;
-    padding: 6px 10px;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    font-size: 13px;
-}
-
-.flowbpmn-properties p {
-    margin: 0;
-    font-size: 13px;
-    color: #555;
-}
-
-/* Hide bpmn.io branding */
-.bjs-powered-by {
-    display: none !important;
-}
-
-/* BPMN Palette Styles */
-.djs-palette {
-    background: #f8f9fa !important;
-    border-right: 1px solid #ddd !important;
-}
-
-.djs-palette .entry {
-    color: #333 !important;
-}
-
-.djs-palette .entry:hover {
-    background: #e9ecef !important;
-}
-
-/* Context Pad */
-.djs-context-pad {
-    background: #fff !important;
-    border: 1px solid #ccc !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-}
-
-/* Selection */
-.djs-selection .djs-outline {
-    stroke: #4d90fe !important;
-    stroke-width: 2px !important;
-}
-
-/* Hover */
-.djs-element.hover:not(.djs-connection) .djs-outline {
-    stroke: #4d90fe !important;
-    stroke-opacity: 0.5 !important;
-}
-
-/* Connection Preview */
-.djs-connection .djs-visual > path {
-    stroke: #4d90fe !important;
-    stroke-width: 2px !important;
-}
-
-/* Loading State */
-.flowbpmn-loading {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
-
-.flowbpmn-loading i {
-    font-size: 32px;
-    color: #4d90fe;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-.flowbpmn-loading p {
-    margin: 10px 0 0;
-    font-size: 14px;
-    color: #666;
-}
-
-/* Version Modal */
-.flowbpmn-version-modal {
-    max-width: 800px;
-}
-
-.flowbpmn-version-list {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.flowbpmn-version-item {
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    background: #fff;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.flowbpmn-version-item:hover {
-    border-color: #4d90fe;
-    background: #f8f9fa;
-}
-
-.flowbpmn-version-item.active {
-    border-color: #4d90fe;
-    background: #e7f3ff;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .flowbpmn-version-header {
@@ -214,129 +53,38 @@
     margin-bottom: 8px;
 }
 
-.flowbpmn-version-number {
-    font-weight: 600;
-    color: #333;
-}
-
-.flowbpmn-version-date {
-    font-size: 12px;
-    color: #666;
-}
-
-.flowbpmn-version-author {
-    font-size: 12px;
-    color: #888;
-}
-
-/* Export Modal */
-.flowbpmn-export-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-    margin: 20px 0;
-}
-
-.flowbpmn-export-option {
-    padding: 20px;
-    border: 2px solid #ddd;
+.flowbpmn-badge {
+    background-color: #000;
+    color: #fff;
+    padding: 4px 10px;
     border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.flowbpmn-meta {
+    font-size: 0.85em;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+
+.flowbpmn-meta i {
+    margin-right: 5px;
+    width: 14px;
     text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
 }
 
-.flowbpmn-export-option:hover {
-    border-color: #4d90fe;
-    background: #f8f9fa;
+.flowbpmn-actions {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+    text-align: right;
 }
 
-.flowbpmn-export-option i {
-    font-size: 32px;
-    color: #666;
-    margin-bottom: 10px;
+/* Modal tweaks */
+#flowbpmn-versions-modal .modal-dialog {
+    max-width: 90%;
 }
-
-.flowbpmn-export-option span {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: #333;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .flowbpmn-toolbar {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .flowbpmn-toolbar-left,
-    .flowbpmn-toolbar-right {
-        width: 100%;
-    }
-    
-    .flowbpmn-toolbar-right {
-        justify-content: flex-start;
-    }
-    
-    .flowbpmn-canvas {
-        min-height: 400px;
-    }
-}
-
-/* Dark Mode Support */
-[data-glpi-theme="dark"] .flowbpmn-container {
-    background: #1e1e1e;
-    border-color: #444;
-}
-
-[data-glpi-theme="dark"] .flowbpmn-toolbar {
-    background: #2d2d2d;
-    border-color: #444;
-}
-
-[data-glpi-theme="dark"] .flowbpmn-toolbar-left h3 {
-    color: #e0e0e0;
-}
-
-[data-glpi-theme="dark"] .flowbpmn-canvas {
-    background: #1e1e1e;
-}
-
-[data-glpi-theme="dark"] .flowbpmn-properties {
-    background: #2d2d2d;
-    border-color: #444;
-}
-
-[data-glpi-theme="dark"] .flowbpmn-properties h4,
-[data-glpi-theme="dark"] .flowbpmn-properties label {
-    color: #e0e0e0;
-}
-
-[data-glpi-theme="dark"] .flowbpmn-properties p {
-    color: #b0b0b0;
-}
-
-[data-glpi-theme="dark"] .djs-palette {
-    background: #2d2d2d !important;
-    border-color: #444 !important;
-}
-
-[data-glpi-theme="dark"] .djs-context-pad {
-    background: #2d2d2d !important;
-    border-color: #555 !important;
-}
-
-[data-glpi-theme="dark"] .flowbpmn-version-item {
-    background: #2d2d2d;
-    border-color: #444;
-}
-
-[data-glpi-theme="dark"] .flowbpmn-version-item:hover {
-    background: #333;
-}
-
-[data-glpi-theme="dark"] .flowbpmn-version-item.active {
-    background: #1a3a52;
+#flowbpmn-versions-modal .modal-body {
+    background-color: #f5f7fa;
 }
