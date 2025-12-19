@@ -218,7 +218,8 @@ class BpmnFlowEditor {
             if (result.success) {
                 // Force redirect to current tab to guarantee update and cache busting
                 const currentUrl = new URL(window.location.href);
-                currentUrl.searchParams.set('forcetab', 'PluginFlowbpmnFlow$1');
+                // Redirect to the main item tab (e.g., Ticket$1) to show the attached document
+                currentUrl.searchParams.set('forcetab', this.itemtype + '$1');
                 currentUrl.searchParams.set('_ts', new Date().getTime()); // Prevent cache
                 window.location.href = currentUrl.toString();
             } else {
@@ -561,7 +562,8 @@ class BpmnFlowEditor {
         if (result.success) {
             alert('Versão restaurada com sucesso!');
             const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('forcetab', 'PluginFlowbpmnFlow$1');
+            // Redirect to main item tab to show timeline/documents
+            currentUrl.searchParams.set('forcetab', this.itemtype + '$1');
             currentUrl.searchParams.set('_ts', new Date().getTime());
             window.location.href = currentUrl.toString();
         } else {
