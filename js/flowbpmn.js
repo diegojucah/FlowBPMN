@@ -638,8 +638,22 @@ class BpmnFlowEditor {
             }
 
             if (result.success) {
-                // Recarregar a página para mostrar diagrama restaurado
-                window.location.reload();
+                alert('Versão restaurada com sucesso!');
+                // Redirecionar para aba principal (comportamento idêntico para Ticket, Problem e Change)
+                const origin = window.location.origin;
+                const formFile = this.itemtype.toLowerCase() + '.form.php';
+                let targetUrl = `${origin}/front/${formFile}?id=${this.items_id}`;
+
+                // Ticket usa $1, Problem e Change usam $main
+                if (this.itemtype === 'Ticket') {
+                    targetUrl += '&forcetab=Ticket$1';
+                } else {
+                    targetUrl += `&forcetab=${this.itemtype}$main`;
+                }
+
+                console.log('Redirecionando para:', targetUrl);
+                targetUrl += `&_ts=${new Date().getTime()}`;
+                window.location.href = targetUrl;
             } else {
                 throw new Error(result.message || 'Falha ao restaurar versão');
             }
