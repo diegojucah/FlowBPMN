@@ -25,61 +25,61 @@ class BpmnFlowEditor {
             console.error('Container not found:', options.container);
             return;
         }
-        
+
         this.itemtype = this.container.dataset.itemtype;
         this.items_id = this.container.dataset.itemsId;
         this.canEdit = this.container.dataset.canEdit === '1';
         this.existingXml = options.existingXml;
         this.pluginUrl = options.pluginUrl || '';
         this.modeler = null;
-        
+
         this.init();
     }
-    
+
     async init() {
         // Load CSS
         this.loadCSS();
-        
+
         // Show loading
         this.showLoading();
-        
+
         // Load bpmn-js library
         await this.loadBpmnJS();
-        
+
         // Initialize modeler
         this.initModeler();
-        
+
         // Bind events
         this.bindEvents();
-        
+
         // Hide loading
         this.hideLoading();
     }
-    
+
     loadCSS() {
         if (!document.querySelector(`link[href="${BPMN_JS_CSS}"]`)) {
             const link1 = document.createElement('link');
             link1.rel = 'stylesheet';
             link1.href = BPMN_JS_CSS;
             document.head.appendChild(link1);
-            
+
             const link2 = document.createElement('link');
             link2.rel = 'stylesheet';
             link2.href = BPMN_FONT_CSS;
             document.head.appendChild(link2);
-            
+
             const link3 = document.createElement('link');
             link3.rel = 'stylesheet';
             link3.href = BPMN_FONT;
             document.head.appendChild(link3);
         }
     }
-    
+
     async loadBpmnJS() {
         if (window.BpmnJS) {
             return Promise.resolve();
         }
-        
+
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = BPMN_JS_CDN;
@@ -88,12 +88,12 @@ class BpmnFlowEditor {
             document.head.appendChild(script);
         });
     }
-    
+
     initModeler() {
         this.modeler = new BpmnJS({
             container: this.container
         });
-        
+
         // Load diagram
         if (this.existingXml) {
             this.loadDiagram(this.existingXml);
@@ -101,7 +101,7 @@ class BpmnFlowEditor {
             this.createNewDiagram();
         }
     }
-    
+
     async loadDiagram(xml) {
         try {
             await this.modeler.importXML(xml);
@@ -112,7 +112,7 @@ class BpmnFlowEditor {
             this.showError('Error loading BPMN diagram');
         }
     }
-    
+
     async createNewDiagram() {
         const newDiagram = `<?xml version="1.0" encoding="UTF-8"?>
         <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
@@ -131,56 +131,56 @@ class BpmnFlowEditor {
                 </bpmndi:BPMNPlane>
             </bpmndi:BPMNDiagram>
         </bpmn:definitions>`;
-        
+
         await this.loadDiagram(newDiagram);
     }
-    
+
     bindEvents() {
         // Save button
         const saveBtn = document.getElementById('bpmn-save-btn');
         if (saveBtn && this.canEdit) {
             saveBtn.addEventListener('click', () => this.saveDiagram());
         }
-        
+
         // Export PNG button
         const exportPngBtn = document.getElementById('bpmn-export-png-btn');
         if (exportPngBtn) {
             exportPngBtn.addEventListener('click', () => this.exportPNG());
         }
-        
+
         // Export SVG button
         const exportSvgBtn = document.getElementById('bpmn-export-svg-btn');
         if (exportSvgBtn) {
             exportSvgBtn.addEventListener('click', () => this.exportSVG());
         }
-        
+
         // Export BPMN button
         const exportBpmnBtn = document.getElementById('bpmn-export-bpmn-btn');
         if (exportBpmnBtn) {
             exportBpmnBtn.addEventListener('click', () => this.exportBPMN());
         }
-        
+
         // Versions button
         const versionsBtn = document.getElementById('bpmn-versions-btn');
         if (versionsBtn) {
             versionsBtn.addEventListener('click', () => this.showVersionsModal());
         }
     }
-    
+
     async saveDiagram() {
         try {
             const { xml } = await this.modeler.saveXML({ format: true });
             const { svg } = await this.modeler.saveSVG();
-            
+
             // Generate PNG for document attachment
             const pngData = await this.generatePNG(svg);
-            
+
             const url = `${this.pluginUrl}/ajax/flow.php`;
             console.log('Saving to:', url);
-            
+
             const response = await fetch(url, {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
@@ -194,18 +194,18 @@ class BpmnFlowEditor {
                     name: document.getElementById('flow-name')?.value || ''
                 })
             });
-            
+
             console.log('Response status:', response.status);
             const text = await response.text();
             console.log('Response text:', text);
-            
+
             let result;
             try {
                 result = JSON.parse(text);
             } catch (e) {
                 throw new Error('Resposta inválida do servidor: ' + text.substring(0, 100));
             }
-            
+
             if (result.success) {
                 this.showSuccess('Diagrama BPMN salvo com sucesso!');
             } else {
@@ -216,14 +216,14 @@ class BpmnFlowEditor {
             this.showError('Erro ao salvar diagrama: ' + err.message);
         }
     }
-    
+
     async showExportModal() {
         try {
             const format = prompt('Escolha o formato de exportação:\n1 - BPMN XML\n2 - SVG\n3 - PNG', '1');
-            
+
             if (!format) return;
-            
-            switch(format) {
+
+            switch (format) {
                 case '1':
                     await this.exportBPMN();
                     break;
@@ -240,44 +240,44 @@ class BpmnFlowEditor {
             this.showError('Erro ao exportar: ' + err.message);
         }
     }
-    
+
     async exportBPMN() {
         const { xml } = await this.modeler.saveXML({ format: true });
         this.downloadFile(xml, 'diagram.bpmn', 'application/bpmn+xml');
     }
-    
+
     async exportSVG() {
         const { svg } = await this.modeler.saveSVG();
         this.downloadFile(svg, 'diagram.svg', 'image/svg+xml');
     }
-    
+
     async generatePNG(svg) {
         return new Promise((resolve) => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
-            
+
             const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
             const url = URL.createObjectURL(svgBlob);
-            
+
             img.onload = () => {
                 canvas.width = img.width;
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0);
-                
+
                 const pngData = canvas.toDataURL('image/png');
                 URL.revokeObjectURL(url);
                 resolve(pngData);
             };
-            
+
             img.src = url;
         });
     }
-    
+
     async exportPNG() {
         const { svg } = await this.modeler.saveSVG();
         const pngData = await this.generatePNG(svg);
-        
+
         // Convert base64 to blob
         const base64Data = pngData.split(',')[1];
         const byteCharacters = atob(base64Data);
@@ -287,10 +287,10 @@ class BpmnFlowEditor {
         }
         const byteArray = new Uint8Array(byteNumbers);
         const blob = new Blob([byteArray], { type: 'image/png' });
-        
+
         this.downloadFile(blob, 'diagram.png', 'image/png');
     }
-    
+
     downloadFile(data, filename, mimeType) {
         const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType });
         const url = URL.createObjectURL(blob);
@@ -302,7 +302,7 @@ class BpmnFlowEditor {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
-    
+
     async showVersionsModal() {
         try {
             const pluginUrl = this.pluginUrl || '/plugins/flowbpmn';
@@ -357,7 +357,7 @@ class BpmnFlowEditor {
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="flowbpmnVersionsModalLabel">
-                            <i class="ti ti-history"></i> Histórico de Versões - flowBPMN
+                            <i class="ti ti-history"></i> Histórico de Versões - FlowBPMN
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -368,8 +368,8 @@ class BpmnFlowEditor {
                         </div>
 
                         ${versions.length === 0 ?
-                            '<div class="alert alert-warning">Nenhuma versão anterior disponível.</div>' :
-                            `<div class="table-responsive">
+                '<div class="alert alert-warning">Nenhuma versão anterior disponível.</div>' :
+                `<div class="table-responsive">
                                 <table class="table table-striped table-hover">
                                     <thead>
                                         <tr>
@@ -389,19 +389,19 @@ class BpmnFlowEditor {
                                                 <td>${v.user_name}</td>
                                                 <td>
                                                     ${data.canRestore ?
-                                                        `<button type="button" class="btn btn-sm btn-primary flowbpmn-restore-version"
+                        `<button type="button" class="btn btn-sm btn-primary flowbpmn-restore-version"
                                                                 data-version-id="${v.id}">
                                                             <i class="ti ti-refresh"></i> Restaurar
                                                         </button>` :
-                                                        '<span class="text-muted">Sem permissão</span>'
-                                                    }
+                        '<span class="text-muted">Sem permissão</span>'
+                    }
                                                 </td>
                                             </tr>
                                         `).join('')}
                                     </tbody>
                                 </table>
                             </div>`
-                        }
+            }
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
@@ -479,28 +479,28 @@ class BpmnFlowEditor {
             throw new Error(result.message || 'Failed to restore version');
         }
     }
-    
+
     showLoading() {
         const loading = document.createElement('div');
         loading.className = 'flowbpmn-loading';
         loading.innerHTML = '<i class="fas fa-spinner"></i><p>Loading BPMN Editor...</p>';
         this.container.appendChild(loading);
     }
-    
+
     hideLoading() {
         const loading = this.container.querySelector('.flowbpmn-loading');
         if (loading) {
             loading.remove();
         }
     }
-    
+
     showSuccess(message) {
         if (typeof displayAjaxMessageAfterRedirect === 'function') {
             displayAjaxMessageAfterRedirect();
         }
         alert(message); // Fallback
     }
-    
+
     showError(message) {
         alert('Error: ' + message);
     }

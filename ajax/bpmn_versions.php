@@ -36,7 +36,7 @@ try {
     }
 
     // 1. Get Current Flow
-    $stmt = $db->prepare("SELECT f.*, u.name as user_name FROM glpi_plugin_flowbpmn_flows f LEFT JOIN glpi_users u ON f.users_id = u.id WHERE f.itemtype = ? AND f.items_id = ? LIMIT 1");
+    $stmt = $db->prepare("SELECT f.*, u.name as user_name FROM glpi_plugin_flowbpmn_flows f LEFT JOIN glpi_users u ON f.users_id = u.id WHERE f.itemtype = ? AND f.items_id = ? ORDER BY f.id DESC LIMIT 1");
     if (!$stmt) throw new Exception("Prepare failed: " . $db->error);
     
     $stmt->bind_param("si", $itemtype, $items_id);

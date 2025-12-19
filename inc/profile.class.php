@@ -2,29 +2,29 @@
 
 /**
  * -------------------------------------------------------------------------
- * flowBPMN Plugin for GLPI
+ * FlowBPMN Plugin for GLPI
  * -------------------------------------------------------------------------
  *
  * LICENSE
  *
- * This file is part of flowBPMN.
+ * This file is part of FlowBPMN.
  *
- * flowBPMN is free software; you can redistribute it and/or modify
+ * FlowBPMN is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * flowBPMN is distributed in the hope that it will be useful,
+ * FlowBPMN is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with flowBPMN. If not, see <http://www.gnu.org/licenses/>.
+ * along with FlowBPMN. If not, see <http://www.gnu.org/licenses/>.
  * -------------------------------------------------------------------------
- * @copyright Copyright (C) 2024 by KactuX
+ * @copyright Copyright (C) 2024 by Kactux Tecnologia
  * @license   GPLv3 https://www.gnu.org/licenses/gpl-3.0.html
- * @link      https://github.com/diegojucah/pluginBPMN
+ * @link      https://github.com/diegojucah/FlowBPMN
  * -------------------------------------------------------------------------
  */
 
@@ -44,7 +44,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
     }
 
     static function getTypeName($nb = 0) {
-        return __('flowBPMN', 'flowbpmn');
+        return __('FlowBPMN', 'flowbpmn');
     }
     
     /**
@@ -151,7 +151,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
             if (version_compare(GLPI_VERSION, '11.0', 'ge')) {
                 // GLPI 11.x - uses icon parameter
                 return self::createTabEntry(
-                    __('flowBPMN', 'flowbpmn'),
+                    __('FlowBPMN', 'flowbpmn'),
                     0,
                     $item::getType(),
                     'ti ti-git-fork'
@@ -159,7 +159,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
             } else {
                 // GLPI 10.x - icon in label
                 $icon = '<i class="fas fa-project-diagram"></i> ';
-                return self::createTabEntry($icon . __('flowBPMN', 'flowbpmn'));
+                return self::createTabEntry($icon . __('FlowBPMN', 'flowbpmn'));
             }
         }
 
@@ -200,7 +200,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
         echo "<div class='spaced'>";
         echo "<table class='tab_cadre_fixe'>";
         
-        echo "<tr><th colspan='5'>" . __('BPMN Flow Rights Management', 'flowbpmn') . "</th></tr>";
+        echo "<tr><th colspan='5'>" . __('FlowBPMN Rights Management', 'flowbpmn') . "</th></tr>";
         
         echo "<tr>";
         echo "<th>" . __('Item Type', 'flowbpmn') . "</th>";

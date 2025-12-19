@@ -2,29 +2,29 @@
 
 /**
  * -------------------------------------------------------------------------
- * flowBPMN Plugin for GLPI
+ * FlowBPMN Plugin for GLPI
  * -------------------------------------------------------------------------
  *
  * LICENSE
  *
- * This file is part of flowBPMN.
+ * This file is part of FlowBPMN.
  *
- * flowBPMN is free software; you can redistribute it and/or modify
+ * FlowBPMN is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * flowBPMN is distributed in the hope that it will be useful,
+ * FlowBPMN is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with flowBPMN. If not, see <http://www.gnu.org/licenses/>.
+ * along with FlowBPMN. If not, see <http://www.gnu.org/licenses/>.
  * -------------------------------------------------------------------------
- * @copyright Copyright (C) 2024 by KactuX
+ * @copyright Copyright (C) 2024 by Kactux Tecnologia
  * @license   GPLv3 https://www.gnu.org/licenses/gpl-3.0.html
- * @link      https://github.com/diegojucah/pluginBPMN
+ * @link      https://github.com/diegojucah/FlowBPMN
  * -------------------------------------------------------------------------
  */
 
@@ -32,7 +32,7 @@ if (!defined('GLPI_ROOT')) {
     die("Sorry. You can't access directly to this file");
 }
 
-define('PLUGIN_FLOWBPMN_VERSION', '2.0.0');
+define('PLUGIN_FLOWBPMN_VERSION', '2.0.1');
 define('PLUGIN_FLOWBPMN_MIN_GLPI', '10.0.0');
 define('PLUGIN_FLOWBPMN_MAX_GLPI', '11.99.99');
 
@@ -99,11 +99,11 @@ function plugin_init_flowbpmn() {
  */
 function plugin_version_flowbpmn() {
     return [
-        'name'           => 'BPMN Flow',
+        'name'           => 'FlowBPMN',
         'version'        => PLUGIN_FLOWBPMN_VERSION,
-        'author'         => '<a href="https://github.com/diegojucah">KactuX</a>',
+        'author'         => '<a href="https://github.com/diegojucah/FlowBPMN">Kactux Tecnologia</a>',
         'license'        => 'GPLv3+',
-        'homepage'       => 'https://github.com/diegojucah/pluginBPMN',
+        'homepage'       => 'https://github.com/diegojucah/FlowBPMN',
         'requirements'   => [
             'glpi' => [
                 'min' => PLUGIN_FLOWBPMN_MIN_GLPI,

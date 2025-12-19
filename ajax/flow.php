@@ -1,7 +1,7 @@
 <?php
 /**
  * -------------------------------------------------------------------------
- * flowBPMN Plugin for GLPI - Direct SQL Flow Handler + Auto Versioning v2
+ * FlowBPMN Plugin for GLPI - Direct SQL Flow Handler + Auto Versioning v2.1
  * -------------------------------------------------------------------------
  */
 
@@ -34,7 +34,10 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 }
 
 $action = $input['action'] ?? '';
-$user_id = 2; // Fixed user ID for stability
+// Start with default user ID 2, but try to get from session if cookie present? 
+// Since this is independent script, session might not be available easily without GLPI init.
+// Keeping it simple for now, but in production this should verify session cookie.
+$user_id = 2; 
 
 try {
     switch ($action) {
@@ -42,10 +45,16 @@ try {
             $itemtype = $input['itemtype'] ?? '';
             $items_id = (int)($input['items_id'] ?? 0);
             $bpmn_xml = $input['bpmn_xml'] ?? '';
-            $name = $input['name'] ?? 'BPMN Diagram';
+            $name = $input['name'] ?? 'FlowBPMN Diagram';
             
             if (empty($itemtype) || $items_id <= 0 || empty($bpmn_xml)) {
                 throw new Exception('Missing required parameters');
+            }
+            
+            // Validate itemtype
+            $validTypes = ['Ticket', 'Problem', 'Change'];
+            if (!in_array($itemtype, $validTypes)) {
+                throw new Exception('Invalid item type');
             }
             
             // Escape values
@@ -53,6 +62,20 @@ try {
             $base_bpmn_xml = $bpmn_xml; 
             $bpmn_xml_escaped = $db->real_escape_string($bpmn_xml);
             $name_escaped = $db->real_escape_string($name);
+            
+            // Get proper entity ID from the actual item table
+            $entities_id = 0;
+            $tableMap = [
+                'Ticket' => 'glpi_tickets',
+                'Problem' => 'glpi_problems',
+                'Change' => 'glpi_changes'
+            ];
+            $itemTable = $tableMap[$itemtype] ?? 'glpi_tickets';
+            
+            $res = $db->query("SELECT entities_id FROM $itemTable WHERE id = $items_id LIMIT 1");
+            if ($res && $row = $res->fetch_assoc()) {
+                $entities_id = (int)$row['entities_id'];
+            }
             
             // 1. Check for Existing Flow (Avoid Duplicates)
             $flow_id = 0;
@@ -76,8 +99,8 @@ try {
             } else {
                 // INSERT
                 $sql = "INSERT INTO glpi_plugin_flowbpmn_flows 
-                        (itemtype, items_id, bpmn_xml, name, users_id, date_creation, date_mod)
-                        VALUES ('$itemtype', $items_id, '$bpmn_xml_escaped', '$name_escaped', $user_id, NOW(), NOW())";
+                        (itemtype, items_id, entities_id, bpmn_xml, name, users_id, date_creation, date_mod)
+                        VALUES ('$itemtype', $items_id, $entities_id, '$bpmn_xml_escaped', '$name_escaped', $user_id, NOW(), NOW())";
                 if (!$db->query($sql)) {
                     throw new Exception('Database error (Insert): ' . $db->error);
                 }
@@ -102,6 +125,7 @@ try {
                                 VALUES (?, ?, ?, ?, ?, ?, NOW())");
                                 
             if ($stmt) {
+                // i = integer, s = string
                 $stmt->bind_param("iisisi", $flow_id, $next_v, $version_name, $version_comment, $base_bpmn_xml, $user_id);
                 $stmt->execute();
                 $stmt->close();
@@ -112,7 +136,7 @@ try {
             $png_message = '';
             
             if (!empty($input['png_data'])) {
-                $result = createGLPIDocument($db, $input['png_data'], $itemtype, $items_id, $name, $user_id);
+                $result = createGLPIDocument($db, $input['png_data'], $itemtype, $items_id, $entities_id, $name, $user_id);
                 $document_id = $result['document_id'];
                 $png_message = $result['message'];
             }
@@ -159,7 +183,7 @@ try {
 
 $db->close();
 
-function createGLPIDocument($db, $png_data, $itemtype, $items_id, $name, $user_id) {
+function createGLPIDocument($db, $png_data, $itemtype, $items_id, $entities_id, $name, $user_id) {
     try {
         $png_data = preg_replace('/^data:image\/png;base64,/', '', $png_data);
         $png_binary = base64_decode($png_data);
@@ -179,13 +203,12 @@ function createGLPIDocument($db, $png_data, $itemtype, $items_id, $name, $user_i
         $filepath = $full_subdir . '/' . $filename;
         if (!file_put_contents($filepath, $png_binary)) return ['document_id' => null, 'message' => ''];
         
-        $entities_id = 0;
-        $result = $db->query("SELECT entities_id FROM glpi_tickets WHERE id = $items_id LIMIT 1");
-        if ($result && $row = $result->fetch_assoc()) $entities_id = $row['entities_id'];
-        
         $timestamp = date('d/m/Y H:i:s');
         $doc_name = $db->real_escape_string($name . ' - Diagrama BPMN - ' . $timestamp);
         $db_filepath = $subdir1 . '/' . $subdir2 . '/' . $filename;
+        
+        // Remove existing document links for this item to avoid clutter?
+        // OPTIONAL: Keep all history
         
         $sql = "INSERT INTO glpi_documents 
                 (entities_id, name, filename, filepath, mime, sha1sum, 
