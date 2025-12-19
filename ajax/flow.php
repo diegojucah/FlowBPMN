@@ -33,11 +33,20 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     die(json_encode(['success' => false, 'message' => 'Invalid JSON']));
 }
 
+
 $action = $input['action'] ?? '';
-// Start with default user ID 2, but try to get from session if cookie present? 
-// Since this is independent script, session might not be available easily without GLPI init.
-// Keeping it simple for now, but in production this should verify session cookie.
-$user_id = 2; 
+
+// Get user ID from GLPI session
+$user_id = 2; // Default fallback
+if (isset($_COOKIE['glpi_' . md5(realpath('/var/www/glpi/config'))])) {
+    // Try to get session from GLPI
+    session_name('glpi_' . md5(realpath('/var/www/glpi/config')));
+    session_start();
+    
+    if (isset($_SESSION['glpiID'])) {
+        $user_id = (int)$_SESSION['glpiID'];
+    }
+}
 
 try {
     switch ($action) {
