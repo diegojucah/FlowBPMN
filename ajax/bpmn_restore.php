@@ -8,11 +8,6 @@
 // 1. Bootstrap GLPI manually - MATCHING ajax/flow.php logic
 $glpi_root = dirname(__DIR__, 3);
 
-// Define GLPI_ROOT if not defined (required for include checks)
-if (!defined('GLPI_ROOT')) {
-    define('GLPI_ROOT', $glpi_root);
-}
-
 // Include autoloader
 require_once $glpi_root . '/vendor/autoload.php';
 
@@ -80,13 +75,7 @@ try {
     $items_id = (int)$flowData['items_id'];
     
     // Check Permissions
-    // Safely load Profile class if not autoloaded
-    if (!class_exists('PluginFlowbpmnProfile')) {
-        $inc_dir = __DIR__ . '/../inc';
-        if (file_exists($inc_dir . '/profile.class.php')) {
-            include_once $inc_dir . '/profile.class.php';
-        }
-    }
+    // Autoloader handles class loading
 
     if (!class_exists('PluginFlowbpmnProfile') || !PluginFlowbpmnProfile::canRestoreFlow($itemtype)) {
         http_response_code(403);

@@ -27,7 +27,6 @@
  * @link      https://github.com/diegojucah/pluginBPMN
  * -------------------------------------------------------------------------
  */
-
 if (!defined('GLPI_ROOT')) {
     die("Sorry. You can't access directly to this file");
 }

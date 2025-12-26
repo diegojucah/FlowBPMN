@@ -8,11 +8,6 @@
 // 1. Bootstrap GLPI manually - MATCHING ajax/flow.php logic
 $glpi_root = dirname(__DIR__, 3);
 
-// Define GLPI_ROOT if not defined
-if (!defined('GLPI_ROOT')) {
-    define('GLPI_ROOT', $glpi_root);
-}
-
 // Include autoloader unconditionally (assumes Docker env structure)
 require_once $glpi_root . '/vendor/autoload.php';
 
@@ -64,12 +59,8 @@ try {
     }
     
     // Check permissions
-    if (!class_exists('PluginFlowbpmnProfile')) {
-        $inc_dir = __DIR__ . '/../inc';
-        if (file_exists($inc_dir . '/profile.class.php')) {
-            include_once $inc_dir . '/profile.class.php';
-        }
-    }
+    // Check permissions
+    // Autoloader handles class loading
 
     if (!class_exists('PluginFlowbpmnProfile') || !PluginFlowbpmnProfile::canViewFlow($itemtype)) {
         http_response_code(403);

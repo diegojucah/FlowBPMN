@@ -225,31 +225,8 @@
     background-color: #f5f7fa;
 }
 
-/* BPMN Editor - Evitar sobreposição da palette */
-.flowbpmn-container .djs-container {
-    position: relative;
-}
+/* BPMN Editor - Using default palette positioning */
 
-/* Garantir que o canvas tenha espaço para a palette */
-.flowbpmn-container .djs-canvas {
-    margin-left: 64px !important;
-}
-
-/* Ajustar viewport para não ficar sob a palette */
-.flowbpmn-container .djs-canvas>svg {
-    margin-left: 0 !important;
-}
-
-/* Palette sempre visível e não sobrepondo */
-.flowbpmn-container .djs-palette {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    z-index: 10 !important;
-    background: #fff !important;
-    border-right: 1px solid #ccc !important;
-    width: 64px !important;
-}
 
 /* Toolbar do editor acima do canvas */
 .flowbpmn-toolbar {
