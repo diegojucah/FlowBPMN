@@ -1,4 +1,4 @@
-# flowBPMN v2.2.0 - BPMN Editor Plugin for GLPI 11.x
+# FlowBPMN v2.2.0 - BPMN Editor Plugin for GLPI
 
 [![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![GLPI Version](https://img.shields.io/badge/GLPI-11.0+-orange.svg)](https://glpi-project.org/)
