@@ -5,10 +5,15 @@
  * -------------------------------------------------------------------------
  */
 
-// Bootstrap GLPI manually (since this file is called directly, not through front controller)
+// 1. Bootstrap GLPI manually - MATCHING ajax/flow.php logic
 $glpi_root = dirname(__DIR__, 3);
 
-// Include autoloader
+// Define GLPI_ROOT if not defined
+if (!defined('GLPI_ROOT')) {
+    define('GLPI_ROOT', $glpi_root);
+}
+
+// Include autoloader unconditionally (assumes Docker env structure)
 require_once $glpi_root . '/vendor/autoload.php';
 
 // Initialize GLPI Kernel
@@ -21,28 +26,27 @@ $kernel->boot();
 // Load GLPI configuration
 global $CFG_GLPI, $DB;
 
+header("Content-Type: application/json; charset=UTF-8");
+
 // Get user_id from session
 $user_id = Session::getLoginUserID();
-
-header("Content-Type: application/json; charset=UTF-8");
 
 if (!$user_id) {
     http_response_code(401);
     die(json_encode(['success' => false, 'message' => 'Usuário não autenticado']));
 }
 
-// Database Configuration (Using Docker Environment Variables)
+// Database Configuration
 $DB_HOST = getenv('GLPI_DB_HOST') ?: 'mariadb';
 $DB_NAME = getenv('GLPI_DB_NAME') ?: 'glpi';
 $DB_USER = getenv('GLPI_DB_USER') ?: 'glpi';
 $DB_PASS = getenv('GLPI_DB_PASSWORD') ?: 'glpi';
 
-// Connect using MySQLi
 $db = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
 
 if ($db->connect_error) {
     http_response_code(500);
-    die(json_encode(['success' => false, 'message' => 'Database connection failed: ' . $db->connect_error]));
+    die(json_encode(['success' => false, 'message' => 'Database connection failed']));
 }
 
 $db->set_charset('utf8mb4');
@@ -60,7 +64,14 @@ try {
     }
     
     // Check permissions
-    if (!PluginFlowbpmnProfile::canViewFlow($itemtype)) {
+    if (!class_exists('PluginFlowbpmnProfile')) {
+        $inc_dir = __DIR__ . '/../inc';
+        if (file_exists($inc_dir . '/profile.class.php')) {
+            include_once $inc_dir . '/profile.class.php';
+        }
+    }
+
+    if (!class_exists('PluginFlowbpmnProfile') || !PluginFlowbpmnProfile::canViewFlow($itemtype)) {
         http_response_code(403);
         throw new Exception('Você não tem permissão para visualizar diagramas BPMN');
     }
@@ -98,7 +109,6 @@ try {
     // 3. Format Date Helper
     function formatDate($date) {
         if (!$date) return '-';
-        // Convert to d/m/Y H:i
         return date('d/m/Y H:i', strtotime($date));
     }
 
@@ -109,7 +119,7 @@ try {
             'id' => $v['id'],
             'version_number' => $v['version_number'],
             'name' => $v['name'],
-            'comment' => $v['comment'], // Can be json
+            'comment' => $v['comment'], 
             'users_id' => $v['users_id'],
             'user_name' => $v['user_name'] ?: 'Unknown',
             'date_creation' => $v['date_creation'],
@@ -118,7 +128,7 @@ try {
         ];
     }
 
-    // 5. Check restore permissions based on user profile
+    // 5. Check restore permissions
     $canRestore = PluginFlowbpmnProfile::canRestoreFlow($itemtype);
 
     echo json_encode([

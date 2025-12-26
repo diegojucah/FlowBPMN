@@ -638,6 +638,10 @@ class BpmnFlowEditor {
             }
 
             if (result.success && result.bpmn_xml) {
+                // EXPOSE FOR DEBUGGING
+                window.lastRestoreResult = result;
+                console.log('DEBUG RESTORE RESULT:', result);
+
                 // Importar XML diretamente no editor
                 await this.modeler.importXML(result.bpmn_xml);
 
