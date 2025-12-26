@@ -232,7 +232,7 @@
 
 /* Garantir que o canvas tenha espaço para a palette */
 .flowbpmn-container .djs-canvas {
-    margin-left: 80px !important;
+    margin-left: 64px !important;
 }
 
 /* Ajustar viewport para não ficar sob a palette */
@@ -248,7 +248,7 @@
     z-index: 10 !important;
     background: #fff !important;
     border-right: 1px solid #ccc !important;
-    width: 80px !important;
+    width: 64px !important;
 }
 
 /* Toolbar do editor acima do canvas */
