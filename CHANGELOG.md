@@ -5,6 +5,41 @@ All notable changes to the flowBPMN plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-12-26
+
+### 🔒 Security (CRITICAL)
+
+#### Fixed
+- **CRITICAL**: Removido hardcoded `$user_id = 2` em `ajax/flow.php` que causava todos os registros serem atribuídos ao usuário ID 2
+- Implementado bootstrap correto do GLPI em todos os arquivos AJAX
+- Adicionado autenticação nativa usando `Session::checkLoginUser()` e `Session::getLoginUserID()`
+- Implementado validações de permissão em todas as operações AJAX (save, delete, restore, view)
+- Adicionado registro correto do usuário em operações de restore
+- Corrigido rastreamento de auditoria para refletir o usuário real de cada ação
+
+#### Changed
+- `ajax/flow.php`: Implementado bootstrap do GLPI e validações de permissão para save e delete_version
+- `ajax/bpmn_versions.php`: Adicionado bootstrap do GLPI e verificação de permissões de view e restore
+- `ajax/bpmn_restore.php`: Implementado bootstrap do GLPI, validação de permissões e registro do usuário que executou o restore
+- Todas as operações agora seguem a arquitetura nativa do GLPI para identificação de usuários
+
+#### Technical Details
+- Removido código manual de detecção de sessão que não funcionava corretamente
+- Implementado padrão correto de bootstrap: `define('GLPI_ROOT')` + `include(GLPI_ROOT . "/inc/includes.php")`
+- Adicionado verificações de autenticação antes de processar qualquer operação
+- Implementado mensagens de erro em português (PT-BR)
+- Garantido compatibilidade com GLPI 10.x e 11.x
+
+### 📝 Impact
+
+Esta atualização corrige um problema crítico de segurança e auditoria. **Todos os usuários devem atualizar imediatamente.**
+
+**Antes**: Todos os diagramas eram registrados com `users_id = 2`, impossibilitando auditoria correta.
+
+**Depois**: Cada ação (criar, editar, restaurar, deletar) é corretamente registrada com o usuário autenticado que a executou.
+
+---
+
 ## [1.0.0] - 2024-10-23
 
 ### 🎉 Initial Release

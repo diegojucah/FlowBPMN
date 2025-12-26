@@ -1,4 +1,4 @@
-# flowBPMN - BPMN Editor Plugin for GLPI 11
+# flowBPMN v2.1.0 - BPMN Editor Plugin for GLPI 10.x/11.x
 
 [![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![GLPI Version](https://img.shields.io/badge/GLPI-11.0+-orange.svg)](https://glpi-project.org/)
@@ -83,6 +83,32 @@ Set permissions for each item type:
 | **Edit** | Can create and modify diagrams |
 | **Delete** | Can delete diagrams |
 | **Restore** | Can restore previous versions |
+
+---
+
+## 🔒 Segurança
+
+### Autenticação e Auditoria
+
+O plugin FlowBPMN implementa autenticação nativa do GLPI e rastreamento completo de auditoria:
+
+- ✅ **Autenticação Obrigatória**: Todos os endpoints AJAX verificam autenticação via `Session::checkLoginUser()`
+- ✅ **Rastreamento de Usuário**: Cada ação (criar, editar, restaurar, deletar) registra o usuário correto via `Session::getLoginUserID()`
+- ✅ **Validação de Permissões**: Todas as operações verificam permissões do perfil do usuário
+- ✅ **Auditoria Completa**: Histórico de versões mantém registro de quem fez cada modificação
+
+### Correções de Segurança (v2.1.0)
+
+**Versão 2.1.0** corrigiu um problema crítico onde todos os registros eram atribuídos ao usuário ID 2:
+
+- ❌ **Antes**: `$user_id = 2` hardcoded
+- ✅ **Depois**: `$user_id = Session::getLoginUserID()` nativo do GLPI
+
+### Boas Práticas
+
+1. **Configure Permissões Adequadas**: Não dê permissão de "Edit" para todos os perfis
+2. **Revise Logs Regularmente**: Verifique quem está criando/modificando diagramas
+3. **Mantenha Atualizado**: Sempre use a versão mais recente do plugin
 
 ---
 

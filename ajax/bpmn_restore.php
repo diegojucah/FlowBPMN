@@ -5,7 +5,22 @@
  * -------------------------------------------------------------------------
  */
 
+// Bootstrap GLPI
+define('GLPI_ROOT', dirname(dirname(dirname(__DIR__))));
+include (GLPI_ROOT . "/inc/includes.php");
+
 header("Content-Type: application/json; charset=UTF-8");
+
+// Check authentication
+Session::checkLoginUser();
+
+// Get authenticated user ID
+$user_id = Session::getLoginUserID();
+
+if (!$user_id) {
+    http_response_code(401);
+    die(json_encode(['success' => false, 'message' => 'Usuário não autenticado']));
+}
 
 // Database Configuration
 $DB_HOST = getenv('GLPI_DB_HOST') ?: 'mariadb';
@@ -35,6 +50,26 @@ try {
     if (!$flow_id || !$version_id) {
         throw new Exception('Invalid parameters');
     }
+    
+    // Get flow info to check itemtype and permissions
+    $stmt = $db->prepare("SELECT itemtype FROM glpi_plugin_flowbpmn_flows WHERE id = ? LIMIT 1");
+    $stmt->bind_param("i", $flow_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $flowData = $res->fetch_assoc();
+    $stmt->close();
+    
+    if (!$flowData) {
+        throw new Exception('Flow não encontrado');
+    }
+    
+    $itemtype = $flowData['itemtype'];
+    
+    // Check restore permissions
+    if (!PluginFlowbpmnProfile::canRestoreFlow($itemtype)) {
+        http_response_code(403);
+        throw new Exception('Você não tem permissão para restaurar versões');
+    }
 
     // 1. Get Version Data
     $stmt = $db->prepare("SELECT bpmn_xml, name FROM glpi_plugin_flowbpmn_versions WHERE id = ? AND plugin_flowbpmn_flows_id = ? LIMIT 1");
@@ -48,15 +83,9 @@ try {
         throw new Exception('Version not found');
     }
 
-    // 2. Backup Current Flow implementation? (Optional - logic implies we just overwrite current state)
-    // The previous state is NOT automatically saved here unless we explicitly do it.
-    // However, the user request "para cada salvamento deve ser considerado um versionamento" implies SAVE action triggers versioning.
-    // RESTORE is effectively a "Revert". If the user saves after restore, THAT creates a new version.
-    // So we just update the current flow state.
-
-    // 3. Update Flow
-    $stmt = $db->prepare("UPDATE glpi_plugin_flowbpmn_flows SET bpmn_xml = ?, date_mod = NOW() WHERE id = ?");
-    $stmt->bind_param("si", $versionData['bpmn_xml'], $flow_id);
+    // 2. Update Flow with restored content and log the user who restored it
+    $stmt = $db->prepare("UPDATE glpi_plugin_flowbpmn_flows SET bpmn_xml = ?, users_id = ?, date_mod = NOW() WHERE id = ?");
+    $stmt->bind_param("sii", $versionData['bpmn_xml'], $user_id, $flow_id);
     
     if (!$stmt->execute()) {
         throw new Exception('Failed to update flow: ' . $db->error);

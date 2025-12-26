@@ -5,8 +5,32 @@
  * -------------------------------------------------------------------------
  */
 
+// Bootstrap GLPI manually (since this file is called directly, not through front controller)
+$glpi_root = dirname(__DIR__, 3);
+
+// Include autoloader
+require_once $glpi_root . '/vendor/autoload.php';
+
+// Initialize GLPI Kernel
+use Glpi\Kernel\Kernel;
+use Glpi\Application\Environment;
+
+$kernel = new Kernel(Environment::PRODUCTION->value, false);
+$kernel->boot();
+
+// Load GLPI configuration
+global $CFG_GLPI, $DB;
+
+// Get user_id from session
+$user_id = Session::getLoginUserID();
+
 // Set headers
 header("Content-Type: application/json; charset=UTF-8");
+
+if (!$user_id) {
+    http_response_code(401);
+    die(json_encode(['success' => false, 'message' => 'Usuário não autenticado']));
+}
 
 // Get DB config from Docker environment variables
 $DB_HOST = getenv('GLPI_DB_HOST') ?: 'mariadb';
@@ -33,20 +57,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     die(json_encode(['success' => false, 'message' => 'Invalid JSON']));
 }
 
-
 $action = $input['action'] ?? '';
-
-// Get user ID from GLPI session
-$user_id = 2; // Default fallback
-if (isset($_COOKIE['glpi_' . md5(realpath('/var/www/glpi/config'))])) {
-    // Try to get session from GLPI
-    session_name('glpi_' . md5(realpath('/var/www/glpi/config')));
-    session_start();
-    
-    if (isset($_SESSION['glpiID'])) {
-        $user_id = (int)$_SESSION['glpiID'];
-    }
-}
 
 try {
     switch ($action) {
@@ -64,6 +75,12 @@ try {
             $validTypes = ['Ticket', 'Problem', 'Change'];
             if (!in_array($itemtype, $validTypes)) {
                 throw new Exception('Invalid item type');
+            }
+            
+            // Check permissions
+            if (!PluginFlowbpmnProfile::canEditFlow($itemtype)) {
+                http_response_code(403);
+                throw new Exception('Você não tem permissão para editar diagramas BPMN');
             }
             
             // Escape values
@@ -141,7 +158,19 @@ try {
                 $stmt->close();
             }
 
-            // 3. Process PNG
+            // 3. Add entry to timeline using Log::history() with HISTORY_ADD_RELATION
+            // This will appear in timeline like "Adicionar um relacionamento com um item"
+            $log_message = "Diagrama BPMN (versão $next_v)";
+            
+            Log::history(
+                $items_id,
+                $itemtype,
+                [0, '', $log_message],
+                'PluginFlowbpmnFlow',           // itemtype_link
+                Log::HISTORY_ADD_RELATION       // linked_action = 15
+            );
+
+            // 4. Process PNG
             $document_id = null;
             $png_message = '';
             
@@ -185,15 +214,31 @@ try {
             if ($version_id <= 0) {
                 throw new Exception('Invalid Version ID');
             }
-            // Check if version exists and get user permission check ideally
-            // For now assuming logged in user from context (verified by session/cookie check in real code)
+            
+            // Get version info to check itemtype
+            $res = $db->query("SELECT f.itemtype FROM glpi_plugin_flowbpmn_versions v 
+                               JOIN glpi_plugin_flowbpmn_flows f ON v.plugin_flowbpmn_flows_id = f.id 
+                               WHERE v.id = $version_id LIMIT 1");
+            
+            if (!$res || $res->num_rows === 0) {
+                throw new Exception('Versão não encontrada');
+            }
+            
+            $row = $res->fetch_assoc();
+            $itemtype = $row['itemtype'];
+            
+            // Check permissions
+            if (!PluginFlowbpmnProfile::canDeleteFlow($itemtype)) {
+                http_response_code(403);
+                throw new Exception('Você não tem permissão para excluir versões');
+            }
             
             $sql = "DELETE FROM glpi_plugin_flowbpmn_versions WHERE id = $version_id";
             
             if ($db->query($sql)) {
                 echo json_encode(['success' => true, 'message' => 'Versão excluída']);
             } else {
-                throw new Exception('Databse Error: ' . $db->error);
+                throw new Exception('Erro no banco de dados: ' . $db->error);
             }
             break;
             
@@ -251,9 +296,9 @@ function createGLPIDocument($db, $png_data, $itemtype, $items_id, $entities_id, 
         $document_id = $db->insert_id;
         
         $sql = "INSERT INTO glpi_documents_items 
-                (documents_id, items_id, itemtype, entities_id, is_recursive, date_creation, date_mod)
+                (documents_id, items_id, itemtype, entities_id, is_recursive, users_id, date_creation, date_mod)
                 VALUES 
-                ($document_id, $items_id, '$itemtype', $entities_id, 0, NOW(), NOW())";
+                ($document_id, $items_id, '$itemtype', $entities_id, 0, $user_id, NOW(), NOW())";
         
         $db->query($sql);
         

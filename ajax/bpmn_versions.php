@@ -5,7 +5,31 @@
  * -------------------------------------------------------------------------
  */
 
+// Bootstrap GLPI manually (since this file is called directly, not through front controller)
+$glpi_root = dirname(__DIR__, 3);
+
+// Include autoloader
+require_once $glpi_root . '/vendor/autoload.php';
+
+// Initialize GLPI Kernel
+use Glpi\Kernel\Kernel;
+use Glpi\Application\Environment;
+
+$kernel = new Kernel(Environment::PRODUCTION->value, false);
+$kernel->boot();
+
+// Load GLPI configuration
+global $CFG_GLPI, $DB;
+
+// Get user_id from session
+$user_id = Session::getLoginUserID();
+
 header("Content-Type: application/json; charset=UTF-8");
+
+if (!$user_id) {
+    http_response_code(401);
+    die(json_encode(['success' => false, 'message' => 'Usuário não autenticado']));
+}
 
 // Database Configuration (Using Docker Environment Variables)
 $DB_HOST = getenv('GLPI_DB_HOST') ?: 'mariadb';
@@ -34,9 +58,15 @@ try {
     if (!in_array($itemtype, ['Ticket', 'Problem', 'Change'])) {
         throw new Exception('Invalid item type');
     }
+    
+    // Check permissions
+    if (!PluginFlowbpmnProfile::canViewFlow($itemtype)) {
+        http_response_code(403);
+        throw new Exception('Você não tem permissão para visualizar diagramas BPMN');
+    }
 
     // 1. Get Current Flow
-    $stmt = $db->prepare("SELECT f.*, u.name as user_name FROM glpi_plugin_flowbpmn_flows f LEFT JOIN glpi_users u ON f.users_id = u.id WHERE f.itemtype = ? AND f.items_id = ? ORDER BY f.id DESC LIMIT 1");
+    $stmt = $db->prepare("SELECT f.*, CONCAT(u.firstname, ' ', u.realname) as user_name FROM glpi_plugin_flowbpmn_flows f LEFT JOIN glpi_users u ON f.users_id = u.id WHERE f.itemtype = ? AND f.items_id = ? ORDER BY f.id DESC LIMIT 1");
     if (!$stmt) throw new Exception("Prepare failed: " . $db->error);
     
     $stmt->bind_param("si", $itemtype, $items_id);
@@ -55,7 +85,7 @@ try {
     }
 
     // 2. Get Versions
-    $stmt = $db->prepare("SELECT v.*, u.name as user_name FROM glpi_plugin_flowbpmn_versions v LEFT JOIN glpi_users u ON v.users_id = u.id WHERE v.plugin_flowbpmn_flows_id = ? ORDER BY v.version_number DESC");
+    $stmt = $db->prepare("SELECT v.*, CONCAT(u.firstname, ' ', u.realname) as user_name FROM glpi_plugin_flowbpmn_versions v LEFT JOIN glpi_users u ON v.users_id = u.id WHERE v.plugin_flowbpmn_flows_id = ? ORDER BY v.version_number DESC");
     if (!$stmt) throw new Exception("Prepare failed: " . $db->error);
 
     $flowId = $currentFlow['id'];
@@ -88,10 +118,8 @@ try {
         ];
     }
 
-    // 5. Check permissions (Naive check: if you can see the flow, you can restore? Or just disable restore for safe mode)
-    // Since we don't have session, we assume true for viewing, but restoring logic is in another file that might have session checks.
-    // For now, let's allow restore button to appear, but the actual restore action inside bpmn_restore.php SHOULD have session checks.
-    $canRestore = true;
+    // 5. Check restore permissions based on user profile
+    $canRestore = PluginFlowbpmnProfile::canRestoreFlow($itemtype);
 
     echo json_encode([
         'success' => true,
