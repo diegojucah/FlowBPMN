@@ -2,7 +2,7 @@
 <glpi_plugin>
     <name>flowBPMN</name>
     <display_name>BPMN Flow</display_name>
-    <version>2.0.0</version>
+    <version>2.2.0</version>
     <author>Diego Jucá - KactuX</author>
     <license>GPLv3+</license>
     <homepage>https://github.com/diegojucah/pluginBPMN</homepage>
@@ -25,9 +25,9 @@
     </requirements>
     
     <tables>
-        <table name="glpi_plugin_flowbpmn_flows" version="2.0.0"/>
-        <table name="glpi_plugin_flowbpmn_versions" version="2.0.0"/>
-        <table name="glpi_plugin_flowbpmn_profiles" version="2.0.0"/>
-        <table name="glpi_plugin_flowbpmn_configs" version="2.0.0"/>
+        <table name="glpi_plugin_flowbpmn_flows" version="2.2.0"/>
+        <table name="glpi_plugin_flowbpmn_versions" version="2.2.0"/>
+        <table name="glpi_plugin_flowbpmn_profiles" version="2.2.0"/>
+        <table name="glpi_plugin_flowbpmn_configs" version="2.2.0"/>
     </tables>
 </glpi_plugin>

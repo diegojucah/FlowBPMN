@@ -47,18 +47,24 @@ class PluginFlowbpmnHelper {
      *
      * @return bool True if GLPI 11.x or higher
      */
+    /**
+     * Check if running GLPI 11.x
+     * Always returns true as plugin requires GLPI 11+
+     *
+     * @return bool True
+     */
     public static function isGlpi11() {
-        return version_compare(GLPI_VERSION, '11.0', 'ge');
+        return true;
     }
 
     /**
      * Check if running GLPI 10.x
+     * Always returns false as plugin requires GLPI 11+
      *
-     * @return bool True if GLPI 10.x
+     * @return bool False
      */
     public static function isGlpi10() {
-        return version_compare(GLPI_VERSION, '10.0', 'ge')
-            && version_compare(GLPI_VERSION, '11.0', 'lt');
+        return false;
     }
 
     /**

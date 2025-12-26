@@ -183,20 +183,13 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                 // Counter removed - using versionamento for tracking changes
                 // Counter removed - using versionamento for tracking changes
 
-                // Compatibility with both GLPI 10.x and 11.x
-                if (version_compare(GLPI_VERSION, '11.0', 'ge')) {
-                    // GLPI 11.x - uses icon parameter
-                    return self::createTabEntry(
-                        'FlowBPMN',
-                        0,
-                        $item::getType(),
-                        'ti ti-git-fork'
-                    );
-                } else {
-                    // GLPI 10.x - icon in label
-                    $icon = '<i class="fas fa-project-diagram"></i> ';
-                    return self::createTabEntry($icon . 'FlowBPMN', 0);
-                }
+                // GLPI 11+ - uses icon parameter
+                return self::createTabEntry(
+                    'FlowBPMN',
+                    0,
+                    $item::getType(),
+                    'ti ti-git-fork'
+                );
             }
         }
 
@@ -234,17 +227,15 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         // Get existing flow
         $existing = $this->getForItem($itemtype, $items_id);
 
-
-        // Detect GLPI version for icon compatibility
-        $isGLPI11 = version_compare(GLPI_VERSION, '11.0', 'ge');
-        $iconClass = $isGLPI11 ? 'ti ti-git-fork' : 'fas fa-project-diagram';
-        $saveIcon = $isGLPI11 ? 'ti ti-device-floppy' : 'fas fa-save';
-        $uploadIcon = $isGLPI11 ? 'ti ti-upload' : 'fas fa-upload';
-        $downloadIcon = $isGLPI11 ? 'ti ti-download' : 'fas fa-download';
-        $historyIcon = $isGLPI11 ? 'ti ti-history' : 'fas fa-history';
-        $photoIcon = $isGLPI11 ? 'ti ti-photo' : 'fas fa-image';
-        $codeIcon = $isGLPI11 ? 'ti ti-code' : 'fas fa-code';
-        $fileIcon = $isGLPI11 ? 'ti ti-file-code' : 'fas fa-file-code';
+        // GLPI 11+ icons
+        $iconClass = 'ti ti-git-fork';
+        $saveIcon = 'ti ti-device-floppy';
+        $uploadIcon = 'ti ti-upload';
+        $downloadIcon = 'ti ti-download';
+        $historyIcon = 'ti ti-history';
+        $photoIcon = 'ti ti-photo';
+        $codeIcon = 'ti ti-code';
+        $fileIcon = 'ti ti-file-code';
 
         echo "<div class='flowbpmn-container'>";
 
@@ -507,7 +498,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     return false;
                 }
 
-                // Create document using GLPI 11 document system
+                // Create document
                 $document = new Document();
 
                 // Simulate file upload array structure for GLPI 11
