@@ -158,16 +158,16 @@ try {
                 $stmt->close();
             }
 
-            // 3. Add entry to timeline using Log::history() with HISTORY_ADD_RELATION
-            // This will appear in timeline like "Adicionar um relacionamento com um item"
-            $log_message = "Diagrama BPMN (versão $next_v)";
+            // 3. Add entry to timeline using Log::history() with HISTORY_LOG_SIMPLE_MESSAGE
+            $action_type = ($flow_id > 0) ? "atualizado" : "criado";
+            $log_message = "Diagrama BPMN $action_type: Versão $next_v ($name_escaped)";
             
             Log::history(
                 $items_id,
                 $itemtype,
                 [0, '', $log_message],
-                'PluginFlowbpmnFlow',           // itemtype_link
-                Log::HISTORY_ADD_RELATION       // linked_action = 15
+                '',                             // itemtype_link empty for simple message
+                Log::HISTORY_LOG_SIMPLE_MESSAGE // linked_action = 19
             );
 
             // 4. Process PNG
@@ -216,7 +216,7 @@ try {
             }
             
             // Get version info to check itemtype
-            $res = $db->query("SELECT f.itemtype FROM glpi_plugin_flowbpmn_versions v 
+            $res = $db->query("SELECT f.itemtype, f.items_id, v.version_number, v.name FROM glpi_plugin_flowbpmn_versions v 
                                JOIN glpi_plugin_flowbpmn_flows f ON v.plugin_flowbpmn_flows_id = f.id 
                                WHERE v.id = $version_id LIMIT 1");
             
@@ -226,6 +226,9 @@ try {
             
             $row = $res->fetch_assoc();
             $itemtype = $row['itemtype'];
+            $items_id = (int)$row['items_id'];
+            $version_num = $row['version_number'];
+            $version_name = $row['name'];
             
             // Check permissions
             if (!PluginFlowbpmnProfile::canDeleteFlow($itemtype)) {
@@ -236,6 +239,16 @@ try {
             $sql = "DELETE FROM glpi_plugin_flowbpmn_versions WHERE id = $version_id";
             
             if ($db->query($sql)) {
+                // Log deletion
+                $log_message = "Versão do Diagrama BPMN excluída: Versão $version_num ($version_name)";
+                Log::history(
+                    $items_id,
+                    $itemtype,
+                    [0, '', $log_message],
+                    '',
+                    Log::HISTORY_LOG_SIMPLE_MESSAGE
+                );
+
                 echo json_encode(['success' => true, 'message' => 'Versão excluída']);
             } else {
                 throw new Exception('Erro no banco de dados: ' . $db->error);

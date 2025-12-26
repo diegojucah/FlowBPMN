@@ -63,7 +63,7 @@ try {
     }
     
     // Get flow info
-    $stmt = $db->prepare("SELECT itemtype FROM glpi_plugin_flowbpmn_flows WHERE id = ? LIMIT 1");
+    $stmt = $db->prepare("SELECT itemtype, items_id FROM glpi_plugin_flowbpmn_flows WHERE id = ? LIMIT 1");
     if (!$stmt) throw new Exception("Prepare failed: " . $db->error);
     
     $stmt->bind_param("i", $flow_id);
@@ -77,6 +77,7 @@ try {
     }
     
     $itemtype = $flowData['itemtype'];
+    $items_id = (int)$flowData['items_id'];
     
     // Check Permissions
     // Safely load Profile class if not autoloaded
@@ -151,7 +152,18 @@ try {
             if (!$stmt->execute()) {
                 add_debug("FlowBPMN Auto-Save Execute Failed: " . $stmt->error);
             } else {
-                add_debug("FlowBPMN Auto-Save Success: Created version " . $db->insert_id);
+                $new_version_id = $db->insert_id;
+                add_debug("FlowBPMN Auto-Save Success: Created version " . $new_version_id);
+                
+                // Log Auto-Save
+                $log_message = "Backup automático criado: Versão $next_v (antes da restauração)";
+                Log::history(
+                    $items_id, 
+                    $itemtype, 
+                    [0, '', $log_message], 
+                    '', 
+                    Log::HISTORY_LOG_SIMPLE_MESSAGE
+                );
             }
             $stmt->close();
         }
@@ -167,6 +179,19 @@ try {
         throw new Exception('Failed to update flow: ' . $db->error);
     }
     $stmt->close();
+
+    // Log Restore
+    $restored_version_num = (int)$versionData['version_number']; // Need to fetch this?
+    $restore_name = $versionData['name'];
+    $log_message = "Diagrama BPMN restaurado: '$restore_name'"; // Simple message
+    
+    Log::history(
+        $items_id, 
+        $itemtype, 
+        [0, '', $log_message], 
+        '', 
+        Log::HISTORY_LOG_SIMPLE_MESSAGE
+    );
 
     echo json_encode([
         'success' => true, 
