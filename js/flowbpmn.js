@@ -8,12 +8,12 @@
  * -------------------------------------------------------------------------
  */
 
-// BPMN.js CDN version
+// BPMN.js LOCAL version (v3.0 - No CDN dependency)
 const BPMN_JS_VERSION = '18.6.1';
-const BPMN_JS_CDN = `https://cdn.jsdelivr.net/npm/bpmn-js@${BPMN_JS_VERSION}/dist/bpmn-modeler.development.js`;
-const BPMN_JS_CSS = `https://cdn.jsdelivr.net/npm/bpmn-js@${BPMN_JS_VERSION}/dist/assets/diagram-js.css`;
-const BPMN_FONT_CSS = `https://cdn.jsdelivr.net/npm/bpmn-js@${BPMN_JS_VERSION}/dist/assets/bpmn-js.css`;
-const BPMN_FONT = `https://cdn.jsdelivr.net/npm/bpmn-js@${BPMN_JS_VERSION}/dist/assets/bpmn-font/css/bpmn-embedded.css`;
+const BPMN_JS_LOCAL = '/plugins/flowbpmn/lib/bpmn-js/bpmn-modeler.development.js';
+const BPMN_JS_CSS = '/plugins/flowbpmn/lib/bpmn-js/diagram-js.css';
+const BPMN_FONT_CSS = '/plugins/flowbpmn/lib/bpmn-js/bpmn-js.css';
+const BPMN_FONT = '/plugins/flowbpmn/lib/bpmn-js/bpmn-embedded.css';
 
 /**
  * BPMN Flow Editor Class
@@ -82,7 +82,7 @@ class BpmnFlowEditor {
 
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = BPMN_JS_CDN;
+            script.src = BPMN_JS_LOCAL;
             script.onload = resolve;
             script.onerror = reject;
             document.head.appendChild(script);
@@ -407,16 +407,10 @@ class BpmnFlowEditor {
             // Add modal to body
             document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-            // Show modal (GLPI 11.x uses Bootstrap 5)
+            // Show modal (GLPI 11.x uses Bootstrap 5 only)
             modal = document.getElementById('flowbpmn-versions-modal');
-            if (typeof bootstrap !== 'undefined') {
-                // Bootstrap 5 (GLPI 11.x)
-                const bsModal = new bootstrap.Modal(modal);
-                bsModal.show();
-            } else {
-                // Fallback for GLPI 10.x
-                $(modal).modal('show');
-            }
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
 
             // Bind version actions
             this.bindVersionActions(result.current.id, result.canRestore);

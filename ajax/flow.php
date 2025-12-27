@@ -1,7 +1,8 @@
 <?php
+declare(strict_types=1);
 /**
  * -------------------------------------------------------------------------
- * FlowBPMN Plugin for GLPI - Direct SQL Flow Handler + Auto Versioning v2.1
+ * FlowBPMN Plugin for GLPI - Native DB Flow Handler v3.0
  * -------------------------------------------------------------------------
  */
 
@@ -14,6 +15,7 @@ require_once $glpi_root . '/vendor/autoload.php';
 // Initialize GLPI Kernel
 use Glpi\Kernel\Kernel;
 use Glpi\Application\Environment;
+use Glpi\DBAL\QueryExpression;
 
 $kernel = new Kernel(Environment::PRODUCTION->value, false);
 $kernel->boot();
@@ -31,22 +33,6 @@ if (!$user_id) {
     http_response_code(401);
     die(json_encode(['success' => false, 'message' => 'Usuário não autenticado']));
 }
-
-// Get DB config from Docker environment variables
-$DB_HOST = getenv('GLPI_DB_HOST') ?: 'mariadb';
-$DB_NAME = getenv('GLPI_DB_NAME') ?: 'glpi';
-$DB_USER = getenv('GLPI_DB_USER') ?: 'glpi';
-$DB_PASS = getenv('GLPI_DB_PASSWORD') ?: 'glpi';
-
-// Connect to database using mysqli
-$db = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
-
-if ($db->connect_error) {
-    http_response_code(500);
-    die(json_encode(['success' => false, 'message' => 'Database connection failed']));
-}
-
-$db->set_charset('utf8mb4');
 
 // Get input
 $rawInput = file_get_contents("php://input");
@@ -66,6 +52,7 @@ try {
             $items_id = (int)($input['items_id'] ?? 0);
             $bpmn_xml = $input['bpmn_xml'] ?? '';
             $name = $input['name'] ?? 'FlowBPMN Diagram';
+            $svg_content = $input['svg_content'] ?? '';
             
             if (empty($itemtype) || $items_id <= 0 || empty($bpmn_xml)) {
                 throw new Exception('Missing required parameters');
@@ -83,12 +70,6 @@ try {
                 throw new Exception('Você não tem permissão para editar diagramas BPMN');
             }
             
-            // Escape values
-            $itemtype = $db->real_escape_string($itemtype);
-            $base_bpmn_xml = $bpmn_xml; 
-            $bpmn_xml_escaped = $db->real_escape_string($bpmn_xml);
-            $name_escaped = $db->real_escape_string($name);
-            
             // Get proper entity ID from the actual item table
             $entities_id = 0;
             $tableMap = [
@@ -98,76 +79,94 @@ try {
             ];
             $itemTable = $tableMap[$itemtype] ?? 'glpi_tickets';
             
-            $res = $db->query("SELECT entities_id FROM $itemTable WHERE id = $items_id LIMIT 1");
-            if ($res && $row = $res->fetch_assoc()) {
+            $iterator = $DB->request([
+                'SELECT' => 'entities_id',
+                'FROM'   => $itemTable,
+                'WHERE'  => ['id' => $items_id],
+                'LIMIT'  => 1
+            ]);
+            if (count($iterator)) {
+                $row = $iterator->current();
                 $entities_id = (int)$row['entities_id'];
             }
             
             // 1. Check for Existing Flow (Avoid Duplicates)
             $flow_id = 0;
-            // Get the MOST RECENT one if duplicates exist
-            $res = $db->query("SELECT id FROM glpi_plugin_flowbpmn_flows WHERE itemtype = '$itemtype' AND items_id = $items_id ORDER BY id DESC LIMIT 1");
-            if ($res && $row = $res->fetch_assoc()) {
+            $iterator = $DB->request([
+                'SELECT' => 'id',
+                'FROM'   => 'glpi_plugin_flowbpmn_flows',
+                'WHERE'  => [
+                    'itemtype' => $itemtype,
+                    'items_id' => $items_id
+                ],
+                'ORDER'  => 'id DESC',
+                'LIMIT'  => 1
+            ]);
+            if (count($iterator)) {
+                $row = $iterator->current();
                 $flow_id = (int)$row['id'];
             }
             
             if ($flow_id > 0) {
                 // UPDATE
-                $sql = "UPDATE glpi_plugin_flowbpmn_flows SET 
-                        bpmn_xml = '$bpmn_xml_escaped',
-                        name = '$name_escaped',
-                        users_id = $user_id,
-                        date_mod = NOW()
-                        WHERE id = $flow_id";
-                if (!$db->query($sql)) {
-                    throw new Exception('Database error (Update): ' . $db->error);
-                }
+                $DB->update('glpi_plugin_flowbpmn_flows', [
+                    'bpmn_xml'    => $bpmn_xml,
+                    'svg_content' => $svg_content,
+                    'name'        => $name,
+                    'users_id'    => $user_id,
+                    'date_mod'    => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s')
+                ], [
+                    'id' => $flow_id
+                ]);
             } else {
                 // INSERT
-                $sql = "INSERT INTO glpi_plugin_flowbpmn_flows 
-                        (itemtype, items_id, entities_id, bpmn_xml, name, users_id, date_creation, date_mod)
-                        VALUES ('$itemtype', $items_id, $entities_id, '$bpmn_xml_escaped', '$name_escaped', $user_id, NOW(), NOW())";
-                if (!$db->query($sql)) {
-                    throw new Exception('Database error (Insert): ' . $db->error);
-                }
-                $flow_id = $db->insert_id;
+                $flow_id = $DB->insert('glpi_plugin_flowbpmn_flows', [
+                    'itemtype'      => $itemtype,
+                    'items_id'      => $items_id,
+                    'entities_id'   => $entities_id,
+                    'bpmn_xml'      => $bpmn_xml,
+                    'svg_content'   => $svg_content,
+                    'name'          => $name,
+                    'users_id'      => $user_id,
+                    'date_creation' => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s'),
+                    'date_mod'      => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s')
+                ]);
             }
             
             if (!$flow_id) throw new Exception("Failed to manage Flow ID");
 
             // 2. Auto-create Version (History)
-            $res = $db->query("SELECT MAX(version_number) as max_v FROM glpi_plugin_flowbpmn_versions WHERE plugin_flowbpmn_flows_id = $flow_id");
+            $iterator = $DB->request([
+                'SELECT' => [new QueryExpression('MAX(version_number) as max_v')],
+                'FROM'   => 'glpi_plugin_flowbpmn_versions',
+                'WHERE'  => ['plugin_flowbpmn_flows_id' => $flow_id]
+            ]);
             $max_v = 0;
-            if ($res && $row = $res->fetch_assoc()) {
-                $max_v = (int)$row['max_v'];
+            if (count($iterator)) {
+                $row = $iterator->current();
+                $max_v = (int)($row['max_v'] ?? 0);
             }
             $next_v = $max_v + 1;
             
-            $version_name = $name_escaped;
-            $version_comment = "Versão $next_v (Auto-save)";
-            
-            $stmt = $db->prepare("INSERT INTO glpi_plugin_flowbpmn_versions 
-                                (plugin_flowbpmn_flows_id, version_number, name, comment, bpmn_xml, svg_content, users_id, date_creation) 
-                                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
-                                
-            if ($stmt) {
-                // i = integer, s = string (parameters: flow_id, version_num, name, comment, bpmn_xml, svg_content, users_id)
-                $svg_content = $input['svg_content'] ?? '';
-                $stmt->bind_param("iissssi", $flow_id, $next_v, $version_name, $version_comment, $base_bpmn_xml, $svg_content, $user_id);
-                $stmt->execute();
-                $stmt->close();
-            }
+            $DB->insert('glpi_plugin_flowbpmn_versions', [
+                'plugin_flowbpmn_flows_id' => $flow_id,
+                'version_number'           => $next_v,
+                'name'                     => $name,
+                'comment'                  => "Versão $next_v (Auto-save)",
+                'bpmn_xml'                 => $bpmn_xml,
+                'svg_content'              => $svg_content,
+                'users_id'                 => $user_id,
+                'date_creation'            => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s')
+            ]);
 
-            // 3. Add entry to timeline using Log::history() with HISTORY_LOG_SIMPLE_MESSAGE
-            $action_type = ($flow_id > 0) ? "atualizado" : "criado";
-            $log_message = "Diagrama BPMN $action_type: Versão $next_v ($name_escaped)";
-            
+            // 3. Add entry to timeline using Log::history()
+            $log_message = "Diagrama BPMN atualizado: Versão $next_v ($name)";
             Log::history(
                 $items_id,
                 $itemtype,
                 [0, '', $log_message],
-                '',                             // itemtype_link empty for simple message
-                Log::HISTORY_LOG_SIMPLE_MESSAGE // linked_action = 19
+                '',
+                Log::HISTORY_LOG_SIMPLE_MESSAGE
             );
 
             // 4. Process PNG
@@ -175,7 +174,7 @@ try {
             $png_message = '';
             
             if (!empty($input['png_data'])) {
-                $result = createGLPIDocument($db, $input['png_data'], $itemtype, $items_id, $entities_id, $name, $user_id);
+                $result = createGLPIDocumentNative($input['png_data'], $itemtype, $items_id, $entities_id, $name, $user_id);
                 $document_id = $result['document_id'];
                 $png_message = $result['message'];
             }
@@ -197,14 +196,17 @@ try {
                 throw new Exception('Missing required parameters');
             }
             
-            $itemtype = $db->real_escape_string($itemtype);
+            $iterator = $DB->request([
+                'FROM'  => 'glpi_plugin_flowbpmn_flows',
+                'WHERE' => [
+                    'itemtype' => $itemtype,
+                    'items_id' => $items_id
+                ],
+                'ORDER' => 'id DESC',
+                'LIMIT' => 1
+            ]);
             
-            $sql = "SELECT * FROM glpi_plugin_flowbpmn_flows
-                    WHERE itemtype = '$itemtype' AND items_id = $items_id
-                    ORDER BY id DESC LIMIT 1";
-            
-            $result = $db->query($sql);
-            $data = $result ? $result->fetch_assoc() : null;
+            $data = count($iterator) ? $iterator->current() : null;
             
             echo json_encode(['success' => true, 'data' => $data]);
             break;
@@ -216,15 +218,23 @@ try {
             }
             
             // Get version info to check itemtype
-            $res = $db->query("SELECT f.itemtype, f.items_id, v.version_number, v.name FROM glpi_plugin_flowbpmn_versions v 
-                               JOIN glpi_plugin_flowbpmn_flows f ON v.plugin_flowbpmn_flows_id = f.id 
-                               WHERE v.id = $version_id LIMIT 1");
+            $iterator = $DB->request([
+                'SELECT' => ['f.itemtype', 'f.items_id', 'v.version_number', 'v.name'],
+                'FROM'   => 'glpi_plugin_flowbpmn_versions AS v',
+                'INNER JOIN' => [
+                    'glpi_plugin_flowbpmn_flows AS f' => [
+                        'ON' => ['v' => 'plugin_flowbpmn_flows_id', 'f' => 'id']
+                    ]
+                ],
+                'WHERE'  => ['v.id' => $version_id],
+                'LIMIT'  => 1
+            ]);
             
-            if (!$res || $res->num_rows === 0) {
+            if (!count($iterator)) {
                 throw new Exception('Versão não encontrada');
             }
             
-            $row = $res->fetch_assoc();
+            $row = $iterator->current();
             $itemtype = $row['itemtype'];
             $items_id = (int)$row['items_id'];
             $version_num = $row['version_number'];
@@ -236,23 +246,19 @@ try {
                 throw new Exception('Você não tem permissão para excluir versões');
             }
             
-            $sql = "DELETE FROM glpi_plugin_flowbpmn_versions WHERE id = $version_id";
+            $DB->delete('glpi_plugin_flowbpmn_versions', ['id' => $version_id]);
             
-            if ($db->query($sql)) {
-                // Log deletion
-                $log_message = "Versão do Diagrama BPMN excluída: Versão $version_num ($version_name)";
-                Log::history(
-                    $items_id,
-                    $itemtype,
-                    [0, '', $log_message],
-                    '',
-                    Log::HISTORY_LOG_SIMPLE_MESSAGE
-                );
+            // Log deletion
+            $log_message = "Versão do Diagrama BPMN excluída: Versão $version_num ($version_name)";
+            Log::history(
+                $items_id,
+                $itemtype,
+                [0, '', $log_message],
+                '',
+                Log::HISTORY_LOG_SIMPLE_MESSAGE
+            );
 
-                echo json_encode(['success' => true, 'message' => 'Versão excluída']);
-            } else {
-                throw new Exception('Erro no banco de dados: ' . $db->error);
-            }
+            echo json_encode(['success' => true, 'message' => 'Versão excluída']);
             break;
             
         default:
@@ -266,54 +272,71 @@ try {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 
-$db->close();
-
-function createGLPIDocument($db, $png_data, $itemtype, $items_id, $entities_id, $name, $user_id) {
+/**
+ * Create GLPI Document using native DB methods
+ */
+function createGLPIDocumentNative(string $png_data, string $itemtype, int $items_id, int $entities_id, string $name, int $user_id): array {
+    global $DB;
+    
     try {
         $png_data = preg_replace('/^data:image\/png;base64,/', '', $png_data);
         $png_binary = base64_decode($png_data);
         
-        if (!$png_binary || strlen($png_binary) < 100) return ['document_id' => null, 'message' => ''];
+        if (!$png_binary || strlen($png_binary) < 100) {
+            return ['document_id' => null, 'message' => ''];
+        }
         
         $hash = sha1($png_binary);
         $subdir1 = 'PNG';
         $subdir2 = substr($hash, 0, 2);
         $filename = $hash . '.PNG';
         
-        $base_dir = '/var/glpi/files';
+        $base_dir = GLPI_VAR_DIR . '/_uploads';
+        if (!is_dir($base_dir)) {
+            $base_dir = '/var/glpi/files';
+        }
         $full_subdir = $base_dir . '/' . $subdir1 . '/' . $subdir2;
         
-        if (!is_dir($full_subdir)) mkdir($full_subdir, 0755, true);
-        
-        $filepath = $full_subdir . '/' . $filename;
-        if (!file_put_contents($filepath, $png_binary)) return ['document_id' => null, 'message' => ''];
-        
-        $timestamp = date('d/m/Y H:i:s');
-        $doc_name = $db->real_escape_string($name . ' - Diagrama BPMN - ' . $timestamp);
-        $db_filepath = $subdir1 . '/' . $subdir2 . '/' . $filename;
-        
-        // Remove existing document links for this item to avoid clutter?
-        // OPTIONAL: Keep all history
-        
-        $sql = "INSERT INTO glpi_documents 
-                (entities_id, name, filename, filepath, mime, sha1sum, 
-                 users_id, date_creation, date_mod, is_deleted)
-                VALUES 
-                ($entities_id, '$doc_name', '$filename', '$db_filepath', 'image/png', '$hash',
-                 $user_id, NOW(), NOW(), 0)";
-        
-        if (!$db->query($sql)) {
-             return ['document_id' => null, 'message' => 'Erro DB Documento: ' . $db->error];
+        if (!is_dir($full_subdir)) {
+            mkdir($full_subdir, 0755, true);
         }
         
-        $document_id = $db->insert_id;
+        $filepath = $full_subdir . '/' . $filename;
+        if (!file_put_contents($filepath, $png_binary)) {
+            return ['document_id' => null, 'message' => ''];
+        }
         
-        $sql = "INSERT INTO glpi_documents_items 
-                (documents_id, items_id, itemtype, entities_id, is_recursive, users_id, date_creation, date_mod)
-                VALUES 
-                ($document_id, $items_id, '$itemtype', $entities_id, 0, $user_id, NOW(), NOW())";
+        $timestamp = date('d/m/Y H:i:s');
+        $doc_name = $name . ' - Diagrama BPMN - ' . $timestamp;
+        $db_filepath = $subdir1 . '/' . $subdir2 . '/' . $filename;
         
-        $db->query($sql);
+        $document_id = $DB->insert('glpi_documents', [
+            'entities_id'   => $entities_id,
+            'name'          => $doc_name,
+            'filename'      => $filename,
+            'filepath'      => $db_filepath,
+            'mime'          => 'image/png',
+            'sha1sum'       => $hash,
+            'users_id'      => $user_id,
+            'date_creation' => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s'),
+            'date_mod'      => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s'),
+            'is_deleted'    => 0
+        ]);
+        
+        if (!$document_id) {
+            return ['document_id' => null, 'message' => 'Erro ao criar documento'];
+        }
+        
+        $DB->insert('glpi_documents_items', [
+            'documents_id'  => $document_id,
+            'items_id'      => $items_id,
+            'itemtype'      => $itemtype,
+            'entities_id'   => $entities_id,
+            'is_recursive'  => 0,
+            'users_id'      => $user_id,
+            'date_creation' => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s'),
+            'date_mod'      => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s')
+        ]);
         
         return ['document_id' => $document_id, 'message' => 'PNG anexado.'];
         
@@ -321,4 +344,3 @@ function createGLPIDocument($db, $png_data, $itemtype, $items_id, $entities_id, 
         return ['document_id' => null, 'message' => ''];
     }
 }
-?>

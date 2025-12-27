@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /**
  * -------------------------------------------------------------------------
@@ -485,113 +486,61 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             $timestamp = date('Y-m-d H-i-s');
             $filename = 'diagrama-' . $timestamp . '.png';
 
-            // Compatibility with both GLPI 10.x and 11.x
-            // In GLPI 11.x, documents are managed differently
-            if (version_compare(GLPI_VERSION, '11.0', 'ge')) {
-                // GLPI 11.x - Use document upload system with proper file upload array
-                $filepath = GLPI_TMP_DIR . '/' . $filename;
+            // GLPI 11 - Use document upload system with proper file upload array
+            $filepath = GLPI_TMP_DIR . '/' . $filename;
 
-                // Save temporary file
-                if (file_put_contents($filepath, $png_binary) === false) {
-                    error_log('flowBPMN: Failed to write temp file: ' . $filepath);
-                    return false;
-                }
+            // Save temporary file
+            if (file_put_contents($filepath, $png_binary) === false) {
+                error_log('flowBPMN: Failed to write temp file: ' . $filepath);
+                return false;
+            }
 
-                // Create document
-                $document = new Document();
+            // Create document
+            $document = new Document();
 
-                // Simulate file upload array structure for GLPI 11
-                $_FILES['filename'] = [
-                    'name' => $filename,
-                    'tmp_name' => $filepath,
-                    'size' => filesize($filepath),
-                    'type' => 'image/png',
-                    'error' => 0
-                ];
+            // Simulate file upload array structure for GLPI 11
+            $_FILES['filename'] = [
+                'name' => $filename,
+                'tmp_name' => $filepath,
+                'size' => filesize($filepath),
+                'type' => 'image/png',
+                'error' => 0
+            ];
 
-                $input = [
-                    '_filename' => [$filename],
-                    '_only_if_upload_succeed' => true,
-                    'name' => 'Diagrama BPMN - ' . date('d/m/Y H:i:s'),
-                    'users_id' => Session::getLoginUserID(),
-                    'entities_id' => $_SESSION['glpiactive_entity'] ?? 0,
-                ];
+            $input = [
+                '_filename' => [$filename],
+                '_only_if_upload_succeed' => true,
+                'name' => 'Diagrama BPMN - ' . date('d/m/Y H:i:s'),
+                'users_id' => Session::getLoginUserID(),
+                'entities_id' => $_SESSION['glpiactive_entity'] ?? 0,
+            ];
 
-                // Add the document
-                $doc_id = $document->add($input);
+            // Add the document
+            $doc_id = $document->add($input);
 
-                // Clean the simulated upload
-                unset($_FILES['filename']);
+            // Clean the simulated upload
+            unset($_FILES['filename']);
 
-                if ($doc_id) {
-                    // Link document to item
-                    $docItem = new Document_Item();
-                    $users_id = Session::getLoginUserID();
-                    $docItem->add([
-                        'documents_id' => $doc_id,
-                        'itemtype' => $itemtype,
-                        'items_id' => $items_id,
-                        'users_id' => $users_id,
-                        'entities_id' => $_SESSION['glpiactive_entity'] ?? 0
-                    ]);
-
-                    // Clean up temp file
-                    @unlink($filepath);
-
-                    return $doc_id;
-                }
-
-                // Clean up on failure
-                @unlink($filepath);
-
-            } else {
-                // GLPI 10.x - Legacy method
-                $filepath = GLPI_TMP_DIR . '/' . $filename;
-
-                // Save temporary file
-                if (file_put_contents($filepath, $png_binary) === false) {
-                    return false;
-                }
-
-                // Create document
-                $document = new Document();
-                $input = [
+            if ($doc_id) {
+                // Link document to item
+                $docItem = new Document_Item();
+                $users_id = Session::getLoginUserID();
+                $docItem->add([
+                    'documents_id' => $doc_id,
                     'itemtype' => $itemtype,
                     'items_id' => $items_id,
-                    'name' => !empty($name) ? $name : __('flowBPMN Diagram', 'flowbpmn'),
-                    'filename' => $filename,
-                    'filepath' => $filepath,
-                    'mime' => 'image/png',
-                    'users_id' => Session::getLoginUserID(),
-                ];
+                    'users_id' => $users_id,
+                    'entities_id' => $_SESSION['glpiactive_entity'] ?? 0
+                ]);
 
-                // For tickets in GLPI 10.x
-                if ($itemtype == 'Ticket') {
-                    $input['tickets_id'] = $items_id;
-                }
-
-                $doc_id = $document->add($input);
-
-                if ($doc_id) {
-                    // Link document to item
-                    $docItem = new Document_Item();
-                    $users_id = Session::getLoginUserID();
-                    $docItem->add([
-                        'documents_id' => $doc_id,
-                        'itemtype' => $itemtype,
-                        'items_id' => $items_id,
-                        'users_id' => $users_id
-                    ]);
-
-                    // Clean up temp file
-                    @unlink($filepath);
-
-                    return $doc_id;
-                }
-
-                // Clean up on failure
+                // Clean up temp file
                 @unlink($filepath);
+
+                return $doc_id;
             }
+
+            // Clean up on failure
+            @unlink($filepath);
 
         } catch (Exception $e) {
             error_log('flowBPMN PNG save error: ' . $e->getMessage());

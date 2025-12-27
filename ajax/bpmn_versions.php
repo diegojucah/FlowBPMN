@@ -1,50 +1,31 @@
 <?php
+declare(strict_types=1);
 /**
  * -------------------------------------------------------------------------
- * flowBPMN Plugin for GLPI - Versions Handler (Direct SQL Mode)
+ * FlowBPMN Plugin for GLPI - Native DB Versions Handler v3.0
  * -------------------------------------------------------------------------
  */
 
-// 1. Bootstrap GLPI manually - MATCHING ajax/flow.php logic
+// Bootstrap GLPI
 $glpi_root = dirname(__DIR__, 3);
-
-// Include autoloader unconditionally (assumes Docker env structure)
 require_once $glpi_root . '/vendor/autoload.php';
 
-// Initialize GLPI Kernel
 use Glpi\Kernel\Kernel;
 use Glpi\Application\Environment;
 
 $kernel = new Kernel(Environment::PRODUCTION->value, false);
 $kernel->boot();
 
-// Load GLPI configuration
 global $CFG_GLPI, $DB;
 
 header("Content-Type: application/json; charset=UTF-8");
 
-// Get user_id from session
 $user_id = Session::getLoginUserID();
 
 if (!$user_id) {
     http_response_code(401);
     die(json_encode(['success' => false, 'message' => 'Usuário não autenticado']));
 }
-
-// Database Configuration
-$DB_HOST = getenv('GLPI_DB_HOST') ?: 'mariadb';
-$DB_NAME = getenv('GLPI_DB_NAME') ?: 'glpi';
-$DB_USER = getenv('GLPI_DB_USER') ?: 'glpi';
-$DB_PASS = getenv('GLPI_DB_PASSWORD') ?: 'glpi';
-
-$db = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
-
-if ($db->connect_error) {
-    http_response_code(500);
-    die(json_encode(['success' => false, 'message' => 'Database connection failed']));
-}
-
-$db->set_charset('utf8mb4');
 
 try {
     $itemtype = $_GET['itemtype'] ?? '';
@@ -59,25 +40,30 @@ try {
     }
     
     // Check permissions
-    // Check permissions
-    // Autoloader handles class loading
-
-    if (!class_exists('PluginFlowbpmnProfile') || !PluginFlowbpmnProfile::canViewFlow($itemtype)) {
+    if (!PluginFlowbpmnProfile::canViewFlow($itemtype)) {
         http_response_code(403);
         throw new Exception('Você não tem permissão para visualizar diagramas BPMN');
     }
 
-    // 1. Get Current Flow
-    $stmt = $db->prepare("SELECT f.*, CONCAT(u.firstname, ' ', u.realname) as user_name FROM glpi_plugin_flowbpmn_flows f LEFT JOIN glpi_users u ON f.users_id = u.id WHERE f.itemtype = ? AND f.items_id = ? ORDER BY f.id DESC LIMIT 1");
-    if (!$stmt) throw new Exception("Prepare failed: " . $db->error);
-    
-    $stmt->bind_param("si", $itemtype, $items_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $currentFlow = $result->fetch_assoc();
-    $stmt->close();
+    // 1. Get Current Flow with user name
+    $iterator = $DB->request([
+        'SELECT' => [
+            'f.*',
+            new QueryExpression("CONCAT(" . $DB->quoteName('u.firstname') . ", ' ', " . $DB->quoteName('u.realname') . ") AS user_name")
+        ],
+        'FROM'   => 'glpi_plugin_flowbpmn_flows AS f',
+        'LEFT JOIN' => [
+            'glpi_users AS u' => ['ON' => ['f' => 'users_id', 'u' => 'id']]
+        ],
+        'WHERE'  => [
+            'f.itemtype' => $itemtype,
+            'f.items_id' => $items_id
+        ],
+        'ORDER'  => 'f.id DESC',
+        'LIMIT'  => 1
+    ]);
 
-    if (!$currentFlow) {
+    if (!count($iterator)) {
         echo json_encode([
             'success' => true, 
             'versions' => [], 
@@ -86,26 +72,32 @@ try {
         exit;
     }
 
-    // 2. Get Versions
-    $stmt = $db->prepare("SELECT v.*, CONCAT(u.firstname, ' ', u.realname) as user_name FROM glpi_plugin_flowbpmn_versions v LEFT JOIN glpi_users u ON v.users_id = u.id WHERE v.plugin_flowbpmn_flows_id = ? ORDER BY v.version_number DESC");
-    if (!$stmt) throw new Exception("Prepare failed: " . $db->error);
+    $currentFlow = $iterator->current();
+    $flowId = (int)$currentFlow['id'];
 
-    $flowId = $currentFlow['id'];
-    $stmt->bind_param("i", $flowId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $versions = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
+    // 2. Get Versions with user name
+    $iterator = $DB->request([
+        'SELECT' => [
+            'v.*',
+            new QueryExpression("CONCAT(" . $DB->quoteName('u.firstname') . ", ' ', " . $DB->quoteName('u.realname') . ") AS user_name")
+        ],
+        'FROM'   => 'glpi_plugin_flowbpmn_versions AS v',
+        'LEFT JOIN' => [
+            'glpi_users AS u' => ['ON' => ['v' => 'users_id', 'u' => 'id']]
+        ],
+        'WHERE'  => ['v.plugin_flowbpmn_flows_id' => $flowId],
+        'ORDER'  => 'v.version_number DESC'
+    ]);
 
     // 3. Format Date Helper
-    function formatDate($date) {
+    $formatDate = function($date): string {
         if (!$date) return '-';
         return date('d/m/Y H:i', strtotime($date));
-    }
+    };
 
     // 4. Prepare Response
     $formattedVersions = [];
-    foreach ($versions as $v) {
+    foreach ($iterator as $v) {
         $formattedVersions[] = [
             'id' => $v['id'],
             'version_number' => $v['version_number'],
@@ -114,7 +106,7 @@ try {
             'users_id' => $v['users_id'],
             'user_name' => $v['user_name'] ?: 'Unknown',
             'date_creation' => $v['date_creation'],
-            'date_creation_formatted' => formatDate($v['date_creation']),
+            'date_creation_formatted' => $formatDate($v['date_creation']),
             'svg_content' => $v['svg_content'] ?? null
         ];
     }
@@ -129,7 +121,7 @@ try {
             'id' => $currentFlow['id'],
             'name' => $currentFlow['name'],
             'date_mod' => $currentFlow['date_mod'],
-            'date_mod_formatted' => formatDate($currentFlow['date_mod']),
+            'date_mod_formatted' => $formatDate($currentFlow['date_mod']),
             'user_name' => $currentFlow['user_name'] ?: 'Unknown'
         ],
         'canRestore' => $canRestore
@@ -139,6 +131,3 @@ try {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
-
-$db->close();
-?>

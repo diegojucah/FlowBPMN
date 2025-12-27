@@ -1,49 +1,31 @@
 <?php
+declare(strict_types=1);
 /**
  * -------------------------------------------------------------------------
- * flowBPMN Plugin for GLPI - Direct SQL Restore Handler
+ * FlowBPMN Plugin for GLPI - Native DB Restore Handler v3.0
  * -------------------------------------------------------------------------
  */
 
-// 1. Bootstrap GLPI manually - MATCHING ajax/flow.php logic
+// Bootstrap GLPI
 $glpi_root = dirname(__DIR__, 3);
-
-// Include autoloader
 require_once $glpi_root . '/vendor/autoload.php';
 
-// Initialize GLPI Kernel
 use Glpi\Kernel\Kernel;
 use Glpi\Application\Environment;
+use Glpi\DBAL\QueryExpression;
 
 $kernel = new Kernel(Environment::PRODUCTION->value, false);
 $kernel->boot();
 
-// Load GLPI configuration
 global $CFG_GLPI, $DB;
 
 header("Content-Type: application/json; charset=UTF-8");
 
-// Check authentication
 $user_id = Session::getLoginUserID();
 if (!$user_id) {
     http_response_code(401);
     die(json_encode(['success' => false, 'message' => 'Usuário não autenticado']));
 }
-
-// Database Connection
-$DB_HOST = getenv('GLPI_DB_HOST') ?: 'mariadb';
-$DB_NAME = getenv('GLPI_DB_NAME') ?: 'glpi';
-$DB_USER = getenv('GLPI_DB_USER') ?: 'glpi';
-$DB_PASS = getenv('GLPI_DB_PASSWORD') ?: 'glpi';
-
-$db = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
-
-if ($db->connect_error) {
-    http_response_code(500);
-    die(json_encode(['success' => false, 'message' => 'Database connection failed']));
-}
-
-$db->set_charset('utf8mb4');
 
 // Get Input
 $rawInput = file_get_contents("php://input");
@@ -58,126 +40,98 @@ try {
     }
     
     // Get flow info
-    $stmt = $db->prepare("SELECT itemtype, items_id FROM glpi_plugin_flowbpmn_flows WHERE id = ? LIMIT 1");
-    if (!$stmt) throw new Exception("Prepare failed: " . $db->error);
+    $iterator = $DB->request([
+        'SELECT' => ['itemtype', 'items_id', 'bpmn_xml', 'name'],
+        'FROM'   => 'glpi_plugin_flowbpmn_flows',
+        'WHERE'  => ['id' => $flow_id],
+        'LIMIT'  => 1
+    ]);
     
-    $stmt->bind_param("i", $flow_id);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    $flowData = $res->fetch_assoc();
-    $stmt->close();
-    
-    if (!$flowData) {
+    if (!count($iterator)) {
         throw new Exception('Flow não encontrado');
     }
     
+    $flowData = $iterator->current();
     $itemtype = $flowData['itemtype'];
     $items_id = (int)$flowData['items_id'];
     
     // Check Permissions
-    // Autoloader handles class loading
-
-    if (!class_exists('PluginFlowbpmnProfile') || !PluginFlowbpmnProfile::canRestoreFlow($itemtype)) {
+    if (!PluginFlowbpmnProfile::canRestoreFlow($itemtype)) {
         http_response_code(403);
         throw new Exception('Você não tem permissão para restaurar versões');
     }
 
     // 1. Get Target Version Data
-    $stmt = $db->prepare("SELECT bpmn_xml, name, svg_content FROM glpi_plugin_flowbpmn_versions WHERE id = ? AND plugin_flowbpmn_flows_id = ? LIMIT 1");
-    $stmt->bind_param("ii", $version_id, $flow_id);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    $versionData = $res->fetch_assoc();
-    $stmt->close();
+    $iterator = $DB->request([
+        'SELECT' => ['bpmn_xml', 'name', 'svg_content', 'version_number'],
+        'FROM'   => 'glpi_plugin_flowbpmn_versions',
+        'WHERE'  => [
+            'id' => $version_id,
+            'plugin_flowbpmn_flows_id' => $flow_id
+        ],
+        'LIMIT'  => 1
+    ]);
 
-    if (!$versionData) {
+    if (!count($iterator)) {
         throw new Exception('Version not found');
     }
 
-    // Debug Log Collector
-    $debug_info = [];
-    function add_debug($msg) {
-        global $debug_info;
-        $debug_info[] = $msg;
-        error_log($msg);
-    }
+    $versionData = $iterator->current();
 
-    add_debug("Restore initiated for Flow: $flow_id, Version: $version_id");
-
-    // ... (existing code)
-
-    // 2. AUTO-SAVE Current State
-    // Get current flow XML
-    $stmt = $db->prepare("SELECT bpmn_xml, name, users_id FROM glpi_plugin_flowbpmn_flows WHERE id = ? LIMIT 1");
-    $stmt->bind_param("i", $flow_id);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    $currentFlow = $res->fetch_assoc();
-    $stmt->close();
-
-    if ($currentFlow && !empty($currentFlow['bpmn_xml'])) {
-        // Get max version
-        $res = $db->query("SELECT MAX(version_number) as max_v FROM glpi_plugin_flowbpmn_versions WHERE plugin_flowbpmn_flows_id = $flow_id");
+    // 2. AUTO-SAVE Current State (Backup before restore)
+    if (!empty($flowData['bpmn_xml'])) {
+        // Get max version number
+        $iterator = $DB->request([
+            'SELECT' => [new QueryExpression('MAX(version_number) as max_v')],
+            'FROM'   => 'glpi_plugin_flowbpmn_versions',
+            'WHERE'  => ['plugin_flowbpmn_flows_id' => $flow_id]
+        ]);
         $max_v = 0;
-        if ($res && $row = $res->fetch_assoc()) {
-            $max_v = (int)$row['max_v'];
+        if (count($iterator)) {
+            $row = $iterator->current();
+            $max_v = (int)($row['max_v'] ?? 0);
         }
         $next_v = $max_v + 1;
 
-        $auto_name = $currentFlow['name'];
-        $auto_comment = "Backup automático (antes da restauração)";
-        $current_user_id = $user_id;
-
-        add_debug("FlowBPMN Auto-Save: Preparing to insert version $next_v for flow $flow_id");
-
-        $stmt = $db->prepare("INSERT INTO glpi_plugin_flowbpmn_versions 
-                            (plugin_flowbpmn_flows_id, version_number, name, comment, bpmn_xml, svg_content, users_id, date_creation) 
-                            VALUES (?, ?, ?, ?, ?, '0', ?, NOW())");
+        // Insert backup version
+        $DB->insert('glpi_plugin_flowbpmn_versions', [
+            'plugin_flowbpmn_flows_id' => $flow_id,
+            'version_number'           => $next_v,
+            'name'                     => $flowData['name'],
+            'comment'                  => 'Backup automático (antes da restauração)',
+            'bpmn_xml'                 => $flowData['bpmn_xml'],
+            'svg_content'              => '',
+            'users_id'                 => $user_id,
+            'date_creation'            => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s')
+        ]);
         
-        if (!$stmt) {
-             add_debug("FlowBPMN Auto-Save Prepare Failed: " . $db->error);
-        } else {
-            $stmt->bind_param("iisssi", $flow_id, $next_v, $auto_name, $auto_comment, $currentFlow['bpmn_xml'], $current_user_id);
-            if (!$stmt->execute()) {
-                add_debug("FlowBPMN Auto-Save Execute Failed: " . $stmt->error);
-            } else {
-                $new_version_id = $db->insert_id;
-                add_debug("FlowBPMN Auto-Save Success: Created version " . $new_version_id);
-                
-                // Log Auto-Save
-                $log_message = "Backup automático criado: Versão $next_v (antes da restauração)";
-                Log::history(
-                    $items_id, 
-                    $itemtype, 
-                    [0, '', $log_message], 
-                    '', 
-                    Log::HISTORY_LOG_SIMPLE_MESSAGE
-                );
-            }
-            $stmt->close();
-        }
-    } else {
-        add_debug("FlowBPMN Auto-Save Skipped: Current flow empty or not found");
+        // Log Auto-Save
+        Log::history(
+            $items_id, 
+            $itemtype, 
+            [0, '', "Backup automático criado: Versão $next_v (antes da restauração)"], 
+            '', 
+            Log::HISTORY_LOG_SIMPLE_MESSAGE
+        );
     }
 
     // 3. Restore (Update Flow)
-    $stmt = $db->prepare("UPDATE glpi_plugin_flowbpmn_flows SET bpmn_xml = ?, users_id = ?, date_mod = NOW() WHERE id = ?");
-    $stmt->bind_param("sii", $versionData['bpmn_xml'], $user_id, $flow_id);
-    
-    if (!$stmt->execute()) {
-        throw new Exception('Failed to update flow: ' . $db->error);
-    }
-    $stmt->close();
+    $DB->update('glpi_plugin_flowbpmn_flows', [
+        'bpmn_xml'    => $versionData['bpmn_xml'],
+        'svg_content' => $versionData['svg_content'] ?? '',
+        'users_id'    => $user_id,
+        'date_mod'    => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s')
+    ], [
+        'id' => $flow_id
+    ]);
 
     // Log Restore
-    $restored_version_num = (int)$versionData['version_number']; // Need to fetch this?
     $restore_name = $versionData['name'];
-    $log_message = "Diagrama BPMN restaurado: '$restore_name'"; // Simple message
-    
+    $version_num = $versionData['version_number'];
     Log::history(
         $items_id, 
         $itemtype, 
-        [0, '', $log_message], 
+        [0, '', "Diagrama BPMN restaurado: Versão $version_num ($restore_name)"], 
         '', 
         Log::HISTORY_LOG_SIMPLE_MESSAGE
     );
@@ -185,14 +139,10 @@ try {
     echo json_encode([
         'success' => true, 
         'message' => 'Versão restaurada com sucesso (Backup criado).',
-        'bpmn_xml' => $versionData['bpmn_xml'],
-        'debug_info' => $debug_info
+        'bpmn_xml' => $versionData['bpmn_xml']
     ]);
 
 } catch (Exception $e) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
-
-$db->close();
-?>
