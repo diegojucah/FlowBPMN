@@ -31,6 +31,7 @@ class BpmnFlowEditor {
         this.canEdit = this.container.dataset.canEdit === '1';
         this.existingXml = options.existingXml;
         this.pluginUrl = options.pluginUrl || '';
+        this.lastDateMod = options.dateMod || ''; // Optimistic Locking
         this.modeler = null;
 
         this.init();
@@ -196,10 +197,80 @@ class BpmnFlowEditor {
             });
         }
 
+        // Export PDF option (Priority 4)
+        const exportPdfOption = document.getElementById('export-pdf-option');
+        if (exportPdfOption) {
+            exportPdfOption.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.exportPDF();
+            });
+        }
+
         // Versions button
         const versionsBtn = document.getElementById('bpmn-versions-btn');
         if (versionsBtn) {
             versionsBtn.addEventListener('click', () => this.showVersionsModal());
+        }
+
+        // Templates Buttons (Priority 4.1)
+        const saveTemplateBtn = document.getElementById('bpmn-save-template-btn');
+        if (saveTemplateBtn) {
+            saveTemplateBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.saveAsTemplate();
+            });
+        }
+
+        const loadTemplateBtn = document.getElementById('bpmn-load-template-btn');
+        if (loadTemplateBtn) {
+            loadTemplateBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showLoadTemplateModal();
+            });
+        }
+    }
+
+    /**
+     * Export diagram as PDF (using browser print for high quality vector output)
+     */
+    async exportPDF() {
+        try {
+            const { svg } = await this.modeler.saveSVG({ format: true });
+
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert('Por favor, permita popups para exportar o PDF.');
+                return;
+            }
+
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>FlowBPMN Diagram</title>
+                    <style>
+                        @page { size: landscape; margin: 0; }
+                        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                        svg { width: 100%; height: 100%; maxHeight: 100vh; }
+                    </style>
+                </head>
+                <body>
+                    ${svg}
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                                // window.close(); // User closes manually to verify
+                            }, 500);
+                        }
+                    </script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+
+        } catch (err) {
+            console.error('Error exporting PDF:', err);
+            alert('Erro ao gerar PDF: ' + err.message);
         }
     }
 
@@ -764,6 +835,122 @@ class BpmnFlowEditor {
 
     showError(message) {
         alert('Error: ' + message);
+    }
+
+    /**
+     * Save current diagram as Template
+     */
+    async saveAsTemplate() {
+        const name = prompt("Nome do Template:", "Novo Template");
+        if (!name) return;
+
+        try {
+            const { xml } = await this.modeler.saveXML({ format: true });
+            const { svg } = await this.modeler.saveSVG();
+
+            const pluginUrl = this.pluginUrl || '/plugins/flowbpmn';
+            const url = `${pluginUrl}/ajax/flow.php?action=save_template`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Glpi-Csrf-Token': this.getCSRFToken()
+                },
+                body: JSON.stringify({
+                    action: 'save_template',
+                    name: name,
+                    bpmn_xml: xml,
+                    svg_content: svg,
+                    is_public: 0 // Default private
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                this.showSuccess('Template salvo com sucesso!');
+            } else {
+                throw new Error(result.message);
+            }
+
+        } catch (err) {
+            console.error('Erro ao salvar template:', err);
+            this.showError('Erro ao salvar template: ' + err.message);
+        }
+    }
+
+    /**
+     * Show Modal to Load Template
+     */
+    async showLoadTemplateModal() {
+        try {
+            const pluginUrl = this.pluginUrl || '/plugins/flowbpmn';
+            const url = `${pluginUrl}/ajax/flow.php?action=list_templates`;
+
+            const response = await fetch(url);
+            const result = await response.json();
+
+            if (!result.success) throw new Error(result.message);
+
+            // Build Modal HTML
+            let html = `
+            <div class="modal fade" id="flowbpmn-templates-modal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Carregar Template</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="list-group">
+            `;
+
+            if (result.templates.length === 0) {
+                html += `<div class="alert alert-info">Nenhum template encontrado.</div>`;
+            } else {
+                result.templates.forEach(t => {
+                    const badge = t.is_public == 1 ? '<span class="badge bg-success float-end">Público</span>' : '<span class="badge bg-secondary float-end">Privado</span>';
+                    html += `
+                    <button type="button" class="list-group-item list-group-item-action template-item" data-xml="${this.escapeHtml(t.bpmn_xml)}">
+                        ${badge}
+                        <strong>${this.escapeHtml(t.name)}</strong>
+                        <br><small class="text-muted">${this.escapeHtml(t.comment || '')}</small>
+                    </button>`;
+                });
+            }
+
+            html += `
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            // Clean old modal
+            const oldModal = document.getElementById('flowbpmn-templates-modal');
+            if (oldModal) oldModal.remove();
+
+            document.body.insertAdjacentHTML('beforeend', html);
+
+            const modalEl = document.getElementById('flowbpmn-templates-modal');
+            const bsModal = new bootstrap.Modal(modalEl);
+            bsModal.show();
+
+            // Bind click
+            modalEl.querySelectorAll('.template-item').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (confirm('Carregar este template substituirá o diagrama atual. Continuar?')) {
+                        const xml = btn.getAttribute('data-xml');
+                        await this.loadDiagram(xml);
+                        bsModal.hide();
+                    }
+                });
+            });
+
+        } catch (err) {
+            console.error('Erro ao listar templates:', err);
+            this.showError('Erro ao listar templates: ' + err.message);
+        }
     }
 }
 

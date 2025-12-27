@@ -2,15 +2,36 @@
 declare(strict_types=1);
 /**
  * -------------------------------------------------------------------------
+/**
+ * -------------------------------------------------------------------------
  * FlowBPMN Plugin for GLPI - Native DB Flow Handler v3.0
  * -------------------------------------------------------------------------
  */
+error_log("DEBUG: FlowPHP Hit at " . date('H:i:s') . "\n", 3, "/tmp/flowbpmn_debug.log");
 
 // Bootstrap GLPI manually (since this file is called directly, not through front controller)
 $glpi_root = dirname(__DIR__, 3);
 
+/*
+if (!defined('GLPI_ROOT')) {
+    define('GLPI_ROOT', $glpi_root);
+}
+*/
+
 // Include autoloader
 require_once $glpi_root . '/vendor/autoload.php';
+
+// Manual includes for Plugin Classes (Autoloader might fail in manual boot)
+if (!class_exists('PluginFlowbpmnFlow')) {
+    if (file_exists(__DIR__ . '/../inc/flow.class.php')) {
+        include_once __DIR__ . '/../inc/flow.class.php';
+    }
+}
+if (!class_exists('PluginFlowbpmnVersion')) {
+    if (file_exists(__DIR__ . '/../inc/version.class.php')) {
+        include_once __DIR__ . '/../inc/version.class.php';
+    }
+}
 
 // Initialize GLPI Kernel
 use Glpi\Kernel\Kernel;
@@ -54,14 +75,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Get input
 $rawInput = file_get_contents("php://input");
-$input = json_decode($rawInput, true);
+$input = [];
 
-if (json_last_error() !== JSON_ERROR_NONE) {
-    http_response_code(400);
-    die(json_encode(['success' => false, 'message' => 'Invalid JSON']));
+if (!empty($rawInput)) {
+    $input = json_decode($rawInput, true);
+    
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        http_response_code(400);
+        die(json_encode(['success' => false, 'message' => 'Invalid JSON']));
+    }
 }
 
-$action = $input['action'] ?? '';
+$action = $_GET['action'] ?? ($input['action'] ?? '');
 
 try {
     switch ($action) {
@@ -109,6 +134,26 @@ try {
             $existing = $flow->getForItem($itemtype, $items_id);
             
             if ($existing) {
+                // Optimistic Locking Check (Priority 4.2)
+                $clientDateMod = $input['date_mod'] ?? '';
+                $forceOverwrite = $input['force_overwrite'] ?? false;
+                
+                if (!$forceOverwrite && !empty($clientDateMod) && isset($existing['date_mod'])) {
+                     $dbDateMod = strtotime($existing['date_mod']);
+                     $clientTimestamp = strtotime($clientDateMod);
+                     
+                     // Tolerance of 2s for clock skew
+                     if ($dbDateMod > $clientTimestamp + 2) {
+                        echo json_encode([
+                            'success' => false,
+                            'conflict' => true,
+                            'server_date_mod' => $existing['date_mod'],
+                            'message' => 'O diagrama foi modificado por outro usuário.'
+                        ]);
+                        break; // Use break to exit switch standardly
+                     }
+                }
+
                 // UPDATE existing flow
                 $flowInput['id'] = $existing['id'];
                 $success = $flow->update($flowInput);
@@ -124,6 +169,10 @@ try {
             if (!$success || !$flow_id) {
                 throw new Exception('Falha ao salvar diagrama');
             }
+
+            // Get updated flow data to return new date_mod
+            $updatedFlow = $flow->getFromDB($flow_id);
+            $newDateMod = $updatedFlow ? $flow->fields['date_mod'] : date('Y-m-d H:i:s');
             
             // Get version count for response
             $versionCount = 0;
@@ -135,6 +184,7 @@ try {
                 'success' => true,
                 'id' => $flow_id,
                 'version_created' => $versionCount,
+                'date_mod' => $newDateMod,
                 'message' => "Diagrama $action com sucesso (v$versionCount)"
             ]);
             break;
@@ -202,6 +252,152 @@ try {
             );
 
             echo json_encode(['success' => true, 'message' => 'Versão excluída']);
+            break;
+
+        // Heartbeat Logic (Priority 4.2)
+        case 'heartbeat':
+            global $DB;
+            $items_id = $input['items_id'] ?? 0;
+            $itemtype = $input['itemtype'] ?? '';
+            $uid      = Session::getLoginUserID();
+            
+            if (!$items_id || !$itemtype || !$uid) {
+                echo json_encode(['success'=>false]);
+                break;
+            }
+            
+            // 0. Lazy Migration (Auto-create table if missing)
+            if (!$DB->tableExists('glpi_plugin_flowbpmn_sessions')) {
+                 $DB->query("CREATE TABLE IF NOT EXISTS `glpi_plugin_flowbpmn_sessions` (
+                    `id` int(11) NOT NULL AUTO_INCREMENT,
+                    `itemtype` varchar(100) NOT NULL,
+                    `items_id` int(11) NOT NULL,
+                    `users_id` int(11) NOT NULL,
+                    `last_ping` datetime NOT NULL,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `unique_session` (`itemtype`, `items_id`, `users_id`),
+                    KEY `last_ping` (`last_ping`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            }
+
+            // 1. Register/Update presence
+            $DB->query("
+                INSERT INTO glpi_plugin_flowbpmn_sessions (itemtype, items_id, users_id, last_ping)
+                VALUES ('$itemtype', $items_id, $uid, NOW())
+                ON DUPLICATE KEY UPDATE last_ping = NOW()
+            ");
+            
+            // 2. Garbage Collection (Clean old sessions > 1 min)
+            $DB->query("DELETE FROM glpi_plugin_flowbpmn_sessions WHERE last_ping < (NOW() - INTERVAL 1 MINUTE)");
+            
+            // 3. Get active users
+            $iterator = $DB->request([
+                'SELECT' => ['glpi_users.id', 'glpi_users.name', 'glpi_users.realname', 'glpi_users.firstname'],
+                'FROM'   => 'glpi_plugin_flowbpmn_sessions',
+                'INNER JOIN' => [
+                    'glpi_users' => [
+                        'ON' => [
+                            'glpi_plugin_flowbpmn_sessions' => 'users_id',
+                            'glpi_users' => 'id'
+                        ]
+                    ]
+                ],
+                'WHERE' => [
+                    'glpi_plugin_flowbpmn_sessions.itemtype' => $itemtype,
+                    'glpi_plugin_flowbpmn_sessions.items_id' => $items_id,
+                    'glpi_plugin_flowbpmn_sessions.users_id' => ['<>', $uid]
+                ]
+            ]);
+            
+            $active_users = [];
+            foreach ($iterator as $data) {
+                $display_name = formatUserName($data['id'], $data['name'], $data['realname'], $data['firstname']);
+                $initials = strtoupper(substr($display_name, 0, 2));
+                
+                $active_users[] = [
+                    'id' => $data['id'],
+                    'name' => $display_name,
+                    'initials' => $initials,
+                    'color' => '#'.substr(md5($data['name']), 0, 6) // Deterministic color
+                ];
+            }
+            
+            echo json_encode(['success' => true, 'users' => $active_users]);
+            break;
+
+        // Templates Logic (Priority 4.1)
+        case 'list_templates':
+            try {
+                global $DB;
+                if (!isset($DB)) {
+                     throw new Exception("Database not initialized");
+                }
+            
+                // Check if table exists
+                if (!$DB->tableExists('glpi_plugin_flowbpmn_templates')) {
+                     echo json_encode(['success' => true, 'templates' => []]);
+                     break;
+                }
+
+                if (!class_exists('PluginFlowbpmnTemplate')) {
+                     $path = __DIR__ . '/../inc/template.class.php';
+                     if (file_exists($path)) {
+                        include_once($path);
+                     }
+                }
+                
+                if (!class_exists('PluginFlowbpmnTemplate')) {
+                    throw new Exception("Class PluginFlowbpmnTemplate not found");
+                }
+                
+                $templates = PluginFlowbpmnTemplate::getAvailableTemplates();
+                
+                // Format for easy consumption
+                $list = array_map(function($t) {
+                    return [
+                        'id' => $t['id'],
+                        'name' => $t['name'],
+                        'comment' => $t['comment'],
+                        'is_public' => $t['is_public'],
+                        'bpmn_xml' => $t['bpmn_xml'] 
+                    ];
+                }, $templates);
+                
+                echo json_encode(['success' => true, 'templates' => $list]);
+            } catch (\Throwable $e) {
+                // Return JSON error instead of 500 html
+                echo json_encode(['success' => false, 'message' => "Erro interno: " . $e->getMessage()]);
+            }
+            break;
+
+        case 'save_template':
+            if (!class_exists('PluginFlowbpmnTemplate')) {
+                 include_once(__DIR__ . '/../inc/template.class.php');
+            }
+            
+            $name = $input['name'] ?? '';
+            $xml = $input['bpmn_xml'] ?? '';
+            $svg = $input['svg_content'] ?? '';
+            $is_public = (int)($input['is_public'] ?? 0);
+            
+            if (empty($name) || empty($xml)) {
+                throw new Exception('Nome e conteúdo (XML) são obrigatórios');
+            }
+            
+            $template = new PluginFlowbpmnTemplate();
+            $newID = $template->add([
+                'name' => $name,
+                'bpmn_xml' => $xml,
+                'svg_content' => $svg,
+                'is_public' => $is_public,
+                'comment' => 'Created from diagram'
+            ]);
+            
+            if ($newID) {
+                echo json_encode(['success' => true, 'message' => 'Template salvo com sucesso', 'id' => $newID]);
+            } else {
+                throw new Exception('Erro ao salvar template');
+            }
             break;
             
         default:

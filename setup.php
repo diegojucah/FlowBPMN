@@ -75,6 +75,7 @@ function plugin_init_flowbpmn() {
         ]);
 
         Plugin::registerClass('PluginFlowbpmnVersion');
+        Plugin::registerClass('PluginFlowbpmnTemplate');
 
         // Add CSS
         $PLUGIN_HOOKS['add_css']['flowbpmn'] = ['css/flowbpmn.css'];
@@ -253,6 +254,32 @@ function plugin_flowbpmn_install() {
             'date_mod' => $_SESSION['glpi_currenttime']
         ]);
     }
+
+    // Create templates table (Priority 4.1)
+    if (!$DB->tableExists('glpi_plugin_flowbpmn_templates')) {
+        $query = "CREATE TABLE `glpi_plugin_flowbpmn_templates` (
+            `id` int unsigned NOT NULL AUTO_INCREMENT,
+            `entities_id` int unsigned NOT NULL DEFAULT '0',
+            `is_recursive` tinyint NOT NULL DEFAULT '0',
+            `name` varchar(255) DEFAULT NULL,
+            `comment` text,
+            `bpmn_xml` longtext,
+            `svg_content` longtext,
+            `is_active` tinyint NOT NULL DEFAULT '1',
+            `is_public` tinyint NOT NULL DEFAULT '0',
+            `users_id` int unsigned NOT NULL DEFAULT '0',
+            `date_creation` timestamp NULL DEFAULT NULL,
+            `date_mod` timestamp NULL DEFAULT NULL,
+            PRIMARY KEY (`id`),
+            KEY `entities_id` (`entities_id`),
+            KEY `is_recursive` (`is_recursive`),
+            KEY `is_public` (`is_public`),
+            KEY `users_id` (`users_id`),
+            KEY `date_mod` (`date_mod`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
+
+        $DB->doQuery($query) or die($DB->error());
+    }
     
     // Create profiles table with foreign key
     if (!$DB->tableExists('glpi_plugin_flowbpmn_profiles')) {
@@ -334,6 +361,7 @@ function plugin_flowbpmn_uninstall() {
         $tables = [
             'glpi_plugin_flowbpmn_versions',
             'glpi_plugin_flowbpmn_flows',
+            'glpi_plugin_flowbpmn_templates',
             'glpi_plugin_flowbpmn_profiles',
             'glpi_plugin_flowbpmn_configs'
         ];

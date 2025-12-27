@@ -176,9 +176,11 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         
         // Invalidate Cache
         if (isset($this->fields['itemtype']) && isset($this->fields['items_id'])) {
-            $cache = \Glpi\Cache\CacheManager::getInstance()->getCache('core');
-            $cacheKey = "plugin_flowbpmn_flow_{$this->fields['itemtype']}_{$this->fields['items_id']}";
-            $cache->delete($cacheKey);
+            /* CACHE DISABLED TEMPORARILY
+            // $cache = \Glpi\Cache\CacheManager::getInstance()->getCache('core');
+            // $cacheKey = "plugin_flowbpmn_flow_{$this->fields['itemtype']}_{$this->fields['items_id']}";
+            // $cache->delete($cacheKey);
+            */
         }
         
         if (!$history) {
@@ -237,9 +239,11 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         
         // Invalidate Cache
         if (isset($this->fields['itemtype']) && isset($this->fields['items_id'])) {
-            $cache = \Glpi\Cache\CacheManager::getInstance()->getCache('core');
-            $cacheKey = "plugin_flowbpmn_flow_{$this->fields['itemtype']}_{$this->fields['items_id']}";
-            $cache->delete($cacheKey);
+            /* CACHE DISABLED TEMPORARILY
+            // $cache = \Glpi\Cache\CacheManager::getInstance()->getCache('core');
+            // $cacheKey = "plugin_flowbpmn_flow_{$this->fields['itemtype']}_{$this->fields['items_id']}";
+            // $cache->delete($cacheKey);
+            */
         }
         
         // Versions are automatically deleted via CASCADE foreign key
@@ -467,6 +471,17 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "<input type='file' id='bpmn-file-input' accept='.bpmn,.xml' style='display: none;'>";
 
             // Botão Exportar com Dropdown
+            // Templates Button (Priority 4.1)
+            echo "<div class='btn-group ms-2' role='group'>";
+            echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
+            echo "<i class='ti ti-template'></i> Templates";
+            echo "</button>";
+            echo "<ul class='dropdown-menu'>";
+            echo "<li><a class='dropdown-item' href='#' id='bpmn-save-template-btn'><i class='ti ti-device-floppy'></i> Salvar como Template</a></li>";
+            echo "<li><a class='dropdown-item' href='#' id='bpmn-load-template-btn'><i class='ti ti-cloud-download'></i> Carregar Template</a></li>";
+            echo "</ul>";
+            echo "</div>";
+
             echo "<div class='btn-group ms-2' role='group'>";
             echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
             echo "<i class='{$downloadIcon}'></i> Exportar";
@@ -478,6 +493,9 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "<i class='{$codeIcon}'></i> SVG</a></li>";
             echo "<li><a class='dropdown-item' href='#' id='export-bpmn-option'>";
             echo "<i class='{$fileIcon}'></i> BPMN</a></li>";
+            echo "<li><hr class='dropdown-divider'></li>";
+            echo "<li><a class='dropdown-item' href='#' id='export-pdf-option'>";
+            echo "<i class='ti ti-file-type-pdf try-1'></i> PDF</a></li>";
             echo "</ul>";
             echo "</div>";
 
@@ -493,8 +511,8 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     $versionCount = PluginFlowbpmnVersion::countVersions($existing['id']);
                 }
                 
-                // Só renderizar botão se houver 2+ versões
-                if ($versionCount > 1) {
+                // Só renderizar botão se houver 1+ versões
+                if ($versionCount >= 1) {
                     echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-versions-btn'>";
                     echo "<i class='{$historyIcon}'></i> Versões";
                     echo " <span class='badge bg-light text-dark ms-1'>{$versionCount}</span>";
@@ -552,6 +570,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         
         // Encode XML for JavaScript
         $bpmnXmlJson = json_encode($bpmnXml);
+        $dateMod = $existingFlow['date_mod'] ?? '';
         
         echo Html::scriptBlock("
             $(document).ready(function() {
@@ -560,7 +579,8 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     window.bpmnEditor = new BpmnFlowEditor({
                         container: '#bpmn-canvas',
                         existingXml: {$bpmnXmlJson},
-                        pluginUrl: '{$pluginDir}'
+                        pluginUrl: '{$pluginDir}',
+                        dateMod: '{$dateMod}'
                     });
                 } else {
                     console.error('BpmnFlowEditor class not found. Check if flowbpmn.js is loaded correctly.');
@@ -575,13 +595,16 @@ class PluginFlowbpmnFlow extends CommonDBTM {
     function getForItem($itemtype, $items_id) {
         global $DB;
         
+        // CACHE DISABLED TEMPORARILY TO FIX 500 ERROR
         // Use GLPI Cache - Priority 2 Optimization
+        /*
         $cache = \Glpi\Cache\CacheManager::getInstance()->getCache('core');
         $cacheKey = "plugin_flowbpmn_flow_{$itemtype}_{$items_id}";
         
         $flow = $cache->get($cacheKey);
         
         if ($flow === null) {
+        */
             $iterator = $DB->request([
                 'FROM'  => self::getTable(),
                 'WHERE' => [
@@ -610,15 +633,16 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     }
                 }
                 
-                $cache->set($cacheKey, $flow, 3600); // Cache for 1 hour
+                // $cache->set($cacheKey, $flow, 3600); // Cache for 1 hour
             } else {
-                // Cache empty result for shorter time to avoid repeated queries for missing flows
-                $cache->set($cacheKey, false, 60); // 1 minute
+                // $cache->set($cacheKey, false, 60); // 1 minute
                 return null;
             }
+        /*
         } elseif ($flow === false) {
             return null;
         }
+        */
         
         return $flow;
     }
