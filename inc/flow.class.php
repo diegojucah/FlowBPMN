@@ -329,8 +329,19 @@ class PluginFlowbpmnFlow extends CommonDBTM {
     private function loadBpmnEditor($existingFlow = null) {
         
         $pluginDir = Plugin::getWebDir('flowbpmn');
+        
+        // Load CSS
         echo Html::css('plugins/flowbpmn/css/flowbpmn.css');
+        
+        // NOTE: flowbpmn.js is already loaded globally via setup.php $PLUGIN_HOOKS['add_javascript']
+        // Do NOT load it again here to avoid "identifier already declared" errors
+        
         $bpmnXml = $existingFlow['bpmn_xml'] ?? null;
+        
+        // DEBUG: Log what XML we're loading
+        error_log("FlowBPMN loadBpmnEditor: existingFlow ID=" . ($existingFlow['id'] ?? 'null'));
+        error_log("FlowBPMN loadBpmnEditor: XML length=" . strlen($bpmnXml ?? ''));
+        error_log("FlowBPMN loadBpmnEditor: XML preview=" . substr($bpmnXml ?? '', 0, 100));
         
         // Encode XML for JavaScript
         $bpmnXmlJson = json_encode($bpmnXml);
@@ -344,6 +355,8 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                         existingXml: {$bpmnXmlJson},
                         pluginUrl: '{$pluginDir}'
                     });
+                } else {
+                    console.error('BpmnFlowEditor class not found. Check if flowbpmn.js is loaded correctly.');
                 }
             });
         ");

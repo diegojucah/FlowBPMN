@@ -76,80 +76,23 @@ try {
                 throw new Exception('Você não tem permissão para editar diagramas BPMN');
             }
             
-            // Get proper entity ID from the actual item table
-            $entities_id = 0;
-            $tableMap = [
-                'Ticket' => 'glpi_tickets',
-                'Problem' => 'glpi_problems',
-                'Change' => 'glpi_changes'
-            ];
-            $itemTable = $tableMap[$itemtype] ?? 'glpi_tickets';
+            // Use the PluginFlowbpmnFlow class which has the working savePNGAsDocument() method
+            $flow = new PluginFlowbpmnFlow();
+            $png_data = $input['png_data'] ?? '';
             
-            $iterator = $DB->request([
-                'SELECT' => 'entities_id',
-                'FROM'   => $itemTable,
-                'WHERE'  => ['id' => $items_id],
-                'LIMIT'  => 1
-            ]);
-            if (count($iterator)) {
-                $row = $iterator->current();
-                $entities_id = (int)$row['entities_id'];
+            $flow_id = $flow->saveFlow($itemtype, $items_id, $bpmn_xml, $svg_content, $name, $png_data);
+            
+            $debug_file = __DIR__ . '/../debug_versions.txt';
+            file_put_contents($debug_file, "\n" . date('Y-m-d H:i:s') . " - saveFlow returned flow_id=$flow_id for $itemtype #$items_id\n", FILE_APPEND);
+            
+            if (!$flow_id) {
+                throw new Exception('Falha ao salvar diagrama');
             }
             
-            // 1. Check for Existing Flow (Avoid Duplicates)
-            $flow_id = 0;
-            $iterator = $DB->request([
-                'SELECT' => 'id',
-                'FROM'   => 'glpi_plugin_flowbpmn_flows',
-                'WHERE'  => [
-                    'itemtype' => $itemtype,
-                    'items_id' => $items_id
-                ],
-                'ORDER'  => 'id DESC',
-                'LIMIT'  => 1
-            ]);
-            if (count($iterator)) {
-                $row = $iterator->current();
-                $flow_id = (int)$row['id'];
-            }
+            // Create version manually (saveFlow() version creation may not work reliably)
+            $debug_file = __DIR__ . '/../debug_versions.txt';
+            file_put_contents($debug_file, date('Y-m-d H:i:s') . " - Creating version for flow_id=$flow_id\n", FILE_APPEND);
             
-            if ($flow_id > 0) {
-                // UPDATE existing flow
-                $success = $DB->update('glpi_plugin_flowbpmn_flows', [
-                    'bpmn_xml'    => $bpmn_xml,
-                    'svg_content' => $svg_content,
-                    'name'        => $name,
-                    'users_id'    => $user_id,
-                    'date_mod'    => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s')
-                ], [
-                    'id' => $flow_id
-                ]);
-                
-                if (!$success) {
-                    throw new Exception('Falha ao atualizar diagrama existente');
-                }
-            } else {
-                // INSERT new flow
-                $flow_id = $DB->insert('glpi_plugin_flowbpmn_flows', [
-                    'itemtype'      => $itemtype,
-                    'items_id'      => $items_id,
-                    'entities_id'   => $entities_id,
-                    'bpmn_xml'      => $bpmn_xml,
-                    'svg_content'   => $svg_content,
-                    'name'          => $name,
-                    'users_id'      => $user_id,
-                    'date_creation' => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s'),
-                    'date_mod'      => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s')
-                ]);
-                
-                if (!$flow_id) {
-                    throw new Exception('Falha ao criar novo diagrama');
-                }
-            }
-            
-            if (!$flow_id) throw new Exception("Failed to manage Flow ID");
-
-            // 2. Auto-create Version (History)
             $iterator = $DB->request([
                 'SELECT' => [new QueryExpression('MAX(version_number) as max_v')],
                 'FROM'   => 'glpi_plugin_flowbpmn_versions',
@@ -162,7 +105,9 @@ try {
             }
             $next_v = $max_v + 1;
             
-            $DB->insert('glpi_plugin_flowbpmn_versions', [
+            file_put_contents($debug_file, "Max version: $max_v, Next version: $next_v\n", FILE_APPEND);
+            
+            $version_id = $DB->insert('glpi_plugin_flowbpmn_versions', [
                 'plugin_flowbpmn_flows_id' => $flow_id,
                 'version_number'           => $next_v,
                 'name'                     => $name,
@@ -172,8 +117,14 @@ try {
                 'users_id'                 => $user_id,
                 'date_creation'            => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s')
             ]);
-
-            // 3. Add entry to timeline using Log::history()
+            
+            file_put_contents($debug_file, "Version insert result: version_id=$version_id\n", FILE_APPEND);
+            
+            if (!$version_id) {
+                file_put_contents($debug_file, "ERROR: Failed to create version!\n", FILE_APPEND);
+            }
+            
+            // Add entry to timeline
             $log_message = "Diagrama BPMN atualizado: Versão $next_v ($name)";
             Log::history(
                 $items_id,
@@ -182,23 +133,14 @@ try {
                 '',
                 Log::HISTORY_LOG_SIMPLE_MESSAGE
             );
-
-            // 4. Process PNG
-            $document_id = null;
-            $png_message = '';
             
-            if (!empty($input['png_data'])) {
-                $result = createGLPIDocumentNative($input['png_data'], $itemtype, $items_id, $entities_id, $name, $user_id);
-                $document_id = $result['document_id'];
-                $png_message = $result['message'];
-            }
+            file_put_contents($debug_file, "Timeline entry added\n", FILE_APPEND);
             
             echo json_encode([
                 'success' => true,
                 'id' => $flow_id,
                 'version_created' => $next_v,
-                'document_id' => $document_id,
-                'message' => 'Diagrama salvo (v' . $next_v . ')' . ($png_message ? ' + PNG anexado.' : '')
+                'message' => 'Diagrama salvo (v' . $next_v . ')'
             ]);
             break;
             
@@ -284,77 +226,4 @@ try {
         http_response_code(400);
     }
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-}
-
-/**
- * Create GLPI Document using native DB methods
- */
-function createGLPIDocumentNative(string $png_data, string $itemtype, int $items_id, int $entities_id, string $name, int $user_id): array {
-    global $DB;
-    
-    try {
-        $png_data = preg_replace('/^data:image\/png;base64,/', '', $png_data);
-        $png_binary = base64_decode($png_data);
-        
-        if (!$png_binary || strlen($png_binary) < 100) {
-            return ['document_id' => null, 'message' => ''];
-        }
-        
-        $hash = sha1($png_binary);
-        $subdir1 = 'PNG';
-        $subdir2 = substr($hash, 0, 2);
-        $filename = $hash . '.PNG';
-        
-        $base_dir = GLPI_VAR_DIR . '/_uploads';
-        if (!is_dir($base_dir)) {
-            $base_dir = '/var/glpi/files';
-        }
-        $full_subdir = $base_dir . '/' . $subdir1 . '/' . $subdir2;
-        
-        if (!is_dir($full_subdir)) {
-            mkdir($full_subdir, 0755, true);
-        }
-        
-        $filepath = $full_subdir . '/' . $filename;
-        if (!file_put_contents($filepath, $png_binary)) {
-            return ['document_id' => null, 'message' => ''];
-        }
-        
-        $timestamp = date('d/m/Y H:i:s');
-        $doc_name = $name . ' - Diagrama BPMN - ' . $timestamp;
-        $db_filepath = $subdir1 . '/' . $subdir2 . '/' . $filename;
-        
-        $document_id = $DB->insert('glpi_documents', [
-            'entities_id'   => $entities_id,
-            'name'          => $doc_name,
-            'filename'      => $filename,
-            'filepath'      => $db_filepath,
-            'mime'          => 'image/png',
-            'sha1sum'       => $hash,
-            'users_id'      => $user_id,
-            'date_creation' => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s'),
-            'date_mod'      => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s'),
-            'is_deleted'    => 0
-        ]);
-        
-        if (!$document_id) {
-            return ['document_id' => null, 'message' => 'Erro ao criar documento'];
-        }
-        
-        $DB->insert('glpi_documents_items', [
-            'documents_id'  => $document_id,
-            'items_id'      => $items_id,
-            'itemtype'      => $itemtype,
-            'entities_id'   => $entities_id,
-            'is_recursive'  => 0,
-            'users_id'      => $user_id,
-            'date_creation' => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s'),
-            'date_mod'      => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s')
-        ]);
-        
-        return ['document_id' => $document_id, 'message' => 'PNG anexado.'];
-        
-    } catch (Exception $e) {
-        return ['document_id' => null, 'message' => ''];
-    }
 }

@@ -32,10 +32,17 @@ $rawInput = file_get_contents("php://input");
 $input = json_decode($rawInput, true);
 
 try {
+    $debug_file = __DIR__ . '/../debug_restore.txt';
+    file_put_contents($debug_file, "\n" . date('Y-m-d H:i:s') . " - Restore request received\n", FILE_APPEND);
+    file_put_contents($debug_file, "Input: " . json_encode($input) . "\n", FILE_APPEND);
+    
     $flow_id = (int)($input['flow_id'] ?? 0);
     $version_id = (int)($input['version_id'] ?? 0);
     
+    file_put_contents($debug_file, "Parsed: flow_id=$flow_id, version_id=$version_id\n", FILE_APPEND);
+    
     if (!$flow_id || !$version_id) {
+        file_put_contents($debug_file, "ERROR: Invalid parameters\n", FILE_APPEND);
         throw new Exception('Invalid parameters');
     }
     
@@ -136,6 +143,8 @@ try {
         Log::HISTORY_LOG_SIMPLE_MESSAGE
     );
 
+    file_put_contents($debug_file, "Restore successful, returning XML\n", FILE_APPEND);
+    
     echo json_encode([
         'success' => true, 
         'message' => 'Versão restaurada com sucesso (Backup criado).',
@@ -143,6 +152,8 @@ try {
     ]);
 
 } catch (Exception $e) {
+    $debug_file = __DIR__ . '/../debug_restore.txt';
+    file_put_contents($debug_file, "EXCEPTION: " . $e->getMessage() . "\n", FILE_APPEND);
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }

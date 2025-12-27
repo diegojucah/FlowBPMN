@@ -12,6 +12,7 @@ require_once $glpi_root . '/vendor/autoload.php';
 
 use Glpi\Kernel\Kernel;
 use Glpi\Application\Environment;
+use Glpi\DBAL\QueryExpression;
 
 $kernel = new Kernel(Environment::PRODUCTION->value, false);
 $kernel->boot();

@@ -80,7 +80,7 @@ function plugin_init_flowbpmn() {
         $PLUGIN_HOOKS['add_css']['flowbpmn'] = ['css/flowbpmn.css'];
 
         // Add JavaScript with cache buster
-        $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = ['js/flowbpmn.js?v=2.2.2'];
+        $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = ['js/flowbpmn.js?v=3.0.0'];
     }
 }
 
