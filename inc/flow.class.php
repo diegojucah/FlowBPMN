@@ -390,11 +390,6 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     return '';
                 }
 
-                // Counter removed - using versionamento for tracking changes
-                // Counter removed - using versionamento for tracking changes
-                // Counter removed - using versionamento for tracking changes
-                // Counter removed - using versionamento for tracking changes
-
                 // GLPI 11+ - uses icon parameter
                 return self::createTabEntry(
                     'FlowBPMN',

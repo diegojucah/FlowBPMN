@@ -147,17 +147,9 @@ try {
                 throw new Exception('Missing required parameters');
             }
             
-            $iterator = $DB->request([
-                'FROM'  => 'glpi_plugin_flowbpmn_flows',
-                'WHERE' => [
-                    'itemtype' => $itemtype,
-                    'items_id' => $items_id
-                ],
-                'ORDER' => 'id DESC',
-                'LIMIT' => 1
-            ]);
-            
-            $data = count($iterator) ? $iterator->current() : null;
+            // Refactored to use class method - gains Cache and Decompression features (Priority 2 & 3 support)
+            $flow = new PluginFlowbpmnFlow();
+            $data = $flow->getForItem($itemtype, $items_id);
             
             echo json_encode(['success' => true, 'data' => $data]);
             break;
