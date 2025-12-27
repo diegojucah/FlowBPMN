@@ -127,6 +127,15 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             );
         }
         
+        // Create initial version (v1)
+        if (class_exists('PluginFlowbpmnVersion') && isset($this->fields['id'])) {
+            try {
+                PluginFlowbpmnVersion::createVersion($this->fields['id'], $this->fields);
+            } catch (Exception $e) {
+                error_log("flowBPMN: Failed to create initial version - " . $e->getMessage());
+            }
+        }
+        
         // Save PNG if provided (stored temporarily in input)
         if (isset($this->input['_png_data']) && !empty($this->input['_png_data'])) {
             $this->savePNGAsDocument(

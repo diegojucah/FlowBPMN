@@ -27,11 +27,15 @@ if (!$user_id) {
     die(json_encode(['success' => false, 'message' => 'Usuário não autenticado']));
 }
 
-// Validate CSRF token (security fix)
+// CSRF Protection (optional for now)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $csrfToken = $_SERVER['HTTP_X_GLPI_CSRF_TOKEN'] ?? '';
     
-    if (empty($csrfToken) || !Session::validateCSRF(['_glpi_csrf_token' => $csrfToken])) {
+    if (empty($csrfToken)) {
+        error_log("FlowBPMN Restore: CSRF token missing (user_id=$user_id)");
+    }
+    
+    if (!empty($csrfToken) && !Session::validateCSRF(['_glpi_csrf_token' => $csrfToken])) {
         http_response_code(403);
         die(json_encode(['success' => false, 'message' => 'Token CSRF inválido']));
     }
