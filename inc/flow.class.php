@@ -85,6 +85,16 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         $input['date_creation'] = $_SESSION['glpi_currenttime'];
         $input['date_mod'] = $_SESSION['glpi_currenttime'];
         
+        // Compression for large diagrams (Priority 2)
+        if (isset($input['bpmn_xml']) && strlen($input['bpmn_xml']) > 10240) { // > 10KB
+            // Use level 6 compression (default balance)
+            $compressed = gzcompress($input['bpmn_xml'], 6);
+            if ($compressed !== false) {
+                // Store as Base64 with prefix to identify compressed content
+                $input['bpmn_xml'] = 'COMPRESSED::' . base64_encode($compressed);
+            }
+        }
+        
         return parent::prepareInputForAdd($input);
     }
     
@@ -99,6 +109,14 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         }
         $input['date_mod'] = $_SESSION['glpi_currenttime'];
         $input['users_id'] = Session::getLoginUserID();
+        
+        // Compression for large diagrams (Priority 2)
+        if (isset($input['bpmn_xml']) && strlen($input['bpmn_xml']) > 10240) { // > 10KB
+            $compressed = gzcompress($input['bpmn_xml'], 6);
+            if ($compressed !== false) {
+                $input['bpmn_xml'] = 'COMPRESSED::' . base64_encode($compressed);
+            }
+        }
         
         return parent::prepareInputForUpdate($input);
     }
@@ -156,6 +174,13 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         
         parent::post_updateItem($history);
         
+        // Invalidate Cache
+        if (isset($this->fields['itemtype']) && isset($this->fields['items_id'])) {
+            $cache = \Glpi\Cache\CacheManager::getInstance()->getCache('core');
+            $cacheKey = "plugin_flowbpmn_flow_{$this->fields['itemtype']}_{$this->fields['items_id']}";
+            $cache->delete($cacheKey);
+        }
+        
         if (!$history) {
             return;
         }
@@ -209,6 +234,13 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         global $DB;
         
         parent::post_deleteItem();
+        
+        // Invalidate Cache
+        if (isset($this->fields['itemtype']) && isset($this->fields['items_id'])) {
+            $cache = \Glpi\Cache\CacheManager::getInstance()->getCache('core');
+            $cacheKey = "plugin_flowbpmn_flow_{$this->fields['itemtype']}_{$this->fields['items_id']}";
+            $cache->delete($cacheKey);
+        }
         
         // Versions are automatically deleted via CASCADE foreign key
         // Just log the deletion
@@ -548,22 +580,52 @@ class PluginFlowbpmnFlow extends CommonDBTM {
     function getForItem($itemtype, $items_id) {
         global $DB;
         
-        $iterator = $DB->request([
-            'FROM'  => self::getTable(),
-            'WHERE' => [
-                'itemtype' => $itemtype,
-                'items_id' => $items_id,
-                'is_active' => 1
-            ],
-            'ORDER' => 'date_mod DESC',
-            'LIMIT' => 1
-        ]);
+        // Use GLPI Cache - Priority 2 Optimization
+        $cache = \Glpi\Cache\CacheManager::getInstance()->getCache('core');
+        $cacheKey = "plugin_flowbpmn_flow_{$itemtype}_{$items_id}";
         
-        if (count($iterator)) {
-            return $iterator->current();
+        $flow = $cache->get($cacheKey);
+        
+        if ($flow === null) {
+            $iterator = $DB->request([
+                'FROM'  => self::getTable(),
+                'WHERE' => [
+                    'itemtype' => $itemtype,
+                    'items_id' => $items_id,
+                    'is_active' => 1
+                ],
+                // Add entity restriction just in case relevant in future
+                // 'entities_id' => $_SESSION['glpiactive_entity'] ?? 0, 
+                'ORDER' => 'date_mod DESC',
+                'LIMIT' => 1
+            ]);
+            
+            if (count($iterator)) {
+                $flow = $iterator->current();
+                
+                // Decompression logic (Priority 2)
+                if (isset($flow['bpmn_xml']) && strpos($flow['bpmn_xml'], 'COMPRESSED::') === 0) {
+                    $encoded = substr($flow['bpmn_xml'], 12); // Remove prefix
+                    $compressed = base64_decode($encoded);
+                    if ($compressed) {
+                        $decompressed = gzuncompress($compressed);
+                        if ($decompressed) {
+                            $flow['bpmn_xml'] = $decompressed;
+                        }
+                    }
+                }
+                
+                $cache->set($cacheKey, $flow, 3600); // Cache for 1 hour
+            } else {
+                // Cache empty result for shorter time to avoid repeated queries for missing flows
+                $cache->set($cacheKey, false, 60); // 1 minute
+                return null;
+            }
+        } elseif ($flow === false) {
+            return null;
         }
         
-        return null;
+        return $flow;
     }
     
     /**

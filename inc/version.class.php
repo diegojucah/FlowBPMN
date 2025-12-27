@@ -71,6 +71,18 @@ class PluginFlowbpmnVersion extends CommonDBTM {
         
         $nextVersion = $maxVersion + 1;
         
+        
+        $bpmn_xml = $flowData['bpmn_xml'] ?? '';
+        
+        // Compression for versions (Priority 2)
+        // If not already compressed and large, compress it
+        if (!empty($bpmn_xml) && strpos($bpmn_xml, 'COMPRESSED::') === false && strlen($bpmn_xml) > 10240) {
+            $compressed = gzcompress($bpmn_xml, 6);
+            if ($compressed !== false) {
+                $bpmn_xml = 'COMPRESSED::' . base64_encode($compressed);
+            }
+        }
+        
         // Create version record
         $version = new self();
         $input = [
@@ -78,7 +90,7 @@ class PluginFlowbpmnVersion extends CommonDBTM {
             'version_number' => $nextVersion,
             'name' => $flowData['name'] ?? '',
             'comment' => sprintf(__('Version %d', 'flowbpmn'), $nextVersion),
-            'bpmn_xml' => $flowData['bpmn_xml'] ?? '',
+            'bpmn_xml' => $bpmn_xml,
             'svg_content' => $flowData['svg_content'] ?? '',
             'users_id' => Session::getLoginUserID(),
             'date_creation' => $_SESSION['glpi_currenttime']
@@ -108,6 +120,17 @@ class PluginFlowbpmnVersion extends CommonDBTM {
         ]);
         
         foreach ($iterator as $data) {
+            // Decompression (Priority 2)
+            if (isset($data['bpmn_xml']) && strpos($data['bpmn_xml'], 'COMPRESSED::') === 0) {
+                $encoded = substr($data['bpmn_xml'], 12);
+                $compressed = base64_decode($encoded);
+                if ($compressed) {
+                    $decompressed = gzuncompress($compressed);
+                    if ($decompressed) {
+                        $data['bpmn_xml'] = $decompressed;
+                    }
+                }
+            }
             $versions[] = $data;
         }
         
@@ -130,7 +153,21 @@ class PluginFlowbpmnVersion extends CommonDBTM {
         ]);
         
         if (count($iterator)) {
-            return $iterator->current();
+            $data = $iterator->current();
+            
+            // Decompression (Priority 2)
+            if (isset($data['bpmn_xml']) && strpos($data['bpmn_xml'], 'COMPRESSED::') === 0) {
+                $encoded = substr($data['bpmn_xml'], 12);
+                $compressed = base64_decode($encoded);
+                if ($compressed) {
+                    $decompressed = gzuncompress($compressed);
+                    if ($decompressed) {
+                        $data['bpmn_xml'] = $decompressed;
+                    }
+                }
+            }
+            
+            return $data;
         }
         
         return null;
