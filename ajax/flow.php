@@ -64,6 +64,12 @@ try {
                 throw new Exception('Invalid item type');
             }
             
+            // Normalize itemtype to ensure proper casing (critical for DB lookups)
+            $itemtype = ucfirst(strtolower($itemtype));
+            if ($itemtype === 'Ticket') $itemtype = 'Ticket';
+            elseif ($itemtype === 'Problem') $itemtype = 'Problem';
+            elseif ($itemtype === 'Change') $itemtype = 'Change';
+            
             // Check permissions
             if (!PluginFlowbpmnProfile::canEditFlow($itemtype)) {
                 http_response_code(403);
@@ -108,8 +114,8 @@ try {
             }
             
             if ($flow_id > 0) {
-                // UPDATE
-                $DB->update('glpi_plugin_flowbpmn_flows', [
+                // UPDATE existing flow
+                $success = $DB->update('glpi_plugin_flowbpmn_flows', [
                     'bpmn_xml'    => $bpmn_xml,
                     'svg_content' => $svg_content,
                     'name'        => $name,
@@ -118,8 +124,12 @@ try {
                 ], [
                     'id' => $flow_id
                 ]);
+                
+                if (!$success) {
+                    throw new Exception('Falha ao atualizar diagrama existente');
+                }
             } else {
-                // INSERT
+                // INSERT new flow
                 $flow_id = $DB->insert('glpi_plugin_flowbpmn_flows', [
                     'itemtype'      => $itemtype,
                     'items_id'      => $items_id,
@@ -131,6 +141,10 @@ try {
                     'date_creation' => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s'),
                     'date_mod'      => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s')
                 ]);
+                
+                if (!$flow_id) {
+                    throw new Exception('Falha ao criar novo diagrama');
+                }
             }
             
             if (!$flow_id) throw new Exception("Failed to manage Flow ID");
