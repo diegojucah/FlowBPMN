@@ -34,6 +34,17 @@ if (!$user_id) {
     die(json_encode(['success' => false, 'message' => 'Usuário não autenticado']));
 }
 
+// Validate CSRF token for POST requests (security fix)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // GLPI's CSRF token is sent in headers for AJAX requests
+    $csrfToken = $_SERVER['HTTP_X_GLPI_CSRF_TOKEN'] ?? '';
+    
+    if (empty($csrfToken) || !Session::validateCSRF(['_glpi_csrf_token' => $csrfToken])) {
+        http_response_code(403);
+        die(json_encode(['success' => false, 'message' => 'Token CSRF inválido']));
+    }
+}
+
 // Get input
 $rawInput = file_get_contents("php://input");
 $input = json_decode($rawInput, true);
@@ -76,71 +87,48 @@ try {
                 throw new Exception('Você não tem permissão para editar diagramas BPMN');
             }
             
-            // Use the PluginFlowbpmnFlow class which has the working savePNGAsDocument() method
+            // Prepare input for GLPI class methods
+            $flowInput = [
+                'itemtype'    => $itemtype,
+                'items_id'    => $items_id,
+                'name'        => $name,
+                'bpmn_xml'    => $bpmn_xml,
+                'svg_content' => $svg_content,
+                '_png_data'   => $input['png_data'] ?? '', // Underscore prefix = temporary field
+            ];
+            
+            // Check if flow already exists
             $flow = new PluginFlowbpmnFlow();
-            $png_data = $input['png_data'] ?? '';
+            $existing = $flow->getForItem($itemtype, $items_id);
             
-            $flow_id = $flow->saveFlow($itemtype, $items_id, $bpmn_xml, $svg_content, $name, $png_data);
+            if ($existing) {
+                // UPDATE existing flow
+                $flowInput['id'] = $existing['id'];
+                $success = $flow->update($flowInput);
+                $flow_id = $existing['id'];
+                $action = 'atualizado';
+            } else {
+                // CREATE new flow
+                $flow_id = $flow->add($flowInput);
+                $success = ($flow_id > 0);
+                $action = 'criado';
+            }
             
-            $debug_file = __DIR__ . '/../debug_versions.txt';
-            file_put_contents($debug_file, "\n" . date('Y-m-d H:i:s') . " - saveFlow returned flow_id=$flow_id for $itemtype #$items_id\n", FILE_APPEND);
-            
-            if (!$flow_id) {
+            if (!$success || !$flow_id) {
                 throw new Exception('Falha ao salvar diagrama');
             }
             
-            // Create version manually (saveFlow() version creation may not work reliably)
-            $debug_file = __DIR__ . '/../debug_versions.txt';
-            file_put_contents($debug_file, date('Y-m-d H:i:s') . " - Creating version for flow_id=$flow_id\n", FILE_APPEND);
-            
-            $iterator = $DB->request([
-                'SELECT' => [new QueryExpression('MAX(version_number) as max_v')],
-                'FROM'   => 'glpi_plugin_flowbpmn_versions',
-                'WHERE'  => ['plugin_flowbpmn_flows_id' => $flow_id]
-            ]);
-            $max_v = 0;
-            if (count($iterator)) {
-                $row = $iterator->current();
-                $max_v = (int)($row['max_v'] ?? 0);
+            // Get version count for response
+            $versionCount = 0;
+            if (class_exists('PluginFlowbpmnVersion')) {
+                $versionCount = PluginFlowbpmnVersion::countVersions($flow_id);
             }
-            $next_v = $max_v + 1;
-            
-            file_put_contents($debug_file, "Max version: $max_v, Next version: $next_v\n", FILE_APPEND);
-            
-            $version_id = $DB->insert('glpi_plugin_flowbpmn_versions', [
-                'plugin_flowbpmn_flows_id' => $flow_id,
-                'version_number'           => $next_v,
-                'name'                     => $name,
-                'comment'                  => "Versão $next_v (Auto-save)",
-                'bpmn_xml'                 => $bpmn_xml,
-                'svg_content'              => $svg_content,
-                'users_id'                 => $user_id,
-                'date_creation'            => $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s')
-            ]);
-            
-            file_put_contents($debug_file, "Version insert result: version_id=$version_id\n", FILE_APPEND);
-            
-            if (!$version_id) {
-                file_put_contents($debug_file, "ERROR: Failed to create version!\n", FILE_APPEND);
-            }
-            
-            // Add entry to timeline
-            $log_message = "Diagrama BPMN atualizado: Versão $next_v ($name)";
-            Log::history(
-                $items_id,
-                $itemtype,
-                [0, '', $log_message],
-                '',
-                Log::HISTORY_LOG_SIMPLE_MESSAGE
-            );
-            
-            file_put_contents($debug_file, "Timeline entry added\n", FILE_APPEND);
             
             echo json_encode([
                 'success' => true,
                 'id' => $flow_id,
-                'version_created' => $next_v,
-                'message' => 'Diagrama salvo (v' . $next_v . ')'
+                'version_created' => $versionCount,
+                'message' => "Diagrama $action com sucesso (v$versionCount)"
             ]);
             break;
             

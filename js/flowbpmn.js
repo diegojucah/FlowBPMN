@@ -36,6 +36,27 @@ class BpmnFlowEditor {
         this.init();
     }
 
+    /**
+     * Security: Escape HTML to prevent XSS attacks
+     * @param {string} text - Text to escape
+     * @returns {string} - Escaped HTML
+     */
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    /**
+     * Security: Get CSRF token from GLPI meta tag
+     * @returns {string} - CSRF token
+     */
+    getCSRFToken() {
+        const meta = document.querySelector('meta[name="glpi-csrf-token"]');
+        return meta ? meta.getAttribute('content') : '';
+    }
+
     async init() {
         // Load CSS
         this.loadCSS();
@@ -206,7 +227,8 @@ class BpmnFlowEditor {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Glpi-Csrf-Token': this.getCSRFToken()
                 },
                 body: JSON.stringify({
                     action: 'save',
@@ -613,7 +635,8 @@ class BpmnFlowEditor {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Glpi-Csrf-Token': this.getCSRFToken()
                 },
                 body: JSON.stringify({
                     flow_id: flowId,

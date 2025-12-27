@@ -46,6 +46,177 @@ class PluginFlowbpmnFlow extends CommonDBTM {
     static function getTypeName($nb = 0) {
         return _n('BPMN Flow', 'BPMN Flows', $nb, 'flowbpmn');
     }
+    
+    /**
+     * Prepare input for add - GLPI Standard Method
+     * Validates and sanitizes input before creating a new flow
+     */
+    function prepareInputForAdd($input) {
+        // Validate itemtype (whitelist)
+        $validTypes = ['Ticket', 'Problem', 'Change'];
+        if (!isset($input['itemtype']) || !in_array($input['itemtype'], $validTypes, true)) {
+            Session::addMessageAfterRedirect(
+                __('Invalid item type', 'flowbpmn'),
+                false,
+                ERROR
+            );
+            return false;
+        }
+        
+        // Validate items_id
+        if (!isset($input['items_id']) || (int)$input['items_id'] <= 0) {
+            Session::addMessageAfterRedirect(
+                __('Invalid item ID', 'flowbpmn'),
+                false,
+                ERROR
+            );
+            return false;
+        }
+        
+        // Set default values
+        $input['users_id'] = Session::getLoginUserID();
+        $input['is_active'] = 1;
+        $input['is_deleted'] = 0;
+        
+        // Set timestamps
+        if (!isset($_SESSION['glpi_currenttime'])) {
+            $_SESSION['glpi_currenttime'] = date('Y-m-d H:i:s');
+        }
+        $input['date_creation'] = $_SESSION['glpi_currenttime'];
+        $input['date_mod'] = $_SESSION['glpi_currenttime'];
+        
+        return parent::prepareInputForAdd($input);
+    }
+    
+    /**
+     * Prepare input for update - GLPI Standard Method
+     * Validates and sanitizes input before updating a flow
+     */
+    function prepareInputForUpdate($input) {
+        // Update modification date
+        if (!isset($_SESSION['glpi_currenttime'])) {
+            $_SESSION['glpi_currenttime'] = date('Y-m-d H:i:s');
+        }
+        $input['date_mod'] = $_SESSION['glpi_currenttime'];
+        $input['users_id'] = Session::getLoginUserID();
+        
+        return parent::prepareInputForUpdate($input);
+    }
+    
+    /**
+     * Actions after adding an item - GLPI Standard Method
+     * Automatically adds timeline entry and saves PNG if provided
+     */
+    function post_addItem() {
+        global $DB;
+        
+        parent::post_addItem();
+        
+        // Add timeline entry
+        if (isset($this->fields['itemtype']) && isset($this->fields['items_id'])) {
+            $itemtype = $this->fields['itemtype'];
+            $items_id = $this->fields['items_id'];
+            $name = $this->fields['name'] ?? 'BPMN Diagram';
+            
+            Log::history(
+                $items_id,
+                $itemtype,
+                [0, '', sprintf(__('BPMN diagram created: %s', 'flowbpmn'), $name)],
+                '',
+                Log::HISTORY_LOG_SIMPLE_MESSAGE
+            );
+        }
+        
+        // Save PNG if provided (stored temporarily in input)
+        if (isset($this->input['_png_data']) && !empty($this->input['_png_data'])) {
+            $this->savePNGAsDocument(
+                $this->fields['itemtype'],
+                $this->fields['items_id'],
+                $this->input['_png_data'],
+                $this->fields['name'] ?? 'BPMN Diagram'
+            );
+        }
+    }
+    
+    /**
+     * Actions after updating an item - GLPI Standard Method
+     * Automatically creates version and adds timeline entry
+     */
+    function post_updateItem($history = true) {
+        global $DB;
+        
+        parent::post_updateItem($history);
+        
+        if (!$history) {
+            return;
+        }
+        
+        // Create version automatically
+        if (class_exists('PluginFlowbpmnVersion')) {
+            try {
+                PluginFlowbpmnVersion::createVersion($this->fields['id'], $this->fields);
+            } catch (Exception $e) {
+                error_log("flowBPMN: Failed to create version - " . $e->getMessage());
+            }
+        }
+        
+        // Add timeline entry
+        if (isset($this->fields['itemtype']) && isset($this->fields['items_id'])) {
+            $itemtype = $this->fields['itemtype'];
+            $items_id = $this->fields['items_id'];
+            $name = $this->fields['name'] ?? 'BPMN Diagram';
+            
+            // Get version number
+            $versionCount = 0;
+            if (class_exists('PluginFlowbpmnVersion')) {
+                $versionCount = PluginFlowbpmnVersion::countVersions($this->fields['id']);
+            }
+            
+            Log::history(
+                $items_id,
+                $itemtype,
+                [0, '', sprintf(__('BPMN diagram updated: %s (v%d)', 'flowbpmn'), $name, $versionCount)],
+                '',
+                Log::HISTORY_LOG_SIMPLE_MESSAGE
+            );
+        }
+        
+        // Save PNG if provided
+        if (isset($this->input['_png_data']) && !empty($this->input['_png_data'])) {
+            $this->savePNGAsDocument(
+                $this->fields['itemtype'],
+                $this->fields['items_id'],
+                $this->input['_png_data'],
+                $this->fields['name'] ?? 'BPMN Diagram'
+            );
+        }
+    }
+    
+    /**
+     * Actions after deleting an item - GLPI Standard Method
+     * Cleans up related versions and adds timeline entry
+     */
+    function post_deleteItem() {
+        global $DB;
+        
+        parent::post_deleteItem();
+        
+        // Versions are automatically deleted via CASCADE foreign key
+        // Just log the deletion
+        if (isset($this->fields['itemtype']) && isset($this->fields['items_id'])) {
+            $itemtype = $this->fields['itemtype'];
+            $items_id = $this->fields['items_id'];
+            $name = $this->fields['name'] ?? 'BPMN Diagram';
+            
+            Log::history(
+                $items_id,
+                $itemtype,
+                [0, '', sprintf(__('BPMN diagram deleted: %s', 'flowbpmn'), $name)],
+                '',
+                Log::HISTORY_LOG_SIMPLE_MESSAGE
+            );
+        }
+    }
 
     /**
      * Define search options for the item

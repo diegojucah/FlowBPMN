@@ -27,6 +27,16 @@ if (!$user_id) {
     die(json_encode(['success' => false, 'message' => 'Usuário não autenticado']));
 }
 
+// Validate CSRF token (security fix)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $csrfToken = $_SERVER['HTTP_X_GLPI_CSRF_TOKEN'] ?? '';
+    
+    if (empty($csrfToken) || !Session::validateCSRF(['_glpi_csrf_token' => $csrfToken])) {
+        http_response_code(403);
+        die(json_encode(['success' => false, 'message' => 'Token CSRF inválido']));
+    }
+}
+
 // Get Input
 $rawInput = file_get_contents("php://input");
 $input = json_decode($rawInput, true);
