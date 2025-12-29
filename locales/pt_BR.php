@@ -62,7 +62,10 @@ $LANG['plugin_flowbpmn'] = [
 
     // Permissions
     'BPMN Flow Rights' => 'Direitos do Fluxo BPMN',
-    'BPMN Flow Rights Management' => 'Gerenciamento de Permissões flowBPMN',
+    'BPMN Flow Rights Management' => 'Gerenciamento de Permissões FlowBPMN',
+    'flowBPMN Rights' => 'Permissões do FlowBPMN',
+    'FlowBPMN Rights' => 'Permissões do FlowBPMN',
+    'Permissões' => 'Permissões',
     'Item Type' => 'Tipo de Item',
     'View' => 'Visualizar',
     'Edit' => 'Editar',

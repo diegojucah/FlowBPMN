@@ -132,7 +132,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
         
         echo "<div class='spaced'>";
         echo "<table class='tab_cadre_fixe'>";
-        echo "<tr class='tab_bg_1'><th colspan='5'>" . __('flowBPMN Rights', 'flowbpmn') . "</th></tr>";
+        echo "<tr class='tab_bg_1'><th colspan='5'>" . __('Permissões', 'flowbpmn') . "</th></tr>";
         
         $types = [
             'Ticket' => __('Ticket'),
@@ -147,10 +147,10 @@ class PluginFlowbpmnProfile extends CommonDBTM {
         echo "</tr>";
         
         $actions = [
-            'view' => __('View', 'flowbpmn'),
-            'edit' => __('Edit', 'flowbpmn'),
-            'delete' => __('Delete', 'flowbpmn'),
-            'restore' => __('Restore', 'flowbpmn')
+            'view' => _x('action', 'Visualizar', 'flowbpmn'),
+            'edit' => _x('action', 'Editar', 'flowbpmn'),
+            'delete' => _x('action', 'Excluir', 'flowbpmn'),
+            'restore' => _x('action', 'Restaurar', 'flowbpmn')
         ];
         
         foreach ($actions as $action => $label) {
