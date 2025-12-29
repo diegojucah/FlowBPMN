@@ -130,11 +130,14 @@ try {
     // 5. Check restore permissions
     $canRestore = PluginFlowbpmnProfile::canRestoreFlow($itemtype);
 
+    // Calculate actual version number (total versions + 1 for current)
+    $versionNumber = count($formattedVersions) + 1;
+    
     echo json_encode([
         'success' => true,
         'versions' => $formattedVersions,
         'current' => [
-            'id' => $currentFlow['id'],
+            'id' => $versionNumber, // Show version number instead of DB ID
             'name' => $currentFlow['name'],
             'date_mod' => $currentFlow['date_mod'],
             'date_mod_formatted' => $formatDate($currentFlow['date_mod']),
