@@ -645,6 +645,11 @@ class BpmnFlowEditor {
             // Bind version actions
             this.bindVersionActions(result.current.id, result.canRestore);
 
+            // Bind pagination if needed
+            if (result.versions.length > 6) {
+                this.bindPaginationEvents('versions', result.versions, result.canRestore);
+            }
+
         } catch (err) {
             console.error('Error loading versions:', err);
             this.showError('Erro ao carregar versões: ' + err.message);
@@ -653,6 +658,8 @@ class BpmnFlowEditor {
 
     createVersionsModalHTML(data) {
         const versions = data.versions;
+        const itemsPerPage = 6;
+        const totalPages = Math.ceil(versions.length / itemsPerPage);
 
         let html = `
         <div class="modal fade" id="flowbpmn-versions-modal" tabindex="-1" aria-labelledby="flowbpmnVersionsModalLabel" aria-hidden="true">
@@ -667,13 +674,13 @@ class BpmnFlowEditor {
                     <div class="modal-body">
                         
                         ${versions.length === 0 ?
-                '<div class="alert alert-warning">Nenhuma versão anterior disponível.</div>' :
-                `<div class="flowbpmn-versions-grid">
-                                ${versions.map(v => this.createVersionCard(v, data.canRestore)).join('')}
-                            </div>`
+                '<div class="alert alert-warning">' + this._t('No previous versions available') + '</div>' :
+                `<div class="flowbpmn-versions-grid" id="flowbpmn-versions-grid" data-total-pages="${totalPages}" data-current-page="1">
+                                ${versions.slice(0, itemsPerPage).map(v => this.createVersionCard(v, data.canRestore)).join('')}
+                            </div>
+                            ${totalPages > 1 ? this.createPaginationHTML('versions', totalPages, versions, data.canRestore) : ''}`
             }
 
-                    </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Close')}</button>
@@ -1035,6 +1042,8 @@ class BpmnFlowEditor {
             if (!result.success) throw new Error(result.message);
 
             const templates = result.templates;
+            const itemsPerPage = 6;
+            const totalPages = Math.ceil(templates.length / itemsPerPage);
 
             let html = `
             <div class="modal fade" id="flowbpmn-templates-modal" tabindex="-1" aria-labelledby="flowbpmnTemplatesModalLabel" aria-hidden="true">
@@ -1058,9 +1067,10 @@ class BpmnFlowEditor {
 
                             ${templates.length === 0 ?
                     `<div class="alert alert-info">${this._t('No templates found')}</div>` :
-                    `<div class="flowbpmn-versions-grid" id="flowbpmn-templates-grid">
-                                    ${templates.map(t => this.createTemplateCardHTML(t)).join('')}
-                                </div>`
+                    `<div class="flowbpmn-versions-grid" id="flowbpmn-templates-grid" data-total-pages="${totalPages}" data-current-page="1" data-all-templates='${JSON.stringify(templates).replace(/'/g, "&apos;")}'>
+                                    ${templates.slice(0, itemsPerPage).map(t => this.createTemplateCardHTML(t)).join('')}
+                                </div>
+                                ${totalPages > 1 ? this.createPaginationHTML('templates', totalPages, templates) : ''}`
                 }               </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Close')}</button>
@@ -1116,6 +1126,11 @@ class BpmnFlowEditor {
 
             // Bind Template Actions
             this.bindTemplateActions();
+
+            // Bind pagination if needed
+            if (templates.length > 6) {
+                this.bindPaginationEvents('templates', templates);
+            }
 
         } catch (err) {
             console.error('Erro ao listar templates:', err);
@@ -1263,6 +1278,146 @@ class BpmnFlowEditor {
             }
         } catch (err) {
             this.showError(this._t('Error deleting template') + ': ' + err.message);
+        }
+    }
+
+    /**
+     * Create pagination HTML (GLPI style)
+     */
+    createPaginationHTML(type, totalPages, allData, canRestore = null) {
+        const currentPage = 1;
+
+        let html = `
+        <nav aria-label="Page navigation" class="mt-3">
+            <ul class="pagination justify-content-center" id="flowbpmn-${type}-pagination">
+                <li class="page-item disabled" id="flowbpmn-${type}-prev">
+                    <a class="page-link" href="#" tabindex="-1">
+                        <i class="ti ti-chevron-left"></i>
+                    </a>
+                </li>`;
+
+        for (let i = 1; i <= totalPages; i++) {
+            html += `
+                <li class="page-item ${i === 1 ? 'active' : ''}" data-page="${i}">
+                    <a class="page-link" href="#">${i}</a>
+                </li>`;
+        }
+
+        html += `
+                <li class="page-item ${totalPages === 1 ? 'disabled' : ''}" id="flowbpmn-${type}-next">
+                    <a class="page-link" href="#">
+                        <i class="ti ti-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>`;
+
+        return html;
+    }
+
+    /**
+     * Bind pagination events
+     */
+    bindPaginationEvents(type, allData, canRestore = null) {
+        const pagination = document.getElementById(`flowbpmn-${type}-pagination`);
+        if (!pagination) return;
+
+        const grid = document.getElementById(`flowbpmn-${type}-grid`);
+        const itemsPerPage = 6;
+
+        // Page number clicks
+        pagination.querySelectorAll('.page-item[data-page]').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = parseInt(item.dataset.page);
+                this.goToPage(type, page, allData, canRestore);
+            });
+        });
+
+        // Previous button
+        const prevBtn = document.getElementById(`flowbpmn-${type}-prev`);
+        if (prevBtn) {
+            prevBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const currentPage = parseInt(grid.dataset.currentPage);
+                if (currentPage > 1) {
+                    this.goToPage(type, currentPage - 1, allData, canRestore);
+                }
+            });
+        }
+
+        // Next button
+        const nextBtn = document.getElementById(`flowbpmn-${type}-next`);
+        if (nextBtn) {
+            nextBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const currentPage = parseInt(grid.dataset.currentPage);
+                const totalPages = parseInt(grid.dataset.totalPages);
+                if (currentPage < totalPages) {
+                    this.goToPage(type, currentPage + 1, allData, canRestore);
+                }
+            });
+        }
+    }
+
+    /**
+     * Go to specific page
+     */
+    goToPage(type, page, allData, canRestore = null) {
+        const grid = document.getElementById(`flowbpmn-${type}-grid`);
+        const pagination = document.getElementById(`flowbpmn-${type}-pagination`);
+        const itemsPerPage = 6;
+        const totalPages = parseInt(grid.dataset.totalPages);
+
+        // Update grid
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageData = allData.slice(start, end);
+
+        if (type === 'versions') {
+            grid.innerHTML = pageData.map(v => this.createVersionCard(v, canRestore)).join('');
+            this.bindVersionActions(null, canRestore); // Re-bind actions
+        } else if (type === 'templates') {
+            grid.innerHTML = pageData.map(t => this.createTemplateCardHTML(t)).join('');
+            this.bindTemplateActions(); // Re-bind actions
+        }
+
+        // Update pagination state
+        grid.dataset.currentPage = page;
+
+        // Update active page
+        pagination.querySelectorAll('.page-item[data-page]').forEach(item => {
+            if (parseInt(item.dataset.page) === page) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+
+        // Update prev/next buttons
+        const prevBtn = document.getElementById(`flowbpmn-${type}-prev`);
+        const nextBtn = document.getElementById(`flowbpmn-${type}-next`);
+
+        if (prevBtn) {
+            if (page === 1) {
+                prevBtn.classList.add('disabled');
+            } else {
+                prevBtn.classList.remove('disabled');
+            }
+        }
+
+        if (nextBtn) {
+            if (page === totalPages) {
+                nextBtn.classList.add('disabled');
+            } else {
+                nextBtn.classList.remove('disabled');
+            }
+        }
+
+        // Scroll to top of modal
+        const modalBody = grid.closest('.modal-body');
+        if (modalBody) {
+            modalBody.scrollTop = 0;
         }
     }
 }
