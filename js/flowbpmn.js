@@ -1462,8 +1462,7 @@ class BpmnFlowEditor {
             modalBody.scrollTop = 0;
         }
     }
-}
-    
+
     showImportModal(sourceType) {
         const itemtypeMap = {ticket: 'Ticket', problem: 'Problem', change: 'Change'};
         const itemtype = itemtypeMap[sourceType];
