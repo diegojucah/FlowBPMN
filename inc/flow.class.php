@@ -593,10 +593,13 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "</ul>";
             echo "</div>";
 
-            // Botão Importar (Dropdown)
-            echo "<div class='btn-group ms-2' role='group'>";
-            echo "<button type='button' class='btn btn-success dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
+            // Botão Importar (Split Button)
+            echo "<div class='btn-group ms-2'>";
+            echo "<button type='button' class='btn btn-success' id='import-from-file-option'>";
             echo "<i class='{$uploadIcon}'></i> " . self::_t('Import');
+            echo "</button>";
+            echo "<button type='button' class='btn btn-success dropdown-toggle dropdown-toggle-split' data-bs-toggle='dropdown' aria-expanded='false' style='border-left: 1px solid rgba(0,0,0,0.1);'>";
+            echo "<span class='visually-hidden'>Toggle Dropdown</span>";
             echo "</button>";
             echo "<ul class='dropdown-menu'>";
             echo "<li><a class='dropdown-item' href='#' id='import-from-ticket-option'>";
@@ -605,9 +608,6 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "<i class='ti ti-bug'></i> " . self::_t('Problem') . "</a></li>";
             echo "<li><a class='dropdown-item' href='#' id='import-from-change-option'>";
             echo "<i class='ti ti-refresh'></i> " . self::_t('Change') . "</a></li>";
-            echo "<li><hr class='dropdown-divider'></li>";
-            echo "<li><a class='dropdown-item' href='#' id='import-from-file-option'>";
-            echo "<i class='ti ti-file-upload'></i> " . self::_t('File') . "</a></li>";
             echo "</ul>";
             echo "</div>";
             echo "<input type='file' id='bpmn-file-input' accept='.bpmn,.xml' style='display: none;'>";
