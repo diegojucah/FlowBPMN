@@ -197,7 +197,13 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         // Create initial version (v1)
         if (class_exists('PluginFlowbpmnVersion') && isset($this->fields['id'])) {
             try {
-                PluginFlowbpmnVersion::createVersion($this->fields['id'], $this->fields);
+                // Ensure SVG content is passed
+                $flowData = $this->fields;
+                if (empty($flowData['svg_content']) && !empty($this->input['svg_content'])) {
+                    $flowData['svg_content'] = $this->input['svg_content'];
+                }
+
+                PluginFlowbpmnVersion::createVersion($this->fields['id'], $flowData);
             } catch (Exception $e) {
                 error_log("flowBPMN: Failed to create initial version - " . $e->getMessage());
             }
@@ -239,7 +245,13 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         // Create version automatically
         if (class_exists('PluginFlowbpmnVersion')) {
             try {
-                PluginFlowbpmnVersion::createVersion($this->fields['id'], $this->fields);
+                // Ensure SVG content is passed (fallback to input if fields missing)
+                $flowData = $this->fields;
+                if (empty($flowData['svg_content']) && !empty($this->input['svg_content'])) {
+                    $flowData['svg_content'] = $this->input['svg_content'];
+                }
+                
+                PluginFlowbpmnVersion::createVersion($this->fields['id'], $flowData);
             } catch (Exception $e) {
                 error_log("flowBPMN: Failed to create version - " . $e->getMessage());
             }
@@ -495,7 +507,39 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         $historyIcon = 'ti ti-history';
         $photoIcon = 'ti ti-photo';
         $codeIcon = 'ti ti-code';
+        $codeIcon = 'ti ti-code';
         $fileIcon = 'ti ti-file-code';
+
+        // Inject Translations for JS
+        $jsTranslations = [
+            'Version History' => self::_t('Version History'),
+            'Template Gallery' => self::_t('Template Gallery'),
+            'Restore' => self::_t('Restore'),
+            'Apply' => self::_t('Apply'),
+            'View' => self::_t('View'),
+            'Delete' => self::_t('Delete'),
+            'Close' => self::_t('Close'),
+            'No preview available' => self::_t('No preview available'),
+            'Public' => self::_t('Public'),
+            'Private' => self::_t('Private'),
+            'System' => self::_t('System'),
+            'Search templates by name...' => self::_t('Search templates by name...'),
+            'No templates found' => self::_t('No templates found'),
+            'Error loading template' => self::_t('Error loading template'),
+            'Template loaded successfully!' => self::_t('Template loaded successfully!'),
+            'This will overwrite the current diagram. Continue?' => self::_t('This will overwrite the current diagram. Continue?'),
+            'Delete this template permanently?' => self::_t('Delete this template permanently?'),
+            'Template deleted' => self::_t('Template deleted'),
+            'Error deleting template' => self::_t('Error deleting template'),
+            'No previous versions available' => self::_t('No previous versions available'),
+            'Modification Date' => self::_t('Modification Date'),
+            'Author' => self::_t('Author'),
+            'Responsible User' => self::_t('Responsible User')
+        ];
+        
+        echo "<script>
+            window.FLOWBPMN_I18N = " . json_encode($jsTranslations) . ";
+        </script>";
 
         echo "<div class='flowbpmn-container'>";
 
@@ -508,10 +552,18 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         if ($canEdit) {
             echo "<div class='flowbpmn-toolbar-right'>";
             
-            // Botão Salvar
-            echo "<button type='button' class='btn btn-primary' id='bpmn-save-btn'>";
+            // Botão Salvar (Split Button)
+            echo "<div class='btn-group'>";
+            echo "<button type='button' class='btn' id='bpmn-save-btn' style='background-color: #FFC107; color: #212529; border-color: #FFC107;'>";
             echo "<i class='{$saveIcon}'></i> " . self::_t('Save');
             echo "</button>";
+            echo "<button type='button' class='btn dropdown-toggle dropdown-toggle-split' data-bs-toggle='dropdown' aria-expanded='false' style='background-color: #FFC107; color: #212529; border-color: #FFC107; border-left: 1px solid rgba(0,0,0,0.1);'>";
+            echo "<span class='visually-hidden'>Toggle Dropdown</span>";
+            echo "</button>";
+            echo "<ul class='dropdown-menu'>";
+            echo "<li><a class='dropdown-item' href='#' id='bpmn-save-template-btn'><i class='ti ti-template'></i> " . self::_t('Save as Template') . "</a></li>";
+            echo "</ul>";
+            echo "</div>";
 
             // Botão Importar
             echo "<button type='button' class='btn btn-success ms-2' id='bpmn-import-btn'>";
@@ -519,17 +571,10 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "</button>";
             echo "<input type='file' id='bpmn-file-input' accept='.bpmn,.xml' style='display: none;'>";
 
-            // Botão Exportar com Dropdown
-            // Templates Button (Priority 4.1)
-            echo "<div class='btn-group ms-2' role='group'>";
-            echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
+            // Botão Modelos (Simplified - Opens Gallery Directly)
+            echo "<button type='button' class='btn btn-outline-secondary ms-2' id='bpmn-load-template-btn'>";
             echo "<i class='ti ti-template'></i> " . self::_t('Templates');
             echo "</button>";
-            echo "<ul class='dropdown-menu'>";
-            echo "<li><a class='dropdown-item' href='#' id='bpmn-save-template-btn'><i class='ti ti-device-floppy'></i> " . self::_t('Save as Template') . "</a></li>";
-            echo "<li><a class='dropdown-item' href='#' id='bpmn-load-template-btn'><i class='ti ti-cloud-download'></i> " . self::_t('Load Template') . "</a></li>";
-            echo "</ul>";
-            echo "</div>";
 
             echo "<div class='btn-group ms-2' role='group'>";
             echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";

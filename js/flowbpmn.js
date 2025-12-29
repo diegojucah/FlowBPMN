@@ -58,6 +58,18 @@ class BpmnFlowEditor {
         return meta ? meta.getAttribute('content') : '';
     }
 
+    /**
+     * Helper: Get translated string
+     * @param {string} key - Translation key
+     * @return {string} - Translated text or key if missing
+     */
+    _t(key) {
+        if (window.FLOWBPMN_I18N && window.FLOWBPMN_I18N[key]) {
+            return window.FLOWBPMN_I18N[key];
+        }
+        return key;
+    }
+
     async init() {
         // Load CSS
         this.loadCSS();
@@ -94,6 +106,123 @@ class BpmnFlowEditor {
             link3.rel = 'stylesheet';
             link3.href = BPMN_FONT;
             document.head.appendChild(link3);
+        }
+
+        // Custom CSS for FlowBPMN Interface
+        if (!document.getElementById('flowbpmn-custom-css')) {
+            const css = `
+                /* Versions Modal Grid */
+                .flowbpmn-versions-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                    gap: 25px;
+                    padding: 10px;
+                }
+                
+                /* Version Card Styling */
+                .flowbpmn-version-card {
+                    border: 1px solid #e9ecef;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    background: #fff;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                    display: flex;
+                    flex-direction: column;
+                }
+                .flowbpmn-version-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+                }
+
+                /* Preview Area */
+                .flowbpmn-version-preview {
+                    height: 240px;
+                    background-color: #f8f9fa;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    position: relative;
+                    border-bottom: 1px solid #e9ecef;
+                    overflow: hidden;
+                }
+                .flowbpmn-version-preview svg {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                }
+
+                /* Overlay */
+                .flowbpmn-version-overlay {
+                    position: absolute;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(33, 37, 41, 0.85); /* Dark overlay */
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    opacity: 0;
+                    transition: opacity 0.2s;
+                    gap: 10px;
+                }
+                .flowbpmn-version-card:hover .flowbpmn-version-overlay {
+                    opacity: 1;
+                }
+
+                /* Info Section */
+                .flowbpmn-version-info {
+                    padding: 15px;
+                    flex-grow: 1;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+                .flowbpmn-version-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 5px;
+                }
+                .flowbpmn-badge {
+                    background: #212529;
+                    color: #fff;
+                    padding: 4px 8px;
+                    border-radius: 6px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                }
+                .flowbpmn-meta {
+                    font-size: 0.9rem;
+                    color: #6c757d;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+                /* Actions Footer */
+                .flowbpmn-actions {
+                    margin-top: 15px;
+                }
+                
+                /* Action Buttons in Overlay */
+                .btn-flowbpmn-action {
+                    background: rgba(255,255,255,0.15);
+                    border: 1px solid rgba(255,255,255,0.5);
+                    color: white;
+                    border-radius: 6px;
+                    padding: 8px 16px;
+                    backdrop-filter: blur(4px);
+                    transition: all 0.2s;
+                }
+                .btn-flowbpmn-action:hover {
+                    background: white;
+                    color: #212529;
+                    border-color: white;
+                }
+            `;
+            const style = document.createElement('style');
+            style.id = 'flowbpmn-custom-css';
+            style.textContent = css;
+            document.head.appendChild(style);
         }
     }
 
@@ -315,7 +444,7 @@ class BpmnFlowEditor {
             console.log('Response status:', response.status);
             console.log('Response headers:', response.headers);
             console.log('Response ok:', response.ok);
-            
+
             const text = await response.text();
             console.log('Response text length:', text.length);
             console.log('Response text:', text);
@@ -527,11 +656,11 @@ class BpmnFlowEditor {
 
         let html = `
         <div class="modal fade" id="flowbpmn-versions-modal" tabindex="-1" aria-labelledby="flowbpmnVersionsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
+            <div class="modal-dialog modal-xl" style="max-width: 65vw;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="flowbpmnVersionsModalLabel">
-                            <i class="ti ti-history"></i> Histórico de Versões - FlowBPMN
+                            <i class="ti ti-history"></i> ${this._t('Version History')}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -545,8 +674,9 @@ class BpmnFlowEditor {
             }
 
                     </div>
+                    </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Close')}</button>
                     </div>
                 </div>
             </div>
@@ -576,6 +706,8 @@ class BpmnFlowEditor {
         if (version.svg_content && version.svg_content !== '0' && version.svg_content.length > 50) {
             thumbnail = version.svg_content; // Directly embed SVG
             svgData = encodeURIComponent(version.svg_content);
+        } else {
+            thumbnail = `<div class="text-muted"><i class="ti ti-photo-off"></i> ${this._t('No preview available')}</div>`;
         }
 
         return `
@@ -584,10 +716,10 @@ class BpmnFlowEditor {
                 ${thumbnail}
                 <div class="flowbpmn-version-overlay">
                     <button type="button" class="btn-flowbpmn-action flowbpmn-view-image" data-svg="${svgData}">
-                        <i class="ti ti-eye"></i> Ver
+                        <i class="ti ti-eye"></i> ${this._t('View')}
                     </button>
                     <button type="button" class="btn-flowbpmn-action flowbpmn-delete-version" data-version-id="${version.id}">
-                        <i class="ti ti-trash"></i> Excluir
+                        <i class="ti ti-trash"></i> ${this._t('Delete')}
                     </button>
                 </div>
             </div>
@@ -596,18 +728,19 @@ class BpmnFlowEditor {
                     <span class="flowbpmn-badge">v${version.version_number}</span>
                 </div>
                 
-                <div class="flowbpmn-meta" title="Data da modificação">
+                <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
                     <i class="ti ti-calendar"></i> ${version.date_creation_formatted}
                 </div>
-                <div class="flowbpmn-meta" title="Usuário responsável">
+                <div class="flowbpmn-meta" title="${this._t('Responsible User')}">
                     <i class="ti ti-user"></i> ${version.user_name}
                 </div>
 
                 <div class="flowbpmn-actions">
                     ${canRestore ?
-                `<button type="button" class="btn btn-sm btn-primary flowbpmn-restore-version btn-flowbpmn-restore"
-                                data-version-id="${version.id}">
-                            <i class="ti ti-refresh"></i> Restaurar
+                `<button type="button" class="btn btn-warning w-100 flowbpmn-restore-version btn-flowbpmn-restore"
+                                data-version-id="${version.id}"
+                                style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;">
+                            <i class="ti ti-refresh"></i> ${this._t('Restore')}
                         </button>` : ''
             }
                 </div>
@@ -621,7 +754,7 @@ class BpmnFlowEditor {
         restoreButtons.forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const versionId = e.currentTarget.dataset.versionId;
-                if (!confirm('Tem certeza que deseja restaurar esta versão? A versão atual será salva no histórico.')) {
+                if (!confirm(this._t('This will overwrite the current diagram. Continue?'))) {
                     return;
                 }
                 try {
@@ -668,7 +801,7 @@ class BpmnFlowEditor {
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 const versionId = e.currentTarget.dataset.versionId;
-                if (confirm('Tem certeza que deseja excluir esta versão permanentemente?')) {
+                if (confirm(this._t('Are you sure you want to permanently delete this version?'))) {
                     await this.deleteVersion(versionId);
                 }
             });
@@ -695,12 +828,13 @@ class BpmnFlowEditor {
                     card.style.opacity = '0';
                     setTimeout(() => card.remove(), 500);
                 }
+                this.showSuccess(this._t('Version deleted successfully!'));
             } else {
-                alert('Erro ao excluir: ' + result.message);
+                this.showError(this._t('Error deleting version') + ': ' + result.message);
             }
         } catch (err) {
             console.error(err);
-            alert('Erro de conexão ao tentar excluir.');
+            this.showError(this._t('Connection error when trying to delete.'));
         }
     }
 
@@ -900,35 +1034,48 @@ class BpmnFlowEditor {
 
             if (!result.success) throw new Error(result.message);
 
-            // Build Modal HTML
+            const templates = result.templates;
+
             let html = `
-            <div class="modal fade" id="flowbpmn-templates-modal" tabindex="-1">
-                <div class="modal-dialog modal-lg">
+            <div class="modal fade" id="flowbpmn-templates-modal" tabindex="-1" aria-labelledby="flowbpmnTemplatesModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl" style="max-width: 65vw;">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">Carregar Template</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            <h5 class="modal-title" id="flowbpmnTemplatesModalLabel">
+                                <i class="ti ti-template"></i> ${this._t('Template Gallery')}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <div class="list-group">
-            `;
-
-            if (result.templates.length === 0) {
-                html += `<div class="alert alert-info">Nenhum template encontrado.</div>`;
-            } else {
-                result.templates.forEach(t => {
-                    const badge = t.is_public == 1 ? '<span class="badge bg-success float-end">Público</span>' : '<span class="badge bg-secondary float-end">Privado</span>';
-                    html += `
-                    <button type="button" class="list-group-item list-group-item-action template-item" data-xml="${this.escapeHtml(t.bpmn_xml)}">
-                        ${badge}
-                        <strong>${this.escapeHtml(t.name)}</strong>
-                        <br><small class="text-muted">${this.escapeHtml(t.comment || '')}</small>
-                    </button>`;
-                });
-            }
-
-            html += `
+                            
+                            <!-- Search Field -->
+                            <div class="mb-3 sticky-top bg-white pt-2 pb-2" style="top: -16px; z-index: 5;">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="ti ti-search"></i></span>
+                                    <input type="text" id="flowbpmn-template-search" class="form-control" placeholder="${this._t('Search templates by name...')}">
+                                </div>
                             </div>
+
+                            ${templates.length === 0 ?
+                    `<div class="alert alert-info">${this._t('No templates found')}</div>` :
+                    `<div class="flowbpmn-versions-grid" id="flowbpmn-templates-grid">
+                                    ${templates.map(t => this.createTemplateCardHTML(t)).join('')}
+                                </div>`
+                }               </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Close')}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Shared Image Preview Modal (Identical to Versions) -->
+            <div class="modal fade" id="flowbpmn-image-modal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-body position-relative">
+                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px; z-index: 10;"></button>
+                             <div id="flowbpmn-image-container" class="d-flex justify-content-center"></div>
                         </div>
                     </div>
                 </div>
@@ -944,20 +1091,178 @@ class BpmnFlowEditor {
             const bsModal = new bootstrap.Modal(modalEl);
             bsModal.show();
 
-            // Bind click
-            modalEl.querySelectorAll('.template-item').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    if (confirm('Carregar este template substituirá o diagrama atual. Continuar?')) {
-                        const xml = btn.getAttribute('data-xml');
-                        await this.loadDiagram(xml);
-                        bsModal.hide();
-                    }
+            // Bind Search Logic
+            const searchInput = document.getElementById('flowbpmn-template-search');
+            if (searchInput) {
+                searchInput.addEventListener('keyup', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const cards = document.querySelectorAll('#flowbpmn-templates-grid .flowbpmn-version-card');
+
+                    cards.forEach(card => {
+                        const nameEl = card.querySelector('.flowbpmn-version-header strong');
+                        const name = nameEl ? nameEl.textContent.toLowerCase() : '';
+
+                        if (name.includes(term)) {
+                            card.style.display = 'flex';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
                 });
-            });
+
+                // Focus on search
+                setTimeout(() => searchInput.focus(), 500);
+            }
+
+            // Bind Template Actions
+            this.bindTemplateActions();
 
         } catch (err) {
             console.error('Erro ao listar templates:', err);
             this.showError('Erro ao listar templates: ' + err.message);
+        }
+    }
+    createTemplateCardHTML(template) {
+        // Thumbnail logic
+        let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> Sem pré-visualização</div>';
+        let svgData = '';
+
+        if (template.svg_content && template.svg_content !== '0' && template.svg_content.length > 50) {
+            thumbnail = template.svg_content; // Directly embed SVG
+            svgData = encodeURIComponent(template.svg_content);
+        } else {
+            thumbnail = `<div class="text-muted"><i class="ti ti-photo-off"></i> ${this._t('No preview available')}</div>`;
+        }
+
+        const deleteBtn = template.can_delete ?
+            `<button type="button" class="btn-flowbpmn-action flowbpmn-delete-template" data-template-id="${template.id}">
+                <i class="ti ti-trash"></i> ${this._t('Delete')}
+            </button>` : '';
+
+        return `
+        <div class="flowbpmn-version-card" id="template-card-${template.id}">
+            <div class="flowbpmn-version-preview">
+                ${thumbnail}
+                <div class="flowbpmn-version-overlay">
+                    <button type="button" class="btn-flowbpmn-action flowbpmn-view-image" data-svg="${svgData}">
+                        <i class="ti ti-eye"></i> ${this._t('View')}
+                    </button>
+                    ${deleteBtn}
+                </div>
+            </div>
+            <div class="flowbpmn-version-info">
+                <div class="flowbpmn-version-header">
+                    <strong>${this.escapeHtml(template.name)}</strong>
+                </div>
+                
+                <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
+                    <i class="ti ti-calendar"></i> ${template.date_mod}
+                </div>
+                <div class="flowbpmn-meta" title="${this._t('Author')}">
+                    <i class="ti ti-user"></i> ${template.author_name}
+                </div>
+
+                <div class="flowbpmn-actions">
+                    <button type="button" class="btn btn-warning w-100 flowbpmn-load-template"
+                            data-xml="${template.bpmn_xml}"
+                            style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;">
+                        <i class="ti ti-check"></i> ${this._t('Apply')}
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    bindTemplateActions() {
+        // Scope to the Modal
+        const modalEl = document.getElementById('flowbpmn-templates-modal');
+        if (!modalEl) return;
+
+        // Load (Apply) Action
+        modalEl.querySelectorAll('.flowbpmn-load-template').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                if (confirm(this._t('This will overwrite the current diagram. Continue?'))) {
+                    const base64Xml = e.currentTarget.getAttribute('data-xml');
+
+                    try {        // Decode Base64 (handle UTF-8 correctly)
+                        const xml = decodeURIComponent(escape(atob(base64Xml)));
+
+                        // Close Modal
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+
+                        await this.loadDiagram(xml);
+                        this.showSuccess(this._t('Template loaded successfully!'));
+                    } catch (err) {
+                        console.error('Error decoding/loading XML:', err);
+                        this.showError(this._t('Error loading template') + ': ' + err.message);
+                    }
+                }
+            });
+        });
+
+        // View Action
+        modalEl.querySelectorAll('.flowbpmn-view-image').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const svgContent = decodeURIComponent(e.currentTarget.dataset.svg);
+                if (svgContent) {
+                    const container = document.getElementById('flowbpmn-image-container');
+                    container.innerHTML = svgContent;
+
+                    // Fix SVG size for modal
+                    const svgEl = container.querySelector('svg');
+                    if (svgEl) {
+                        svgEl.removeAttribute('width');
+                        svgEl.removeAttribute('height');
+                        svgEl.style.width = '100%';
+                        svgEl.style.height = 'auto';
+                        svgEl.style.maxWidth = '100%';
+                    }
+
+                    const imgModal = new bootstrap.Modal(document.getElementById('flowbpmn-image-modal'));
+                    imgModal.show();
+                }
+            });
+        });
+
+        // Delete Template Action
+        modalEl.querySelectorAll('.flowbpmn-delete-template').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.currentTarget.dataset.templateId;
+                if (confirm(this._t('Delete this template permanently?'))) {
+                    await this.deleteTemplate(id);
+                }
+            });
+        });
+    }
+
+    async deleteTemplate(id) {
+        try {
+            const pluginUrl = this.pluginUrl || '/plugins/flowbpmn';
+            const url = `${pluginUrl}/ajax/flow.php?action=delete_template`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Glpi-Csrf-Token': this.getCSRFToken()
+                },
+                body: JSON.stringify({
+                    action: 'delete_template',
+                    id: id
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                this.showSuccess(this._t('Template deleted'));
+                // Refresh
+                this.showLoadTemplateModal();
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (err) {
+            this.showError(this._t('Error deleting template') + ': ' + err.message);
         }
     }
 }

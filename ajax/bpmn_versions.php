@@ -99,6 +99,21 @@ try {
     // 4. Prepare Response
     $formattedVersions = [];
     foreach ($iterator as $v) {
+        $svg = $v['svg_content'] ?? '';
+        
+        // Check for compression (standard flowbpmn pattern)
+        if (!empty($svg) && strpos($svg, 'COMPRESSED::') === 0) {
+            $encoded = substr($svg, 12);
+            $compressed = base64_decode($encoded);
+            if ($compressed) {
+                // Try decompress
+                $decompressed = @gzuncompress($compressed);
+                if ($decompressed !== false) {
+                    $svg = $decompressed;
+                }
+            }
+        }
+
         $formattedVersions[] = [
             'id' => $v['id'],
             'version_number' => $v['version_number'],
@@ -108,7 +123,7 @@ try {
             'user_name' => $v['user_name'] ?: 'Unknown',
             'date_creation' => $v['date_creation'],
             'date_creation_formatted' => $formatDate($v['date_creation']),
-            'svg_content' => $v['svg_content'] ?? null
+            'svg_content' => $svg
         ];
     }
 
