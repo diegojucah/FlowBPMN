@@ -643,7 +643,7 @@ class BpmnFlowEditor {
             bsModal.show();
 
             // Bind version actions
-            this.bindVersionActions(result.current.id, result.canRestore);
+            this.bindVersionActions(result.current.flow_db_id, result.canRestore);
 
             // Bind pagination if needed
             if (result.versions.length > 6) {

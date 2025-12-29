@@ -137,7 +137,8 @@ try {
         'success' => true,
         'versions' => $formattedVersions,
         'current' => [
-            'id' => $versionNumber, // Show version number instead of DB ID
+            'id' => $versionNumber, // Show version number for display
+            'flow_db_id' => $currentFlow['id'], // Real database ID for restore
             'name' => $currentFlow['name'],
             'date_mod' => $currentFlow['date_mod'],
             'date_mod_formatted' => $formatDate($currentFlow['date_mod']),
