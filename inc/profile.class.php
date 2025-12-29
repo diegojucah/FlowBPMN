@@ -96,7 +96,12 @@ class PluginFlowbpmnProfile extends CommonDBTM {
      */
     function getTabNameForItem(CommonGLPI $item, $withtemplate = 0) {
         if ($item->getType() == 'Profile') {
-            return 'FlowBPMN';
+            return self::createTabEntry(
+                'FlowBPMN',
+                0,
+                $item::getType(),
+                'ti ti-sitemap'
+            );
         }
         return '';
     }
