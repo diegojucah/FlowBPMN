@@ -90,6 +90,7 @@ $LANG['plugin_flowbpmn'] = [
     'You do not have permission to edit BPMN flows' => 'No tiene permiso para editar flujos BPMN',
 
     // Modals & JS Actions
+    'Current Version' => 'Versión Actual',
     'Version History' => 'Historial de Versiones',
     'Template Gallery' => 'Galería de Plantillas',
     'Restore' => 'Restaurar',
