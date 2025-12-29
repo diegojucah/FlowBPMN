@@ -671,7 +671,7 @@ class BpmnFlowEditor {
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body" style="max-height: calc(85vh - 120px); overflow-y: auto;">
+                    <div class="modal-body">
                         
                         <!-- Current Version Info -->
                         <div class="alert alert-info mb-3 d-flex align-items-center justify-content-between" style="min-height: 38px; padding: 0.5rem 1rem;">
@@ -1066,7 +1066,7 @@ class BpmnFlowEditor {
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body" style="max-height: calc(85vh - 120px); overflow-y: auto;">
+                        <div class="modal-body">
                             
                             <!-- Search Field -->
                             <div class="mb-3 sticky-top bg-white pt-2 pb-2" style="top: -16px; z-index: 5;">
