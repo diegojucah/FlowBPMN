@@ -1467,28 +1467,88 @@ class BpmnFlowEditor {
         const itemtypeMap = { ticket: 'Ticket', problem: 'Problem', change: 'Change' };
         const itemtype = itemtypeMap[sourceType];
         if (!itemtype) return;
-        const titleMap = { Ticket: this._t('Import from Ticket'), Problem: this._t('Import from Problem'), Change: this._t('Import from Change') };
-        const modalId = 'flowbpmn-import-modal';
-        const existingModal = document.getElementById(modalId);
-        if (existingModal) existingModal.remove();
-        const html = `<div class="modal fade" id="${modalId}" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title"><i class="ti ti-download"></i> ${titleMap[itemtype]}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label for="import-item-select" class="form-label">${this._t('Select ' + itemtype)}:</label><select id="import-item-select" class="form-select" style="width:100%;"></select></div><div id="import-preview" class="alert alert-info" style="display:none;"><strong>${this._t('Selected diagram:')}</strong><p id="import-diagram-name" class="mb-1"></p><small id="import-diagram-date" class="text-muted"></small></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Close')}</button><button type="button" class="btn btn-primary" id="import-confirm-btn" disabled><i class="ti ti-download"></i> ${this._t('Import')}</button></div></div></div></div>`;
-        document.body.insertAdjacentHTML('beforeend', html);
-        const modal = new bootstrap.Modal(document.getElementById(modalId));
-        const select = document.getElementById('import-item-select');
-        const confirmBtn = document.getElementById('import-confirm-btn');
-        let selectedItem = null;
-        $(select).select2({ ajax: { url: this.pluginUrl + '/ajax/list_items_with_diagrams.php', dataType: 'json', delay: 250, data: (params) => ({ itemtype: itemtype, search: params.term, page: params.page || 1 }), processResults: (data) => ({ results: data.success ? data.items.map(i => ({ id: i.id, text: i.text, items_id: i.items_id, date_mod_formatted: i.date_mod_formatted })) : [], pagination: { more: data.pagination?.more } }) }, minimumInputLength: 2, placeholder: this._t('Type to search...'), dropdownParent: $('#' + modalId) });
-        $(select).on('select2:select', (e) => { selectedItem = e.params.data; document.getElementById('import-diagram-name').textContent = selectedItem.text; document.getElementById('import-diagram-date').textContent = selectedItem.date_mod_formatted; document.getElementById('import-preview').style.display = 'block'; confirmBtn.disabled = false; });
-        confirmBtn.addEventListener('click', () => { if (selectedItem) { this.loadDiagramFromItem(itemtype, selectedItem.id, selectedItem.items_id, selectedItem.text); modal.hide(); } });
-        document.getElementById(modalId).addEventListener('hidden.bs.modal', () => { $(select).select2('destroy'); document.getElementById(modalId).remove(); });
-        modal.show();
+
+        // Load modal with native GLPI dropdown via AJAX
+        fetch(this.pluginUrl + '/ajax/show_import_modal.php?itemtype=' + itemtype)
+            .then(r => r.text())
+            .then(html => {
+                // Create modal
+                const modalDiv = document.createElement('div');
+                modalDiv.className = 'modal fade';
+                modalDiv.id = 'flowbpmn-import-modal';
+                modalDiv.innerHTML = `<div class="modal-dialog modal-dialog-centered">${html}</div>`;
+                document.body.appendChild(modalDiv);
+
+                // Show modal
+                const modal = new bootstrap.Modal(modalDiv);
+                modal.show();
+
+                // Event listener for import button
+                const confirmBtn = document.getElementById('confirm-import-btn');
+                if (confirmBtn) {
+                    confirmBtn.addEventListener('click', () => {
+                        const itemId = document.querySelector('[name="import_item_id"]')?.value;
+                        if (itemId && itemId !== '0') {
+                            this.loadDiagramFromItem(itemtype, parseInt(itemId));
+                            modal.hide();
+                        } else {
+                            alert(this._t('Please select an item'));
+                        }
+                    });
+                }
+
+                // Cleanup on modal close
+                modalDiv.addEventListener('hidden.bs.modal', () => {
+                    modalDiv.remove();
+                });
+            })
+            .catch(error => {
+                console.error('Error loading import modal:', error);
+                this.showMessage(this._t('Failed to load import modal'), 'error');
+            });
     }
 
-    loadDiagramFromItem(itemtype, flow_id, items_id, sourceName) {
-        fetch(this.pluginUrl + '/ajax/load_diagram_from_item.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ flow_id, itemtype, items_id }) })
+    loadDiagramFromItem(itemtype, items_id) {
+        // First, get the flow_id for this item
+        fetch(this.pluginUrl + '/ajax/get_flow_id.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ itemtype, items_id })
+        })
             .then(r => r.json())
-            .then(data => { if (data.success) { this.modeler.importXML(data.bpmn_xml).then(() => { this.showMessage(this._t('Diagram imported successfully from %s').replace('%s', sourceName), 'success'); }).catch(() => this.showMessage(this._t('Failed to import diagram'), 'error')); } else { this.showMessage(data.message || this._t('Failed to import diagram'), 'error'); } })
-            .catch(() => this.showMessage(this._t('Failed to import diagram'), 'error'));
+            .then(data => {
+                if (data.success && data.flow_id) {
+                    // Now load the diagram
+                    return fetch(this.pluginUrl + '/ajax/load_diagram_from_item.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({
+                            flow_id: data.flow_id,
+                            itemtype: itemtype,
+                            items_id: items_id
+                        })
+                    });
+                } else {
+                    throw new Error(data.message || this._t('Failed to get diagram'));
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    this.modeler.importXML(data.bpmn_xml).then(() => {
+                        const sourceName = `${itemtype} #${items_id}`;
+                        this.showMessage(this._t('Diagram imported successfully from %s').replace('%s', sourceName), 'success');
+                    }).catch(() => {
+                        this.showMessage(this._t('Failed to import diagram'), 'error');
+                    });
+                } else {
+                    this.showMessage(data.message || this._t('Failed to import diagram'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading diagram:', error);
+                this.showMessage(error.message || this._t('Failed to import diagram'), 'error');
+            });
     }
 }
 
