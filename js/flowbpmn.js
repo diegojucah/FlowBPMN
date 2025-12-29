@@ -663,7 +663,7 @@ class BpmnFlowEditor {
 
         let html = `
         <div class="modal fade" id="flowbpmn-versions-modal" tabindex="-1" aria-labelledby="flowbpmnVersionsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl" style="max-width: 65vw;">
+            <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 1.75rem;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="flowbpmnVersionsModalLabel">
@@ -1058,7 +1058,7 @@ class BpmnFlowEditor {
 
             let html = `
             <div class="modal fade" id="flowbpmn-templates-modal" tabindex="-1" aria-labelledby="flowbpmnTemplatesModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl" style="max-width: 65vw;">
+                <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 1.75rem;">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="flowbpmnTemplatesModalLabel">
