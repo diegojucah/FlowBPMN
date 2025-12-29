@@ -546,7 +546,23 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             'No previous versions available' => self::_t('No previous versions available'),
             'Modification Date' => self::_t('Modification Date'),
             'Author' => self::_t('Author'),
-            'Responsible User' => self::_t('Responsible User')
+            'Responsible User' => self::_t('Responsible User'),
+            
+            // Import dropdown
+            'Import from Ticket' => self::_t('Import from Ticket'),
+            'Import from Problem' => self::_t('Import from Problem'),
+            'Import from Change' => self::_t('Import from Change'),
+            'Import from External File' => self::_t('Import from External File'),
+            'Select Ticket' => self::_t('Select Ticket'),
+            'Select Problem' => self::_t('Select Problem'),
+            'Select Change' => self::_t('Select Change'),
+            'Type to search...' => self::_t('Type to search...'),
+            'Selected diagram:' => self::_t('Selected diagram:'),
+            'No diagram found' => self::_t('No diagram found'),
+            'Diagram imported successfully from %s' => self::_t('Diagram imported successfully from %s'),
+            'Failed to import diagram' => self::_t('Failed to import diagram'),
+            'Import diagram from %s?' => self::_t('Import diagram from %s?'),
+            'This will replace your current diagram' => self::_t('This will replace your current diagram')
         ];
         
         echo "<script>
@@ -577,10 +593,23 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "</ul>";
             echo "</div>";
 
-            // Botão Importar
-            echo "<button type='button' class='btn btn-success ms-2' id='bpmn-import-btn'>";
+            // Botão Importar (Dropdown)
+            echo "<div class='btn-group ms-2' role='group'>";
+            echo "<button type='button' class='btn btn-success dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
             echo "<i class='{$uploadIcon}'></i> " . self::_t('Import');
             echo "</button>";
+            echo "<ul class='dropdown-menu'>";
+            echo "<li><a class='dropdown-item' href='#' id='import-from-ticket-option'>";
+            echo "<i class='ti ti-ticket'></i> " . self::_t('Import from Ticket') . "</a></li>";
+            echo "<li><a class='dropdown-item' href='#' id='import-from-problem-option'>";
+            echo "<i class='ti ti-alert-triangle'></i> " . self::_t('Import from Problem') . "</a></li>";
+            echo "<li><a class='dropdown-item' href='#' id='import-from-change-option'>";
+            echo "<i class='ti ti-git-branch'></i> " . self::_t('Import from Change') . "</a></li>";
+            echo "<li><hr class='dropdown-divider'></li>";
+            echo "<li><a class='dropdown-item' href='#' id='import-from-file-option'>";
+            echo "<i class='ti ti-file-upload'></i> " . self::_t('Import from External File') . "</a></li>";
+            echo "</ul>";
+            echo "</div>";
             echo "<input type='file' id='bpmn-file-input' accept='.bpmn,.xml' style='display: none;'>";
 
             // Botão Modelos (Simplified - Opens Gallery Directly)

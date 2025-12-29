@@ -293,12 +293,43 @@ class BpmnFlowEditor {
             saveBtn.addEventListener('click', () => this.saveDiagram());
         }
 
-        // Import button
-        const importBtn = document.getElementById('bpmn-import-btn');
+        // Import dropdown options
         const fileInput = document.getElementById('bpmn-file-input');
-        if (importBtn && fileInput && this.canEdit) {
-            importBtn.addEventListener('click', () => fileInput.click());
+        const importFromTicketOption = document.getElementById('import-from-ticket-option');
+        const importFromProblemOption = document.getElementById('import-from-problem-option');
+        const importFromChangeOption = document.getElementById('import-from-change-option');
+        const importFromFileOption = document.getElementById('import-from-file-option');
+
+        if (fileInput && this.canEdit) {
             fileInput.addEventListener('change', (e) => this.importDiagram(e));
+        }
+
+        if (importFromTicketOption) {
+            importFromTicketOption.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert(this._t('Import from Ticket') + ' - Em desenvolvimento (Fase 2)');
+            });
+        }
+
+        if (importFromProblemOption) {
+            importFromProblemOption.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert(this._t('Import from Problem') + ' - Em desenvolvimento (Fase 2)');
+            });
+        }
+
+        if (importFromChangeOption) {
+            importFromChangeOption.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert(this._t('Import from Change') + ' - Em desenvolvimento (Fase 2)');
+            });
+        }
+
+        if (importFromFileOption && fileInput) {
+            importFromFileOption.addEventListener('click', (e) => {
+                e.preventDefault();
+                fileInput.click();
+            });
         }
 
         // Export dropdown options

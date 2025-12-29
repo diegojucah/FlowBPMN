@@ -148,5 +148,23 @@ $LANG['plugin_flowbpmn'] = [
     'Permission denied' => 'Permissão negada',
     'Failed to save flow' => 'Falha ao salvar fluxo',
     'Failed to delete flow' => 'Falha ao excluir fluxo',
-    'Invalid action' => 'Ação inválida'
+    'Invalid action' => 'Ação inválida',
+    
+    // Import dropdown
+    'Import from Ticket' => 'Importar de Chamado',
+    'Import from Problem' => 'Importar de Problema',
+    'Import from Change' => 'Importar de Mudança',
+    'Import from External File' => 'Importar de Arquivo Externo',
+    'Select Ticket' => 'Selecione o Chamado',
+    'Select Problem' => 'Selecione o Problema',
+    'Select Change' => 'Selecione a Mudança',
+    'Type to search...' => 'Digite para buscar...',
+    'Selected diagram:' => 'Diagrama selecionado:',
+    'No diagram found' => 'Nenhum diagrama encontrado',
+    'Diagram imported successfully from %s' => 'Diagrama importado com sucesso de %s',
+    'Failed to import diagram' => 'Falha ao importar diagrama',
+    'No items with diagrams found' => 'Nenhum item com diagrama encontrado',
+    'You do not have permission to view this item' => 'Você não tem permissão para visualizar este item',
+    'Import diagram from %s?' => 'Importar diagrama de %s?',
+    'This will replace your current diagram' => 'Isso substituirá seu diagrama atual'
 ];
