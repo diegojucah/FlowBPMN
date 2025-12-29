@@ -663,15 +663,15 @@ class BpmnFlowEditor {
 
         let html = `
         <div class="modal fade" id="flowbpmn-versions-modal" tabindex="-1" aria-labelledby="flowbpmnVersionsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl" style="max-width: 55vw; margin-top: 1.75rem;">
-                <div class="modal-content">
+            <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 1.75rem;">
+                <div class="modal-content" style="max-height: 85vh;">
                     <div class="modal-header">
                         <h5 class="modal-title" id="flowbpmnVersionsModalLabel">
                             <i class="ti ti-history"></i> ${this._t('Version History')}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body" style="max-height: calc(85vh - 120px); overflow-y: auto;">
                         
                         <!-- Current Version Info -->
                         <div class="alert alert-info mb-3 d-flex align-items-center justify-content-between" style="min-height: 38px; padding: 0.5rem 1rem;">
@@ -1058,15 +1058,15 @@ class BpmnFlowEditor {
 
             let html = `
             <div class="modal fade" id="flowbpmn-templates-modal" tabindex="-1" aria-labelledby="flowbpmnTemplatesModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl" style="max-width: 55vw; margin-top: 1.75rem;">
-                    <div class="modal-content">
+                <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 1.75rem;">
+                    <div class="modal-content" style="max-height: 85vh;">
                         <div class="modal-header">
                             <h5 class="modal-title" id="flowbpmnTemplatesModalLabel">
                                 <i class="ti ti-template"></i> ${this._t('Template Gallery')}
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body" style="max-height: calc(85vh - 120px); overflow-y: auto;">
                             
                             <!-- Search Field -->
                             <div class="mb-3 sticky-top bg-white pt-2 pb-2" style="top: -16px; z-index: 5;">
