@@ -132,27 +132,32 @@ class PluginFlowbpmnProfile extends CommonDBTM {
         
         echo "<div class='spaced'>";
         echo "<table class='tab_cadre_fixe'>";
-        echo "<tr class='tab_bg_1'><th colspan='5'>FlowBPMN Rights</th></tr>";
+        echo "<tr class='tab_bg_1'><th colspan='5'>" . __('flowBPMN Rights', 'flowbpmn') . "</th></tr>";
         
-        $types = ['Ticket', 'Problem', 'Change'];
+        $types = [
+            'Ticket' => __('Ticket'),
+            'Problem' => __('Problem'),
+            'Change' => __('Change')
+        ];
+        
         echo "<tr class='tab_bg_2'><td></td>";
-        foreach ($types as $type) {
-            echo "<th>$type</th>";
+        foreach ($types as $type => $typeLabel) {
+            echo "<th>$typeLabel</th>";
         }
         echo "</tr>";
         
         $actions = [
-            'view' => 'View',
-            'edit' => 'Edit',
-            'delete' => 'Delete',
-            'restore' => 'Restore'
+            'view' => __('View', 'flowbpmn'),
+            'edit' => __('Edit', 'flowbpmn'),
+            'delete' => __('Delete', 'flowbpmn'),
+            'restore' => __('Restore', 'flowbpmn')
         ];
         
         foreach ($actions as $action => $label) {
             echo "<tr class='tab_bg_2'>";
             echo "<td><b>$label</b></td>";
             
-            foreach ($types as $type) {
+            foreach (array_keys($types) as $type) {
                 $col = 'can_' . $action . '_' . strtolower($type);
                 $val = $rights[$col] ?? 0;
                 
