@@ -307,21 +307,21 @@ class BpmnFlowEditor {
         if (importFromTicketOption) {
             importFromTicketOption.addEventListener('click', (e) => {
                 e.preventDefault();
-                alert(this._t('Import from Ticket') + ' - Em desenvolvimento (Fase 2)');
+                this.showImportModal('ticket');
             });
         }
 
         if (importFromProblemOption) {
             importFromProblemOption.addEventListener('click', (e) => {
                 e.preventDefault();
-                alert(this._t('Import from Problem') + ' - Em desenvolvimento (Fase 2)');
+                this.showImportModal('problem');
             });
         }
 
         if (importFromChangeOption) {
             importFromChangeOption.addEventListener('click', (e) => {
                 e.preventDefault();
-                alert(this._t('Import from Change') + ' - Em desenvolvimento (Fase 2)');
+                this.showImportModal('change');
             });
         }
 
@@ -1464,10 +1464,10 @@ class BpmnFlowEditor {
     }
 
     showImportModal(sourceType) {
-        const itemtypeMap = {ticket: 'Ticket', problem: 'Problem', change: 'Change'};
+        const itemtypeMap = { ticket: 'Ticket', problem: 'Problem', change: 'Change' };
         const itemtype = itemtypeMap[sourceType];
         if (!itemtype) return;
-        const titleMap = {Ticket: this._t('Import from Ticket'), Problem: this._t('Import from Problem'), Change: this._t('Import from Change')};
+        const titleMap = { Ticket: this._t('Import from Ticket'), Problem: this._t('Import from Problem'), Change: this._t('Import from Change') };
         const modalId = 'flowbpmn-import-modal';
         const existingModal = document.getElementById(modalId);
         if (existingModal) existingModal.remove();
@@ -1477,18 +1477,18 @@ class BpmnFlowEditor {
         const select = document.getElementById('import-item-select');
         const confirmBtn = document.getElementById('import-confirm-btn');
         let selectedItem = null;
-        $(select).select2({ajax: {url: this.pluginUrl + '/ajax/list_items_with_diagrams.php', dataType: 'json', delay: 250, data: (params) => ({itemtype: itemtype, search: params.term, page: params.page || 1}), processResults: (data) => ({results: data.success ? data.items.map(i => ({id: i.id, text: i.text, items_id: i.items_id, date_mod_formatted: i.date_mod_formatted})) : [], pagination: {more: data.pagination?.more}})}, minimumInputLength: 2, placeholder: this._t('Type to search...'), dropdownParent: $('#' + modalId)});
-        $(select).on('select2:select', (e) => {selectedItem = e.params.data; document.getElementById('import-diagram-name').textContent = selectedItem.text; document.getElementById('import-diagram-date').textContent = selectedItem.date_mod_formatted; document.getElementById('import-preview').style.display = 'block'; confirmBtn.disabled = false;});
-        confirmBtn.addEventListener('click', () => {if (selectedItem) {this.loadDiagramFromItem(itemtype, selectedItem.id, selectedItem.items_id, selectedItem.text); modal.hide();}});
-        document.getElementById(modalId).addEventListener('hidden.bs.modal', () => {$(select).select2('destroy'); document.getElementById(modalId).remove();});
+        $(select).select2({ ajax: { url: this.pluginUrl + '/ajax/list_items_with_diagrams.php', dataType: 'json', delay: 250, data: (params) => ({ itemtype: itemtype, search: params.term, page: params.page || 1 }), processResults: (data) => ({ results: data.success ? data.items.map(i => ({ id: i.id, text: i.text, items_id: i.items_id, date_mod_formatted: i.date_mod_formatted })) : [], pagination: { more: data.pagination?.more } }) }, minimumInputLength: 2, placeholder: this._t('Type to search...'), dropdownParent: $('#' + modalId) });
+        $(select).on('select2:select', (e) => { selectedItem = e.params.data; document.getElementById('import-diagram-name').textContent = selectedItem.text; document.getElementById('import-diagram-date').textContent = selectedItem.date_mod_formatted; document.getElementById('import-preview').style.display = 'block'; confirmBtn.disabled = false; });
+        confirmBtn.addEventListener('click', () => { if (selectedItem) { this.loadDiagramFromItem(itemtype, selectedItem.id, selectedItem.items_id, selectedItem.text); modal.hide(); } });
+        document.getElementById(modalId).addEventListener('hidden.bs.modal', () => { $(select).select2('destroy'); document.getElementById(modalId).remove(); });
         modal.show();
     }
-    
+
     loadDiagramFromItem(itemtype, flow_id, items_id, sourceName) {
-        fetch(this.pluginUrl + '/ajax/load_diagram_from_item.php', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams({flow_id, itemtype, items_id})})
-        .then(r => r.json())
-        .then(data => {if (data.success) {this.modeler.importXML(data.bpmn_xml).then(() => {this.showMessage(this._t('Diagram imported successfully from %s').replace('%s', sourceName), 'success');}).catch(() => this.showMessage(this._t('Failed to import diagram'), 'error'));} else {this.showMessage(data.message || this._t('Failed to import diagram'), 'error');}})
-        .catch(() => this.showMessage(this._t('Failed to import diagram'), 'error'));
+        fetch(this.pluginUrl + '/ajax/load_diagram_from_item.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ flow_id, itemtype, items_id }) })
+            .then(r => r.json())
+            .then(data => { if (data.success) { this.modeler.importXML(data.bpmn_xml).then(() => { this.showMessage(this._t('Diagram imported successfully from %s').replace('%s', sourceName), 'success'); }).catch(() => this.showMessage(this._t('Failed to import diagram'), 'error')); } else { this.showMessage(data.message || this._t('Failed to import diagram'), 'error'); } })
+            .catch(() => this.showMessage(this._t('Failed to import diagram'), 'error'));
     }
 }
 
