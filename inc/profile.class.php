@@ -25,6 +25,55 @@ class PluginFlowbpmnProfile extends CommonDBTM {
     }
 
     /**
+     * Helper function to get translated text from $LANG array
+     */
+    private static function _t($key) {
+        global $LANG;
+        
+        // Check if translations are loaded, if not, load them
+        if (!isset($LANG['plugin_flowbpmn'])) {
+            self::loadTranslations();
+        }
+        
+        // Try to get from $LANG array first
+        if (isset($LANG['plugin_flowbpmn'][$key])) {
+            return $LANG['plugin_flowbpmn'][$key];
+        }
+        
+        // Fallback to __() function
+        $translated = __($key, 'flowbpmn');
+        
+        // If translation failed, return the key itself
+        return ($translated === $key) ? $key : $translated;
+    }
+    
+    /**
+     * Load translations for current language
+     */
+    private static function loadTranslations() {
+        global $LANG;
+        
+        // Get current language from session
+        $locale = $_SESSION['glpilanguage'] ?? 'pt_BR';
+        
+        // Get plugin directory
+        $plugin_dir = GLPI_ROOT . '/plugins/flowbpmn';
+        
+        // Try to load locale file
+        $locale_file = $plugin_dir . '/locales/' . $locale . '.php';
+        
+        if (file_exists($locale_file)) {
+            include $locale_file;
+        } else {
+            // Fallback to pt_BR
+            $locale_file = $plugin_dir . '/locales/pt_BR.php';
+            if (file_exists($locale_file)) {
+                include $locale_file;
+            }
+        }
+    }
+
+    /**
      * Get rights for specific profile
      */
     static function getProfileRights($profiles_id) {
@@ -132,7 +181,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
         
         echo "<div class='spaced'>";
         echo "<table class='tab_cadre_fixe'>";
-        echo "<tr class='tab_bg_1'><th colspan='5'>" . __('Permissões', 'flowbpmn') . "</th></tr>";
+        echo "<tr class='tab_bg_1'><th colspan='5'>" . self::_t('Permissions') . "</th></tr>";
         
         $types = [
             'Ticket' => __('Ticket'),
@@ -147,10 +196,10 @@ class PluginFlowbpmnProfile extends CommonDBTM {
         echo "</tr>";
         
         $actions = [
-            'view' => _x('action', 'Visualizar', 'flowbpmn'),
-            'edit' => _x('action', 'Editar', 'flowbpmn'),
-            'delete' => _x('action', 'Excluir', 'flowbpmn'),
-            'restore' => _x('action', 'Restaurar', 'flowbpmn')
+            'view' => self::_t('View'),
+            'edit' => self::_t('Edit'),
+            'delete' => self::_t('Delete'),
+            'restore' => self::_t('Restore')
         ];
         
         foreach ($actions as $action => $label) {

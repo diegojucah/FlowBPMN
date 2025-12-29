@@ -48,6 +48,55 @@ class PluginFlowbpmnFlow extends CommonDBTM {
     }
     
     /**
+     * Helper function to get translated text from $LANG array
+     */
+    private static function _t($key) {
+        global $LANG;
+        
+        // Check if translations are loaded, if not, load them
+        if (!isset($LANG['plugin_flowbpmn'])) {
+            self::loadTranslations();
+        }
+        
+        // Try to get from $LANG array first
+        if (isset($LANG['plugin_flowbpmn'][$key])) {
+            return $LANG['plugin_flowbpmn'][$key];
+        }
+        
+        // Fallback to __() function
+        $translated = __($key, 'flowbpmn');
+        
+        // If translation failed, return the key itself
+        return ($translated === $key) ? $key : $translated;
+    }
+    
+    /**
+     * Load translations for current language
+     */
+    private static function loadTranslations() {
+        global $LANG;
+        
+        // Get current language from session
+        $locale = $_SESSION['glpilanguage'] ?? 'pt_BR';
+        
+        // Get plugin directory
+        $plugin_dir = GLPI_ROOT . '/plugins/flowbpmn';
+        
+        // Try to load locale file
+        $locale_file = $plugin_dir . '/locales/' . $locale . '.php';
+        
+        if (file_exists($locale_file)) {
+            include $locale_file;
+        } else {
+            // Fallback to pt_BR
+            $locale_file = $plugin_dir . '/locales/pt_BR.php';
+            if (file_exists($locale_file)) {
+                include $locale_file;
+            }
+        }
+    }
+    
+    /**
      * Prepare input for add - GLPI Standard Method
      * Validates and sanitizes input before creating a new flow
      */
@@ -453,7 +502,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         // Toolbar
         echo "<div class='flowbpmn-toolbar' style='display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; margin-bottom: 10px;'>";
         echo "<div class='flowbpmn-toolbar-left'>";
-        echo "<h3 style='margin: 0;'><i class='{$iconClass}'></i> Editor FlowBPMN</h3>";
+        echo "<h3 style='margin: 0;'><i class='{$iconClass}'></i> " . self::_t('BPMN Flow Editor') . "</h3>";
         echo "</div>";
 
         if ($canEdit) {
@@ -461,12 +510,12 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             
             // Botão Salvar
             echo "<button type='button' class='btn btn-primary' id='bpmn-save-btn'>";
-            echo "<i class='{$saveIcon}'></i> Salvar";
+            echo "<i class='{$saveIcon}'></i> " . self::_t('Save');
             echo "</button>";
 
             // Botão Importar
             echo "<button type='button' class='btn btn-success ms-2' id='bpmn-import-btn'>";
-            echo "<i class='{$uploadIcon}'></i> Importar";
+            echo "<i class='{$uploadIcon}'></i> " . self::_t('Import');
             echo "</button>";
             echo "<input type='file' id='bpmn-file-input' accept='.bpmn,.xml' style='display: none;'>";
 
@@ -474,17 +523,17 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             // Templates Button (Priority 4.1)
             echo "<div class='btn-group ms-2' role='group'>";
             echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
-            echo "<i class='ti ti-template'></i> Templates";
+            echo "<i class='ti ti-template'></i> " . self::_t('Templates');
             echo "</button>";
             echo "<ul class='dropdown-menu'>";
-            echo "<li><a class='dropdown-item' href='#' id='bpmn-save-template-btn'><i class='ti ti-device-floppy'></i> Salvar como Template</a></li>";
-            echo "<li><a class='dropdown-item' href='#' id='bpmn-load-template-btn'><i class='ti ti-cloud-download'></i> Carregar Template</a></li>";
+            echo "<li><a class='dropdown-item' href='#' id='bpmn-save-template-btn'><i class='ti ti-device-floppy'></i> " . self::_t('Save as Template') . "</a></li>";
+            echo "<li><a class='dropdown-item' href='#' id='bpmn-load-template-btn'><i class='ti ti-cloud-download'></i> " . self::_t('Load Template') . "</a></li>";
             echo "</ul>";
             echo "</div>";
 
             echo "<div class='btn-group ms-2' role='group'>";
             echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
-            echo "<i class='{$downloadIcon}'></i> Exportar";
+            echo "<i class='{$downloadIcon}'></i> " . self::_t('Export');
             echo "</button>";
             echo "<ul class='dropdown-menu'>";
             echo "<li><a class='dropdown-item' href='#' id='export-png-option'>";
@@ -514,7 +563,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                 // Só renderizar botão se houver 1+ versões
                 if ($versionCount >= 1) {
                     echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-versions-btn'>";
-                    echo "<i class='{$historyIcon}'></i> Versões";
+                    echo "<i class='{$historyIcon}'></i> " . self::_t('Versions');
                     echo " <span class='badge bg-light text-dark ms-1'>{$versionCount}</span>";
                     echo "</button>";
                 }

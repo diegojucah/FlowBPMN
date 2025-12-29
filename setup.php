@@ -49,6 +49,8 @@ function plugin_init_flowbpmn() {
 
         // Load translations - simplified approach
         if (isset($_SESSION['glpilanguage'])) {
+            global $LANG; // Declare $LANG as global
+            
             $plugin_dir = Plugin::getPhpDir('flowbpmn', false);
             $locale = $_SESSION['glpilanguage'];
 
