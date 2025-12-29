@@ -103,12 +103,15 @@ FlowBPMN implements GLPI's native authentication and complete audit tracking:
 - ✅ **Permission Validation**: All operations verify user profile permissions
 - ✅ **Complete Audit Trail**: Version history maintains records of who made each modification
 
-### Security Fixes (v2.1.0)
+### Security Features
 
-**Version 2.1.0** fixed a critical issue where all records were attributed to user ID 2:
+FlowBPMN is built with security as a priority:
 
-- ❌ **Before**: `$user_id = 2` hardcoded
-- ✅ **After**: `$user_id = Session::getLoginUserID()` native GLPI method
+- **CSRF Protection**: All forms and AJAX requests include CSRF token validation
+- **SQL Injection Prevention**: All database queries use prepared statements
+- **XSS Protection**: All user input is properly escaped before display
+- **Session Management**: Leverages GLPI's robust session handling
+- **Access Control**: Fine-grained permissions per profile and item type
 
 ### Best Practices
 
