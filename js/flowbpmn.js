@@ -663,8 +663,8 @@ class BpmnFlowEditor {
 
         let html = `
         <div class="modal fade" id="flowbpmn-versions-modal" tabindex="-1" aria-labelledby="flowbpmnVersionsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl" style="max-width: 60vw; margin-top: 1.75rem; max-height: calc(100vh - 3.5rem);">
-                <div class="modal-content" style="max-height: calc(100vh - 3.5rem);">
+            <div class="modal-dialog modal-xl" style="max-width: 55vw; margin-top: 1.75rem;">
+                <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="flowbpmnVersionsModalLabel">
                             <i class="ti ti-history"></i> ${this._t('Version History')}
@@ -1058,8 +1058,8 @@ class BpmnFlowEditor {
 
             let html = `
             <div class="modal fade" id="flowbpmn-templates-modal" tabindex="-1" aria-labelledby="flowbpmnTemplatesModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl" style="max-width: 60vw; margin-top: 1.75rem; max-height: calc(100vh - 3.5rem);">
-                    <div class="modal-content" style="max-height: calc(100vh - 3.5rem);">
+                <div class="modal-dialog modal-xl" style="max-width: 55vw; margin-top: 1.75rem;">
+                    <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="flowbpmnTemplatesModalLabel">
                                 <i class="ti ti-template"></i> ${this._t('Template Gallery')}
