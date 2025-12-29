@@ -674,7 +674,7 @@ class BpmnFlowEditor {
                     <div class="modal-body">
                         
                         <!-- Current Version Info -->
-                        <div class="alert alert-info mb-3 d-flex align-items-center justify-content-between" style="padding: 0.75rem 1rem;">
+                        <div class="alert alert-info mb-3 d-flex align-items-center justify-content-between" style="min-height: 38px; padding: 0.5rem 1rem;">
                             <div>
                                 <i class="ti ti-info-circle me-2"></i>
                                 <strong>${this._t('Current Version')}:</strong> v${data.current.id || 'N/A'}
