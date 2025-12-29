@@ -1,4 +1,4 @@
-# FlowBPMN v3.0.0 - BPMN Editor Plugin for GLPI
+# FlowBPMN v1.0.0 - BPMN Editor Plugin for GLPI
 
 [![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![GLPI Version](https://img.shields.io/badge/GLPI-11.0+-orange.svg)](https://glpi-project.org/)
@@ -453,27 +453,19 @@ This project is licensed under the **GNU General Public License v3.0** - see the
 
 ## 📊 Changelog
 
-### v3.0.0 (2024-12-29)
-- ✨ Added complete template system with gallery
-- ✨ Implemented full internationalization (EN, PT, ES)
-- ✨ Added search functionality for templates
-- 🐛 Fixed template loading errors (Base64 encoding)
-- 🐛 Fixed missing thumbnails for new templates
-- 🎨 Unified UI between Templates and Versions modals
-- 🔒 Enhanced security with proper permission checks
-- 📝 Improved version control with better metadata display
-
-### v2.1.0 (2024-12-15)
-- 🐛 Fixed critical user tracking bug
-- 🔒 Implemented proper GLPI session handling
-- 📝 Added complete audit trail
-
-### v2.0.0 (2024-12-01)
-- ✨ Initial public release
-- 📊 Full BPMN 2.0 editor integration
-- 📝 Version control system
-- 🔒 Granular permissions
-- 📤 Multiple export formats
+### v1.0.0 (2024-12-29) - First Stable Release
+- ✨ Full BPMN 2.0 editor integration with bpmn.io
+- ✨ Complete template system with gallery and search
+- ✨ Full internationalization support (English, Portuguese, Spanish)
+- ✨ Version control with restore capabilities
+- ✨ Granular permission system per profile
+- ✨ Multiple export formats (BPMN, SVG, PNG, PDF)
+- ✨ Auto-save and automatic diagram attachment
+- ✨ Modern UI fully integrated with GLPI 11
+- ✨ Dark mode support
+- ✨ Responsive design for mobile devices
+- 🔒 Complete authentication and audit trail
+- 📝 Comprehensive documentation in English
 
 ---
 

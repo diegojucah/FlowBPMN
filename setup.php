@@ -32,7 +32,7 @@ if (!defined('GLPI_ROOT')) {
     die("Sorry. You can't access directly to this file");
 }
 
-define('PLUGIN_FLOWBPMN_VERSION', '3.0.0');
+define('PLUGIN_FLOWBPMN_VERSION', '1.0.0');
 define('PLUGIN_FLOWBPMN_MIN_GLPI', '11.0.0');
 define('PLUGIN_FLOWBPMN_MAX_GLPI', '11.99.99');
 
