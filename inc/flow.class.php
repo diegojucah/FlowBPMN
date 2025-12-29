@@ -195,6 +195,9 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         }
         
         // Create initial version (v1)
+        error_log("flowBPMN DEBUG: post_addItem called, flow_id=" . ($this->fields['id'] ?? 'NULL'));
+        error_log("flowBPMN DEBUG: PluginFlowbpmnVersion exists: " . (class_exists('PluginFlowbpmnVersion') ? 'YES' : 'NO'));
+        
         if (class_exists('PluginFlowbpmnVersion') && isset($this->fields['id'])) {
             try {
                 // Ensure SVG content is passed
@@ -203,10 +206,14 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     $flowData['svg_content'] = $this->input['svg_content'];
                 }
 
+                error_log("flowBPMN DEBUG: Calling createVersion for flow_id=" . $this->fields['id']);
                 PluginFlowbpmnVersion::createVersion($this->fields['id'], $flowData);
+                error_log("flowBPMN DEBUG: Version created successfully");
             } catch (Exception $e) {
-                error_log("flowBPMN: Failed to create initial version - " . $e->getMessage());
+                error_log("flowBPMN ERROR: Failed to create initial version - " . $e->getMessage());
             }
+        } else {
+            error_log("flowBPMN DEBUG: Skipping version creation - class_exists=" . (class_exists('PluginFlowbpmnVersion') ? 'YES' : 'NO') . ", id_isset=" . (isset($this->fields['id']) ? 'YES' : 'NO'));
         }
         
         // Save PNG if provided (stored temporarily in input)
@@ -243,6 +250,8 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         }
         
         // Create version automatically
+        error_log("flowBPMN DEBUG: post_updateItem called, flow_id=" . ($this->fields['id'] ?? 'NULL'));
+        
         if (class_exists('PluginFlowbpmnVersion')) {
             try {
                 // Ensure SVG content is passed (fallback to input if fields missing)
@@ -251,9 +260,11 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     $flowData['svg_content'] = $this->input['svg_content'];
                 }
                 
+                error_log("flowBPMN DEBUG: Calling createVersion for flow_id=" . $this->fields['id']);
                 PluginFlowbpmnVersion::createVersion($this->fields['id'], $flowData);
+                error_log("flowBPMN DEBUG: Version created successfully");
             } catch (Exception $e) {
-                error_log("flowBPMN: Failed to create version - " . $e->getMessage());
+                error_log("flowBPMN ERROR: Failed to create version - " . $e->getMessage());
             }
         }
         
