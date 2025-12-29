@@ -1066,7 +1066,7 @@ class BpmnFlowEditor {
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body" style="max-height: calc(100vh - 200px); overflow-y: auto;">
+                        <div class="modal-body">
                             
                             <!-- Search Field -->
                             <div class="mb-3 sticky-top bg-white pt-2 pb-2" style="top: -16px; z-index: 5;">
