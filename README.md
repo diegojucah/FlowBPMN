@@ -13,18 +13,29 @@ Professional BPMN (Business Process Model and Notation) editor plugin for GLPI 1
 
 ## ✨ Features
 
-- **📊 Full BPMN 2.0 Editor** - Complete visual editor powered by [bpmn.io](https://bpmn.io/)
-- **🎯 Integrated with GLPI** - Seamless tabs in Tickets, Problems, and Changes
-- **📝 Version Control** - Complete history with restore capabilities
+### Core Features (v1.0.0)
+
+- **📊 Full BPMN 2.0 Editor** - Complete visual editor powered by [bpmn.io](https://bpmn.io/) v18.6.1 (local, no CDN)
+- **🎯 GLPI Integration** - Seamless tabs in Tickets, Problems, and Changes
+- **📝 Version Control** - Complete history with restore and delete capabilities
+- **🗂️ Template System** - Save, load, and share BPMN diagrams as reusable templates
+- **🔍 Search & Filter** - Quick template search by name
 - **🔒 Granular Permissions** - Per-profile rights management (view, edit, delete, restore)
-- **💾 Auto-save** - Automatic diagram attachment to items
-- **📤 Export Options** - Export to BPMN XML, SVG, PNG, and PDF formats
-- **🎨 Modern UI** - Fully integrated with GLPI 11 design system
+- **💾 Auto-save** - Automatic PNG attachment to items
+- **📤 Export Options** - Export to BPMN XML, SVG, PNG, and PDF (via browser print)
+- **🎨 Modern UI** - Fully integrated with GLPI 11 design system (Bootstrap 5)
 - **🌙 Dark Mode** - Full support for GLPI dark theme
 - **📱 Responsive** - Works on desktop and mobile devices
-- **🗂️ Template System** - Save and reuse BPMN diagrams as templates
-- **🌍 Multilingual** - Full support for English, Portuguese, and Spanish
-- **🔍 Search & Filter** - Quick template search and version filtering
+- **🌍 Multilingual** - Full support for English, Portuguese (BR), and Spanish
+
+### Security Features
+
+- **CSRF Protection**: All forms and AJAX requests include CSRF token validation
+- **SQL Injection Prevention**: All database queries use prepared statements
+- **XSS Protection**: All user input is properly escaped before display
+- **Session Management**: Leverages GLPI's robust session handling
+- **Access Control**: Fine-grained permissions per profile and item type
+- **Audit Trail**: Complete version history with user tracking
 
 ---
 
@@ -32,7 +43,7 @@ Professional BPMN (Business Process Model and Notation) editor plugin for GLPI 1
 
 - **GLPI**: 11.0.0 or higher
 - **PHP**: 7.4 or higher (8.1+ recommended)
-- **Web Browser**: Modern browser with JavaScript enabled
+- **Web Browser**: Modern browser with JavaScript enabled (Chrome, Firefox, Edge, Safari)
 - **Database**: MySQL 5.7+ or MariaDB 10.3+
 
 ---
@@ -67,17 +78,7 @@ Once published to GLPI Marketplace, install directly from **Setup → Plugins �
 
 ## ⚙️ Configuration
 
-### 1. Global Settings
-
-Navigate to: **Setup → General → FlowBPMN**
-
-Configure:
-- ✅ Auto-attach diagrams to items
-- 🔢 Maximum versions per flow (default: 10)
-- 📤 Enable/disable export formats (BPMN, SVG, PNG)
-- 🎨 Canvas settings (height, grid)
-
-### 2. Profile Permissions
+### Profile Permissions
 
 Navigate to: **Setup → Profiles → [Profile Name] → FlowBPMN**
 
@@ -90,35 +91,16 @@ Set permissions for each item type (Tickets, Problems, Changes):
 | **Delete** | Can delete diagrams and versions |
 | **Restore** | Can restore previous versions |
 
----
+### Default Settings
 
-## 🔒 Security
+The plugin comes with sensible defaults:
+- ✅ Auto-attach PNG diagrams to items (enabled)
+- 📊 Maximum 10 versions per flow (automatic cleanup)
+- 📤 All export formats enabled (BPMN, SVG, PNG, PDF)
+- 🎨 Canvas height: 800px
+- 📏 Grid enabled (10px)
 
-### Authentication and Auditing
-
-FlowBPMN implements GLPI's native authentication and complete audit tracking:
-
-- ✅ **Mandatory Authentication**: All AJAX endpoints verify authentication via `Session::checkLoginUser()`
-- ✅ **User Tracking**: Every action (create, edit, restore, delete) records the correct user via `Session::getLoginUserID()`
-- ✅ **Permission Validation**: All operations verify user profile permissions
-- ✅ **Complete Audit Trail**: Version history maintains records of who made each modification
-
-### Security Features
-
-FlowBPMN is built with security as a priority:
-
-- **CSRF Protection**: All forms and AJAX requests include CSRF token validation
-- **SQL Injection Prevention**: All database queries use prepared statements
-- **XSS Protection**: All user input is properly escaped before display
-- **Session Management**: Leverages GLPI's robust session handling
-- **Access Control**: Fine-grained permissions per profile and item type
-
-### Best Practices
-
-1. **Configure Appropriate Permissions**: Don't grant "Edit" permission to all profiles
-2. **Review Logs Regularly**: Check who is creating/modifying diagrams
-3. **Keep Updated**: Always use the latest plugin version
-4. **Backup Regularly**: Ensure database backups include plugin tables
+> **Note**: Configuration UI is planned for v1.1.0. Current settings are defined in the database and can be modified directly if needed.
 
 ---
 
@@ -132,31 +114,52 @@ FlowBPMN is built with security as a priority:
    - Drag elements from the palette (left sidebar)
    - Connect elements using arrows
    - Edit properties by clicking elements
+   - Use the mini-map (bottom right) for navigation
 4. Click **"Save"** to store the diagram
+   - Diagram is saved as BPMN XML
+   - PNG preview is automatically attached to the item
+   - Version is created automatically
 
 ### Managing Versions
 
 - Click **"Versions"** button to view history
-- Preview any version by clicking **"View"**
-- Click **"Restore"** to revert to a previous version
-- Delete old versions to save space
-- All changes are tracked with user and timestamp
+- **Preview**: Click "View" to see full-size diagram
+- **Restore**: Click "Restore" to revert to a previous version
+  - Current version is saved before restore
+  - Confirmation required
+- **Delete**: Remove old versions to save space
+- All changes tracked with user and timestamp
 
 ### Using Templates
 
-- **Save as Template**: Click the dropdown on the Save button → "Save as Template"
-- **Load Template**: Click the "Templates" button to browse available templates
-- **Search Templates**: Use the search bar to quickly find templates by name
-- **Delete Templates**: Remove templates you no longer need (requires permission)
+#### Save as Template
+1. Create or edit a diagram
+2. Click dropdown on **Save** button
+3. Select **"Save as Template"**
+4. Enter template name
+5. Template is saved with thumbnail
+
+#### Load Template
+1. Click **"Templates"** button
+2. Browse available templates
+3. Use search bar to filter by name
+4. Click **"Apply"** to load template
+5. Confirmation required (overwrites current diagram)
+
+#### Delete Template
+- Click **"Delete"** on template card
+- Only available for templates you created or if you have global delete permission
 
 ### Exporting Diagrams
 
-- Click **"Export"** button
-- Choose format:
-  - **BPMN XML** - Standard BPMN 2.0 format (interoperable)
-  - **SVG** - Vector graphics (scalable)
-  - **PNG** - Raster image (for presentations)
-  - **PDF** - Print-ready document
+Click **"Export"** button and choose format:
+
+| Format | Description | Use Case |
+|--------|-------------|----------|
+| **BPMN XML** | Standard BPMN 2.0 format | Interoperability with other BPMN tools |
+| **SVG** | Vector graphics | Scalable images for documentation |
+| **PNG** | Raster image | Presentations and reports |
+| **PDF** | Print-ready document | Browser print dialog (Ctrl+P) |
 
 ---
 
@@ -175,12 +178,12 @@ FlowBPMN is built with security as a priority:
    ```sql
    SHOW TABLES LIKE 'glpi_plugin_flowbpmn%';
    ```
-   Should return 4 tables:
+   Should return 5 tables:
    - `glpi_plugin_flowbpmn_configs`
    - `glpi_plugin_flowbpmn_flows`
    - `glpi_plugin_flowbpmn_profiles`
-   - `glpi_plugin_flowbpmn_versions`
    - `glpi_plugin_flowbpmn_templates`
+   - `glpi_plugin_flowbpmn_versions`
 
 ### Testing Basic Functionality
 
@@ -192,6 +195,7 @@ FlowBPMN is built with security as a priority:
    - Open the created ticket
    - Click **"FlowBPMN"** tab
    - Verify editor loads correctly
+   - Check that toolbar buttons appear
 
 3. **Create a Simple Diagram**
    - Drag a **Start Event** from palette
@@ -199,12 +203,13 @@ FlowBPMN is built with security as a priority:
    - Connect them with arrows
    - Click **Save**
    - Verify success message appears
+   - Check that PNG is attached to ticket
 
 4. **Test Version Control**
    - Modify the diagram
    - Save again
    - Click **"Versions"** button
-   - Verify both versions are listed
+   - Verify both versions are listed with thumbnails
    - Test restore functionality
 
 5. **Test Templates**
@@ -217,7 +222,7 @@ FlowBPMN is built with security as a priority:
 
 1. **Create a Test Profile**
    - Setup → Profiles → Add
-   - Name it "BPMN Tester"
+   - Name it "BPMN Viewer"
 
 2. **Configure Limited Rights**
    - FlowBPMN tab → Set "View" only for Tickets
@@ -226,7 +231,7 @@ FlowBPMN is built with security as a priority:
 3. **Login as Test User**
    - Open a ticket
    - Verify BPMN tab shows read-only mode
-   - Verify no "Save" button appears
+   - Verify no "Save" or "Templates" buttons appear
 
 ### Testing Internationalization
 
@@ -238,6 +243,7 @@ FlowBPMN is built with security as a priority:
    - Open FlowBPMN tab
    - Click "Versions" or "Templates" buttons
    - Verify modals are in selected language
+   - Check button labels and messages
 
 ---
 
@@ -249,9 +255,9 @@ FlowBPMN is built with security as a priority:
 
 **Solutions**:
 1. Check browser console for errors (F12)
-2. Check if JavaScript is enabled
-3. Try clearing browser cache (Ctrl+F5)
-4. Verify plugin files are correctly uploaded
+2. Verify `/plugins/flowbpmn/lib/bpmn-js/` directory exists
+3. Check file permissions (755 for directories, 644 for files)
+4. Clear browser cache (Ctrl+F5)
 5. Check PHP error logs for backend issues
 
 ### Cannot save diagrams
@@ -260,10 +266,11 @@ FlowBPMN is built with security as a priority:
 
 **Solutions**:
 1. Check user has "Edit" permission for the item type
-2. Verify PHP error logs: `/var/log/apache2/error.log` or `/var/log/php-fpm/error.log`
+2. Verify PHP error logs: `/var/log/apache2/error.log`
 3. Check database connectivity
 4. Verify `glpi_plugin_flowbpmn_flows` table exists
 5. Ensure sufficient disk space for attachments
+6. Check `max_allowed_packet` in MySQL (for large diagrams)
 
 ### Permissions not working
 
@@ -290,6 +297,7 @@ FlowBPMN is built with security as a priority:
    php bin/console cache:clear
    ```
 4. Check browser console for JavaScript errors
+5. Verify item type is supported (Ticket, Problem, or Change)
 
 ### Templates not loading
 
@@ -300,6 +308,7 @@ FlowBPMN is built with security as a priority:
 2. Check user has permission to view templates
 3. Verify SVG content is being saved correctly
 4. Check PHP `max_allowed_packet` setting for large diagrams
+5. Clear GLPI cache
 
 ### Language not changing
 
@@ -310,6 +319,17 @@ FlowBPMN is built with security as a priority:
 2. Hard refresh browser (Ctrl+F5)
 3. Verify locale files exist in `locales/` directory
 4. Check `$_SESSION['glpilanguage']` is set correctly
+5. Verify translations exist in locale files
+
+### Version limit not enforced
+
+**Problem**: More than 10 versions are being kept
+
+**Solutions**:
+1. Version cleanup runs on new save operations
+2. Check `glpi_plugin_flowbpmn_configs` table for `max_versions_per_item` value
+3. Manually trigger cleanup by saving a diagram
+4. Check PHP error logs for cleanup errors
 
 ---
 
@@ -319,30 +339,35 @@ FlowBPMN is built with security as a priority:
 flowbpmn/
 ├── ajax/
 │   ├── bpmn_restore.php       # Version restore endpoint
-│   ├── bpmn_save.php          # Diagram save endpoint
+│   ├── bpmn_save.php          # Diagram save endpoint (legacy)
 │   ├── bpmn_version.php       # Single version endpoint
 │   ├── bpmn_versions.php      # Version list endpoint
 │   ├── db_update.php          # Database update utility
-│   ├── flow.php               # Main AJAX handler
+│   ├── flow.php               # Main AJAX handler (save, restore, delete)
 │   └── template.php           # Template AJAX handler
 ├── css/
-│   └── flowbpmn.css           # Main stylesheet
+│   └── flowbpmn.css           # Custom styles (minimal, uses inline CSS)
 ├── front/
-│   └── config.form.php        # Configuration page
+│   ├── config.form.php        # Configuration page (UI not implemented)
+│   └── config.form.old.php    # Backup file
 ├── inc/
-│   ├── bpmntask.class.php     # BPMN task class
-│   ├── flow.class.php         # Main flow class
+│   ├── bpmntask.class.php     # BPMN task class (version cleanup)
+│   ├── flow.class.php         # Main flow class (CRUD, tab display)
 │   ├── helper.class.php       # Helper utilities
-│   ├── plugin.class.php       # Plugin configuration
+│   ├── plugin.class.php       # Legacy plugin class
 │   ├── profile.class.php      # Permissions management
 │   ├── template.class.php     # Template management
 │   └── version.class.php      # Version control
 ├── install/
-│   └── mysql/                 # Database schema
+│   └── mysql/                 # Database schema (not used, schema in setup.php)
 ├── js/
-│   └── flowbpmn.js            # Main JavaScript with bpmn-js integration
+│   └── flowbpmn.js            # Main JavaScript (1272 lines, full editor logic)
 ├── lib/
-│   └── bpmn-js/               # BPMN.io library (local)
+│   └── bpmn-js/               # BPMN.io library v18.6.1 (local, 4 files)
+│       ├── bpmn-embedded.css
+│       ├── bpmn-js.css
+│       ├── bpmn-modeler.development.js
+│       └── diagram-js.css
 ├── locales/
 │   ├── en_GB.php              # English translations
 │   ├── es_ES.php              # Spanish translations
@@ -351,13 +376,14 @@ flowbpmn/
 │   ├── approval.bpmn          # Approval process template
 │   ├── parallel.bpmn          # Parallel tasks template
 │   └── simple.bpmn            # Simple workflow template
-├── hook.php                   # Plugin hooks
-├── setup.php                  # Plugin setup and installation
-├── plugin.xml                 # Plugin metadata
-├── README.md                  # This file
-├── LICENSE                    # GPLv3 License
 ├── CHANGELOG.md               # Version history
+├── LICENSE                    # GPLv3 License
+├── README.md                  # This file
 ├── SECURITY.md                # Security policy
+├── check_db.php               # Database check utility
+├── hook.php                   # Plugin hooks
+├── plugin.xml                 # Plugin metadata
+├── setup.php                  # Plugin setup and installation
 └── .gitignore                 # Git ignore rules
 ```
 
@@ -385,17 +411,27 @@ flowbpmn/
 
 - **PHP**: PSR-12 coding standards
 - **JavaScript**: ES6+ standards
-- **CSS**: BEM methodology
+- **CSS**: Inline styles + minimal external CSS
 - **Comments**: PHPDoc and JSDoc
-- **Database**: Follow GLPI naming conventions
+- **Database**: Follow GLPI naming conventions (`glpi_plugin_flowbpmn_*`)
 
 ### Adding Translations
 
 1. Edit locale files in `locales/` directory
 2. Add new keys to `$LANG['plugin_flowbpmn']` array
 3. Use `__('Key', 'flowbpmn')` in PHP
-4. Use `this._t('Key')` in JavaScript
-5. Test with all supported languages
+4. Inject translations via `flow.class.php` → `window.FLOWBPMN_I18N`
+5. Use `this._t('Key')` in JavaScript
+6. Test with all supported languages
+
+### Architecture Notes
+
+- **No CDN Dependencies**: bpmn.io library is bundled locally
+- **Single Page Application**: Editor loads dynamically via JavaScript
+- **AJAX-Heavy**: All operations use AJAX endpoints
+- **No Configuration UI**: Settings exist in DB but no admin interface (planned for v1.1.0)
+- **Auto-versioning**: Every save creates a new version
+- **Automatic Cleanup**: Old versions deleted based on `max_versions_per_item`
 
 ### Contributing
 
@@ -428,42 +464,46 @@ This project is licensed under the **GNU General Public License v3.0** - see the
 - **Issues**: [GitHub Issues](https://github.com/diegojucah/FlowBPMN/issues)
 - **Documentation**: [GitHub Wiki](https://github.com/diegojucah/FlowBPMN/wiki)
 - **GLPI Forum**: [GLPI Plugins Forum](https://forum.glpi-project.org/)
-- **Email**: support@kactux.com
 
 ---
 
 ## 🗺️ Roadmap
 
-### Version 3.1 (Planned)
-- [ ] BPMN validation and error checking
-- [ ] Collaboration features (comments, annotations)
-- [ ] Enhanced template library with categories
-- [ ] Diagram comparison (diff view)
+### Version 1.1.0 (Planned - Q1 2025)
+- [ ] **Configuration UI** - Admin interface for plugin settings
+  - Manage max versions per flow
+  - Toggle export formats
+  - Configure canvas settings
+  - Enable/disable features
+- [ ] **Enhanced Templates** - Template categories and tags
+- [ ] **Improved Search** - Advanced filtering in template gallery
+- [ ] **Bulk Operations** - Delete multiple versions at once
 
-### Version 3.2 (Future)
-- [ ] Simulation/execution engine
-- [ ] REST API endpoints
-- [ ] Diagram analytics and metrics
-- [ ] Mobile app companion
+### Version 1.2.0 (Planned - Q2 2025)
+- [ ] **BPMN Validation** - Real-time diagram validation
+- [ ] **Collaboration Features** - Comments and annotations
+- [ ] **Diagram Comparison** - Visual diff between versions
+- [ ] **Export Improvements** - Batch export, custom formats
 
-### Version 4.0 (Vision)
-- [ ] Real-time collaborative editing
-- [ ] AI-powered diagram suggestions
-- [ ] Integration with external BPMN tools
-- [ ] Advanced workflow automation
+### Version 2.0.0 (Vision - 2025)
+- [ ] **Workflow Automation** - Execute BPMN workflows
+- [ ] **REST API** - Programmatic access to diagrams
+- [ ] **Real-time Collaboration** - Multiple users editing simultaneously
+- [ ] **Advanced Analytics** - Diagram metrics and insights
+- [ ] **Mobile App** - Native mobile companion app
 
 ---
 
 ## 📊 Changelog
 
 ### v1.0.0 (2024-12-29) - First Stable Release
-- ✨ Full BPMN 2.0 editor integration with bpmn.io
+- ✨ Full BPMN 2.0 editor integration with bpmn.io v18.6.1
 - ✨ Complete template system with gallery and search
 - ✨ Full internationalization support (English, Portuguese, Spanish)
 - ✨ Version control with restore capabilities
 - ✨ Granular permission system per profile
 - ✨ Multiple export formats (BPMN, SVG, PNG, PDF)
-- ✨ Auto-save and automatic diagram attachment
+- ✨ Auto-save and automatic PNG attachment
 - ✨ Modern UI fully integrated with GLPI 11
 - ✨ Dark mode support
 - ✨ Responsive design for mobile devices
