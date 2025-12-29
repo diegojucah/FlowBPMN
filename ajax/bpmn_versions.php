@@ -130,8 +130,9 @@ try {
     // 5. Check restore permissions
     $canRestore = PluginFlowbpmnProfile::canRestoreFlow($itemtype);
 
-    // Calculate actual version number (total versions + 1 for current)
-    $versionNumber = count($formattedVersions) + 1;
+    // Calculate actual version number (count of old versions, current is the latest)
+    // If there are 30 old versions, current is v30 (not v31)
+    $versionNumber = count($formattedVersions);
     
     echo json_encode([
         'success' => true,
