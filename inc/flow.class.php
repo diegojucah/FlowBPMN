@@ -512,6 +512,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
 
         // Inject Translations for JS
         $jsTranslations = [
+            'Current Version' => self::_t('Current Version'),
             'Version History' => self::_t('Version History'),
             'Template Gallery' => self::_t('Template Gallery'),
             'Restore' => self::_t('Restore'),
