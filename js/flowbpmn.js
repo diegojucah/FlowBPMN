@@ -313,14 +313,22 @@ class BpmnFlowEditor {
             });
 
             console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            console.log('Response ok:', response.ok);
+            
             const text = await response.text();
+            console.log('Response text length:', text.length);
             console.log('Response text:', text);
+            console.log('Response text (first 200 chars):', text.substring(0, 200));
 
             let result;
             try {
                 result = JSON.parse(text);
+                console.log('Parsed result:', result);
             } catch (e) {
-                throw new Error('Resposta inválida do servidor: ' + text.substring(0, 100));
+                console.error('JSON parse error:', e);
+                console.error('Failed to parse text:', text);
+                throw new Error('Resposta inválida do servidor: ' + (text.substring(0, 100) || '[resposta vazia]'));
             }
 
             if (result.success) {

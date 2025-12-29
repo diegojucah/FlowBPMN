@@ -739,11 +739,9 @@ class PluginFlowbpmnFlow extends CommonDBTM {
      */
     private function savePNGAsDocument($itemtype, $items_id, $png_data, $name) {
 
-        // Check if auto-attach is enabled
-        $config = new PluginFlowbpmnConfig();
-        if (!$config->getConfig('enable_auto_attach_image')) {
-            return false;
-        }
+        // Auto-attach habilitado por padrão (classe PluginFlowbpmnConfig não existe)
+        // TODO: Implementar classe de configuração se necessário
+        $enable_auto_attach = true;
 
         try {
             // Decode base64 PNG data

@@ -7,7 +7,9 @@ declare(strict_types=1);
  * FlowBPMN Plugin for GLPI - Native DB Flow Handler v3.0
  * -------------------------------------------------------------------------
  */
-error_log("DEBUG: FlowPHP Hit at " . date('H:i:s') . "\n", 3, "/tmp/flowbpmn_debug.log");
+
+// Start output buffering to prevent any unwanted output
+ob_start();
 
 // Bootstrap GLPI manually (since this file is called directly, not through front controller)
 $glpi_root = dirname(__DIR__, 3);
@@ -32,6 +34,11 @@ if (!class_exists('PluginFlowbpmnVersion')) {
         include_once __DIR__ . '/../inc/version.class.php';
     }
 }
+if (!class_exists('PluginFlowbpmnProfile')) {
+    if (file_exists(__DIR__ . '/../inc/profile.class.php')) {
+        include_once __DIR__ . '/../inc/profile.class.php';
+    }
+}
 
 // Initialize GLPI Kernel
 use Glpi\Kernel\Kernel;
@@ -47,7 +54,8 @@ global $CFG_GLPI, $DB;
 // Get user_id from session
 $user_id = Session::getLoginUserID();
 
-// Set headers
+// Clear any unwanted output and set proper headers
+ob_end_clean();
 header("Content-Type: application/json; charset=UTF-8");
 
 if (!$user_id) {
@@ -88,16 +96,25 @@ if (!empty($rawInput)) {
 
 $action = $_GET['action'] ?? ($input['action'] ?? '');
 
+// Log para debug
+error_log("FlowBPMN AJAX: action=$action, method=" . $_SERVER['REQUEST_METHOD']);
+error_log("FlowBPMN AJAX: input=" . json_encode($input));
+
 try {
     switch ($action) {
         case 'save':
+            error_log("FlowBPMN: Iniciando save");
+            
             $itemtype = $input['itemtype'] ?? '';
             $items_id = (int)($input['items_id'] ?? 0);
             $bpmn_xml = $input['bpmn_xml'] ?? '';
             $name = $input['name'] ?? 'FlowBPMN Diagram';
             $svg_content = $input['svg_content'] ?? '';
             
+            error_log("FlowBPMN: itemtype=$itemtype, items_id=$items_id, name=$name");
+            
             if (empty($itemtype) || $items_id <= 0 || empty($bpmn_xml)) {
+                error_log("FlowBPMN: Missing parameters - itemtype=$itemtype, items_id=$items_id, xml_length=" . strlen($bpmn_xml));
                 throw new Exception('Missing required parameters');
             }
             
@@ -405,8 +422,37 @@ try {
             throw new Exception('Invalid action');
     }
 } catch (Exception $e) {
+    error_log("FlowBPMN ERROR: " . $e->getMessage());
+    error_log("FlowBPMN ERROR Trace: " . $e->getTraceAsString());
+    
     if (http_response_code() === 200) {
         http_response_code(400);
     }
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    
+    // Garantir que qualquer output anterior seja limpo
+    if (ob_get_level() > 0) {
+        ob_clean();
+    }
+    
+    echo json_encode([
+        'success' => false, 
+        'message' => $e->getMessage(),
+        'debug' => [
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]
+    ]);
+} catch (Throwable $e) {
+    // Captura erros fatais também
+    error_log("FlowBPMN FATAL ERROR: " . $e->getMessage());
+    
+    if (ob_get_level() > 0) {
+        ob_clean();
+    }
+    
+    http_response_code(500);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Erro fatal: ' . $e->getMessage()
+    ]);
 }

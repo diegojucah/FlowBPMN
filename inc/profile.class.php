@@ -21,7 +21,7 @@ class PluginFlowbpmnProfile extends CommonDBTM {
     }
 
     static function getIcon() {
-        return 'ti ti-lock';
+        return 'ti ti-sitemap';
     }
 
     /**
@@ -110,17 +110,20 @@ class PluginFlowbpmnProfile extends CommonDBTM {
     }
 
     static function showProfileForm($profile) {
-        global $DB;
+        global $DB, $CFG_GLPI;
         
         $rights = self::getProfileRights($profile->getID());
+        $plugin_profile_id = $rights['id'] ?? 0;
         
         if (empty($rights)) {
-            $rights = [
-                'can_view_ticket' => 0, 'can_edit_ticket' => 0, 'can_delete_ticket' => 0, 'can_restore_ticket' => 0,
-                'can_view_problem' => 0, 'can_edit_problem' => 0, 'can_delete_problem' => 0, 'can_restore_problem' => 0,
-                'can_view_change' => 0, 'can_edit_change' => 0, 'can_delete_change' => 0, 'can_restore_change' => 0
-            ];
+             // Should not happen if installed correctly, but handle gracefully
+             // ... defaults ...
         }
+        
+        echo "<form name='form_flowbpmn_profile' action='" . $CFG_GLPI["root_doc"] . "/plugins/flowbpmn/front/profile.form.php' method='post'>";
+        echo Html::hidden('_glpi_csrf_token', ['value' => Session::getNewCSRFToken()]);
+        echo "<input type='hidden' name='profiles_id' value='" . $profile->getID() . "'>";
+        echo Html::hidden('id', ['value' => $plugin_profile_id]); // ID of the plugin profile record
         
         echo "<div class='spaced'>";
         echo "<table class='tab_cadre_fixe'>";
@@ -147,8 +150,13 @@ class PluginFlowbpmnProfile extends CommonDBTM {
             foreach ($types as $type) {
                 $col = 'can_' . $action . '_' . strtolower($type);
                 $val = $rights[$col] ?? 0;
+                
                 echo "<td class='center'>";
-                echo ($val ? "<i class='ti ti-check text-success'></i>" : "<i class='ti ti-x text-danger'></i>");
+                Html::showCheckbox([
+                    'name' => $col,
+                    'checked' => $val,
+                    'value' => 1
+                ]);
                 echo "</td>";
             }
             echo "</tr>";
@@ -156,5 +164,13 @@ class PluginFlowbpmnProfile extends CommonDBTM {
         
         echo "</table>";
         echo "</div>";
+        
+        if (Session::haveRight('profile', UPDATE)) {
+            echo "<div class='center'>";
+            echo Html::submit(_sx('button', 'Save'), ['name' => 'update', 'class' => 'btn btn-primary']);
+            echo "</div>";
+        }
+        
+        echo Html::closeForm();
     }
 }
