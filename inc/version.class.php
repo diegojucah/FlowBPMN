@@ -226,8 +226,8 @@ class PluginFlowbpmnVersion extends CommonDBTM {
     static function cleanOldVersions($flow_id) {
         global $DB;
         
-        $config = new PluginFlowbpmnConfig();
-        $maxVersions = $config->getConfig('max_versions_per_item');
+        // Fixed limit: keep max 50 versions per flow
+        $maxVersions = 50;
         
         if ($maxVersions <= 0) {
             return; // No limit
