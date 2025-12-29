@@ -151,6 +151,10 @@ $LANG['plugin_flowbpmn'] = [
     'Invalid action' => 'Ação inválida',
     
     // Import dropdown
+    'Ticket' => 'Chamado',
+    'Problem' => 'Problema',
+    'Change' => 'Mudança',
+    'File' => 'Arquivo',
     'Import from Ticket' => 'Importar de Chamado',
     'Import from Problem' => 'Importar de Problema',
     'Import from Change' => 'Importar de Mudança',

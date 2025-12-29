@@ -600,14 +600,14 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "</button>";
             echo "<ul class='dropdown-menu'>";
             echo "<li><a class='dropdown-item' href='#' id='import-from-ticket-option'>";
-            echo "<i class='ti ti-ticket'></i> " . self::_t('Import from Ticket') . "</a></li>";
+            echo "<i class='ti ti-headset'></i> " . self::_t('Ticket') . "</a></li>";
             echo "<li><a class='dropdown-item' href='#' id='import-from-problem-option'>";
-            echo "<i class='ti ti-alert-triangle'></i> " . self::_t('Import from Problem') . "</a></li>";
+            echo "<i class='ti ti-bug'></i> " . self::_t('Problem') . "</a></li>";
             echo "<li><a class='dropdown-item' href='#' id='import-from-change-option'>";
-            echo "<i class='ti ti-git-branch'></i> " . self::_t('Import from Change') . "</a></li>";
+            echo "<i class='ti ti-refresh'></i> " . self::_t('Change') . "</a></li>";
             echo "<li><hr class='dropdown-divider'></li>";
             echo "<li><a class='dropdown-item' href='#' id='import-from-file-option'>";
-            echo "<i class='ti ti-file-upload'></i> " . self::_t('Import from External File') . "</a></li>";
+            echo "<i class='ti ti-file-upload'></i> " . self::_t('File') . "</a></li>";
             echo "</ul>";
             echo "</div>";
             echo "<input type='file' id='bpmn-file-input' accept='.bpmn,.xml' style='display: none;'>";
