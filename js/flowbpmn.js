@@ -673,6 +673,17 @@ class BpmnFlowEditor {
                     </div>
                     <div class="modal-body">
                         
+                        <!-- Current Version Info -->
+                        <div class="alert alert-info mb-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <i class="ti ti-info-circle me-2"></i>
+                                <strong>${this._t('Current Version')}:</strong> v${data.current.id || 'N/A'}
+                            </div>
+                            <small class="text-muted">
+                                <i class="ti ti-calendar me-1"></i>${data.current.date_mod || ''}
+                            </small>
+                        </div>
+                        
                         ${versions.length === 0 ?
                 '<div class="alert alert-warning">' + this._t('No previous versions available') + '</div>' :
                 `<div class="flowbpmn-versions-grid" id="flowbpmn-versions-grid" data-total-pages="${totalPages}" data-current-page="1">
