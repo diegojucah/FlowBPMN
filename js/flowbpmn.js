@@ -1463,9 +1463,6 @@ class BpmnFlowEditor {
         }
     }
 }
-
-// Export to global scope
-window.BpmnFlowEditor = BpmnFlowEditor;
     
     showImportModal(sourceType) {
         const itemtypeMap = {ticket: 'Ticket', problem: 'Problem', change: 'Change'};
@@ -1494,3 +1491,7 @@ window.BpmnFlowEditor = BpmnFlowEditor;
         .then(data => {if (data.success) {this.modeler.importXML(data.bpmn_xml).then(() => {this.showMessage(this._t('Diagram imported successfully from %s').replace('%s', sourceName), 'success');}).catch(() => this.showMessage(this._t('Failed to import diagram'), 'error'));} else {this.showMessage(data.message || this._t('Failed to import diagram'), 'error');}})
         .catch(() => this.showMessage(this._t('Failed to import diagram'), 'error'));
     }
+}
+
+// Export to global scope
+window.BpmnFlowEditor = BpmnFlowEditor;
