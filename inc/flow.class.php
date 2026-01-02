@@ -195,12 +195,25 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         }
         
         // Create initial version (v1)
+        error_log("flowBPMN DEBUG: post_addItem called, flow_id=" . ($this->fields['id'] ?? 'NULL'));
+        error_log("flowBPMN DEBUG: PluginFlowbpmnVersion exists: " . (class_exists('PluginFlowbpmnVersion') ? 'YES' : 'NO'));
+        
         if (class_exists('PluginFlowbpmnVersion') && isset($this->fields['id'])) {
             try {
-                PluginFlowbpmnVersion::createVersion($this->fields['id'], $this->fields);
+                // Ensure SVG content is passed
+                $flowData = $this->fields;
+                if (empty($flowData['svg_content']) && !empty($this->input['svg_content'])) {
+                    $flowData['svg_content'] = $this->input['svg_content'];
+                }
+
+                error_log("flowBPMN DEBUG: Calling createVersion for flow_id=" . $this->fields['id']);
+                PluginFlowbpmnVersion::createVersion($this->fields['id'], $flowData);
+                error_log("flowBPMN DEBUG: Version created successfully");
             } catch (Exception $e) {
-                error_log("flowBPMN: Failed to create initial version - " . $e->getMessage());
+                error_log("flowBPMN ERROR: Failed to create initial version - " . $e->getMessage());
             }
+        } else {
+            error_log("flowBPMN DEBUG: Skipping version creation - class_exists=" . (class_exists('PluginFlowbpmnVersion') ? 'YES' : 'NO') . ", id_isset=" . (isset($this->fields['id']) ? 'YES' : 'NO'));
         }
         
         // Save PNG if provided (stored temporarily in input)
@@ -237,11 +250,21 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         }
         
         // Create version automatically
+        error_log("flowBPMN DEBUG: post_updateItem called, flow_id=" . ($this->fields['id'] ?? 'NULL'));
+        
         if (class_exists('PluginFlowbpmnVersion')) {
             try {
-                PluginFlowbpmnVersion::createVersion($this->fields['id'], $this->fields);
+                // Ensure SVG content is passed (fallback to input if fields missing)
+                $flowData = $this->fields;
+                if (empty($flowData['svg_content']) && !empty($this->input['svg_content'])) {
+                    $flowData['svg_content'] = $this->input['svg_content'];
+                }
+                
+                error_log("flowBPMN DEBUG: Calling createVersion for flow_id=" . $this->fields['id']);
+                PluginFlowbpmnVersion::createVersion($this->fields['id'], $flowData);
+                error_log("flowBPMN DEBUG: Version created successfully");
             } catch (Exception $e) {
-                error_log("flowBPMN: Failed to create version - " . $e->getMessage());
+                error_log("flowBPMN ERROR: Failed to create version - " . $e->getMessage());
             }
         }
         
@@ -495,7 +518,84 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         $historyIcon = 'ti ti-history';
         $photoIcon = 'ti ti-photo';
         $codeIcon = 'ti ti-code';
+        $codeIcon = 'ti ti-code';
         $fileIcon = 'ti ti-file-code';
+
+        // Inject Translations for JS
+        $jsTranslations = [
+            'Current Version' => self::_t('Current Version'),
+            'Version History' => self::_t('Version History'),
+            'Template Gallery' => self::_t('Template Gallery'),
+            'Restore' => self::_t('Restore'),
+            'Apply' => self::_t('Apply'),
+            'View' => self::_t('View'),
+            'Delete' => self::_t('Delete'),
+            'Import' => self::_t('Import'),
+            'Close' => self::_t('Close'),
+            'No preview available' => self::_t('No preview available'),
+            'Public' => self::_t('Public'),
+            'Private' => self::_t('Private'),
+            'System' => self::_t('System'),
+            'Search templates by name...' => self::_t('Search templates by name...'),
+            'No templates found' => self::_t('No templates found'),
+            'Error loading template' => self::_t('Error loading template'),
+            'Template loaded successfully!' => self::_t('Template loaded successfully!'),
+            'This will overwrite the current diagram. Continue?' => self::_t('This will overwrite the current diagram. Continue?'),
+            'Delete this template permanently?' => self::_t('Delete this template permanently?'),
+            'Template deleted' => self::_t('Template deleted'),
+            'Error deleting template' => self::_t('Error deleting template'),
+            'No previous versions available' => self::_t('No previous versions available'),
+            'Modification Date' => self::_t('Modification Date'),
+            'Author' => self::_t('Author'),
+            'Responsible User' => self::_t('Responsible User'),
+            
+            // Import dropdown
+            'Import from Ticket' => self::_t('Import from Ticket'),
+            'Import from Problem' => self::_t('Import from Problem'),
+            'Import from Change' => self::_t('Import from Change'),
+            'Import from External File' => self::_t('Import from External File'),
+            'Select Ticket' => self::_t('Select Ticket'),
+            'Select Problem' => self::_t('Select Problem'),
+            'Select Change' => self::_t('Select Change'),
+            'Type to search...' => self::_t('Type to search...'),
+            'Selected diagram:' => self::_t('Selected diagram:'),
+            'No diagram found' => self::_t('No diagram found'),
+            'Diagram imported successfully from %s' => self::_t('Diagram imported successfully from %s'),
+            'Failed to import diagram' => self::_t('Failed to import diagram'),
+            'Import diagram from %s?' => self::_t('Import diagram from %s?'),
+            'This will replace your current diagram' => self::_t('This will replace your current diagram'),
+
+            // New Import Modal - All Keys
+            'Import Diagram' => self::_t('Import Diagram'),
+            'Import diagram from existing Tickets' => self::_t('Import diagram from existing Tickets'),
+            'Import diagram from existing Problems' => self::_t('Import diagram from existing Problems'),
+            'Import diagram from existing Changes' => self::_t('Import diagram from existing Changes'),
+            'Search...' => self::_t('Search...'),
+            'Back' => self::_t('Back'),
+            'Import from File' => self::_t('Import from File'),
+            'Tickets' => self::_t('Tickets'),
+            'Problems' => self::_t('Problems'),
+            'Changes' => self::_t('Changes'),
+            'Diagram imported from file.' => self::_t('Diagram imported from file.'),
+            'Loading items...' => self::_t('Loading items...'),
+            'Import from %s' => self::_t('Import from %s'),
+            'Select %s' => self::_t('Select %s'),
+            'Select...' => self::_t('Select...'),
+            'Cancel' => self::_t('Cancel'),
+            'No Preview' => self::_t('No Preview'),
+            'Unknown' => self::_t('Unknown'),
+            'No diagram' => self::_t('No diagram'),
+            'Creator' => self::_t('Creator'),
+            'Ticket' => self::_t('Ticket'),
+            'Problem' => self::_t('Problem'),
+            'Change' => self::_t('Change')
+        ];
+        
+        echo "<script>
+            window.FLOWBPMN_I18N = " . json_encode($jsTranslations, JSON_UNESCAPED_UNICODE) . ";
+            console.log('[FlowBPMN PHP] Injected translations:', window.FLOWBPMN_I18N);
+            console.log('[FlowBPMN PHP] Import Diagram translation:', window.FLOWBPMN_I18N['Import Diagram']);
+        </script>";
 
         echo "<div class='flowbpmn-container'>";
 
@@ -508,28 +608,28 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         if ($canEdit) {
             echo "<div class='flowbpmn-toolbar-right'>";
             
-            // Botão Salvar
-            echo "<button type='button' class='btn btn-primary' id='bpmn-save-btn'>";
+            // Botão Salvar (Split Button)
+            echo "<div class='btn-group'>";
+            echo "<button type='button' class='btn' id='bpmn-save-btn' style='background-color: #FFC107; color: #212529; border-color: #FFC107;'>";
             echo "<i class='{$saveIcon}'></i> " . self::_t('Save');
             echo "</button>";
-
-            // Botão Importar
-            echo "<button type='button' class='btn btn-success ms-2' id='bpmn-import-btn'>";
-            echo "<i class='{$uploadIcon}'></i> " . self::_t('Import');
-            echo "</button>";
-            echo "<input type='file' id='bpmn-file-input' accept='.bpmn,.xml' style='display: none;'>";
-
-            // Botão Exportar com Dropdown
-            // Templates Button (Priority 4.1)
-            echo "<div class='btn-group ms-2' role='group'>";
-            echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
-            echo "<i class='ti ti-template'></i> " . self::_t('Templates');
+            echo "<button type='button' class='btn dropdown-toggle dropdown-toggle-split' data-bs-toggle='dropdown' aria-expanded='false' style='background-color: #FFC107; color: #212529; border-color: #FFC107; border-left: 1px solid rgba(0,0,0,0.1);'>";
+            echo "<span class='visually-hidden'>Toggle Dropdown</span>";
             echo "</button>";
             echo "<ul class='dropdown-menu'>";
-            echo "<li><a class='dropdown-item' href='#' id='bpmn-save-template-btn'><i class='ti ti-device-floppy'></i> " . self::_t('Save as Template') . "</a></li>";
-            echo "<li><a class='dropdown-item' href='#' id='bpmn-load-template-btn'><i class='ti ti-cloud-download'></i> " . self::_t('Load Template') . "</a></li>";
+            echo "<li><a class='dropdown-item' href='#' id='bpmn-save-template-btn'><i class='ti ti-template'></i> " . self::_t('Save as Template') . "</a></li>";
             echo "</ul>";
             echo "</div>";
+
+            // Botão Importar (Unified)
+            echo "<button type='button' class='btn btn-success ms-2' id='bpmn-import-unified-btn'>";
+            echo "<i class='ti ti-download'></i> " . self::_t('Import');
+            echo "</button>";
+
+            // Botão Modelos (Simplified - Opens Gallery Directly)
+            echo "<button type='button' class='btn btn-outline-secondary ms-2' id='bpmn-load-template-btn'>";
+            echo "<i class='ti ti-template'></i> " . self::_t('Templates');
+            echo "</button>";
 
             echo "<div class='btn-group ms-2' role='group'>";
             echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
