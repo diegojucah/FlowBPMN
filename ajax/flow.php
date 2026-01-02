@@ -54,14 +54,45 @@ global $CFG_GLPI, $DB;
 // Get user_id from session
 $user_id = Session::getLoginUserID();
 
+// Custom Error Handler to convert PHP errors to JSON
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    if (!(error_reporting() & $errno)) {
+        return false;
+    }
+    
+    // Log error but don't output HTML
+    error_log("FlowBPMN PHP Error: [$errno] $errstr in $errfile:$errline");
+    
+    // For fatal errors that might print output, we try to clear buffer
+    // But for warnings/notices, we just continue (logging is enough)
+    return true; 
+});
+
+// Shutdown function to catch fatal errors
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error && ($error['type'] === E_ERROR || $error['type'] === E_PARSE || $error['type'] === E_CORE_ERROR)) {
+        if (ob_get_length()) ob_clean();
+        header("Content-Type: application/json; charset=UTF-8");
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Erro Fatal PHP: ' . $error['message']
+        ]);
+        exit;
+    }
+});
+
 // Clear any unwanted output and set proper headers
-ob_end_clean();
+if (ob_get_length()) ob_clean();
 header("Content-Type: application/json; charset=UTF-8");
+
 
 if (!$user_id) {
     http_response_code(401);
     die(json_encode(['success' => false, 'message' => 'Usuário não autenticado']));
 }
+
 
 // CSRF Protection (optional for now - GLPI 11 may not always provide token in AJAX)
 // TODO: Make this mandatory after confirming GLPI token availability
@@ -95,10 +126,12 @@ if (!empty($rawInput)) {
 }
 
 $action = $_GET['action'] ?? ($input['action'] ?? '');
+ini_set('display_errors', '0'); // CRITICAL: Suppress HTML errors to output
 
 // Log para debug
 error_log("FlowBPMN AJAX: action=$action, method=" . $_SERVER['REQUEST_METHOD']);
 error_log("FlowBPMN AJAX: input=" . json_encode($input));
+
 
 try {
     switch ($action) {
@@ -350,40 +383,74 @@ try {
                      throw new Exception("Database not initialized");
                 }
             
-                // Check if table exists
-                if (!$DB->tableExists('glpi_plugin_flowbpmn_templates')) {
-                     echo json_encode(['success' => true, 'templates' => []]);
-                     break;
-                }
+                error_log("FlowBPMN: Entrando em list_templates");
+                $all_templates = [];
 
-                if (!class_exists('PluginFlowbpmnTemplate')) {
-                     $path = __DIR__ . '/../inc/template.class.php';
-                     if (file_exists($path)) {
-                        include_once($path);
-                     }
+                // 1. Load Standard Templates (Files) - DISABLED per user request
+                // $std_path = GLPI_ROOT . '/plugins/flowbpmn/templates/';
+                // ... (Removed mocked data)
+
+                // 2. Load DB Templates
+                error_log("FlowBPMN: Verificando DB Templates");
+                if ($DB->tableExists('glpi_plugin_flowbpmn_templates') && class_exists('PluginFlowbpmnTemplate')) {
+                    error_log("FlowBPMN: Buscando templates do banco");
+                    $db_templates = PluginFlowbpmnTemplate::getAvailableTemplates();
+                    error_log("FlowBPMN: Encontrados " . count($db_templates) . " templates no banco");
+                    
+                    foreach ($db_templates as $t) {
+                        $xml = $t['bpmn_xml'];
+                        
+                        $all_templates[] = [
+                            'id'            => $t['id'],
+                            'name'          => $t['name'],
+                            'bpmn_xml'      => base64_encode($xml), // Encode for safe transport/attribute storage
+                            'is_standard'   => 0,
+                            'can_delete'    => $t['can_delete'] ?? false,
+                            'svg_content'   => $t['svg_content'] ?? '',
+                            'date_mod'      => Html::convDateTime($t['date_mod']),
+                            'author_name'   => $t['author_name'] ?? 'Desconhecido',
+                            'comment'       => $t['comment']
+                        ];
+                    }
                 }
                 
-                if (!class_exists('PluginFlowbpmnTemplate')) {
-                    throw new Exception("Class PluginFlowbpmnTemplate not found");
+                error_log("FlowBPMN: Retornando JSON final");
+                $jsonOutput = json_encode(['success' => true, 'templates' => $all_templates]);
+                
+                if ($jsonOutput === false) {
+                    throw new Exception("Falha ao codificar JSON: " . json_last_error_msg());
                 }
-                
-                $templates = PluginFlowbpmnTemplate::getAvailableTemplates();
-                
-                // Format for easy consumption
-                $list = array_map(function($t) {
-                    return [
-                        'id' => $t['id'],
-                        'name' => $t['name'],
-                        'comment' => $t['comment'],
-                        'is_public' => $t['is_public'],
-                        'bpmn_xml' => $t['bpmn_xml'] 
-                    ];
-                }, $templates);
-                
-                echo json_encode(['success' => true, 'templates' => $list]);
+                echo $jsonOutput;
+
             } catch (\Throwable $e) {
-                // Return JSON error instead of 500 html
-                echo json_encode(['success' => false, 'message' => "Erro interno: " . $e->getMessage()]);
+                error_log("FlowBPMN ERROR no list_templates: " . $e->getMessage());
+                echo json_encode(['success' => false, 'message' => "Erro ao listar templates: " . $e->getMessage()]);
+            }
+            break;
+
+        case 'delete_template':
+            $template_id = (int)($input['id'] ?? 0);
+            
+            if ($template_id <= 0) {
+                throw new Exception('ID inválido para exclusão');
+            }
+
+            if (!PluginFlowbpmnTemplate::canDelete()) { // Will use fallback logic added earlier
+                http_response_code(403);
+                throw new Exception('Sem permissão para excluir modelos');
+            }
+
+            $template = new PluginFlowbpmnTemplate();
+            
+            // Security check: Only delete if exists
+            if (!$template->getFromDB($template_id)) {
+                 throw new Exception('Modelo não encontrado');
+            }
+
+            if ($template->delete(['id' => $template_id])) {
+                echo json_encode(['success' => true, 'message' => 'Modelo excluído']);
+            } else {
+                throw new Exception('Falha ao excluir modelo do banco de dados');
             }
             break;
 
@@ -392,6 +459,12 @@ try {
                  include_once(__DIR__ . '/../inc/template.class.php');
             }
             
+            // Check permission
+            if (!PluginFlowbpmnTemplate::canCreate()) {
+                 http_response_code(403);
+                 throw new Exception('Você não tem permissão para criar modelos');
+            }
+
             $name = $input['name'] ?? '';
             $xml = $input['bpmn_xml'] ?? '';
             $svg = $input['svg_content'] ?? '';
@@ -402,18 +475,27 @@ try {
             }
             
             $template = new PluginFlowbpmnTemplate();
-            $newID = $template->add([
+            
+            // Prepare input manually since we are not using front/ form
+            $addInput = [
                 'name' => $name,
                 'bpmn_xml' => $xml,
-                'svg_content' => $svg,
+                'svg_content' => $svg, // Requires DB update? Assume column exists or handled by class
                 'is_public' => $is_public,
-                'comment' => 'Created from diagram'
-            ]);
+                'comment' => '', // Removed default text per user request
+
+                'users_id' => Session::getLoginUserID(),
+                'entities_id' => $_SESSION['glpiactive_entity'] ?? 0,
+                'is_active' => 1
+            ];
+
+            // Use class add method which handles compression in prepareInputForAdd
+            $newID = $template->add($addInput);
             
             if ($newID) {
                 echo json_encode(['success' => true, 'message' => 'Template salvo com sucesso', 'id' => $newID]);
             } else {
-                throw new Exception('Erro ao salvar template');
+                throw new Exception('Erro ao salvar template no banco');
             }
             break;
             

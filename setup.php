@@ -32,7 +32,7 @@ if (!defined('GLPI_ROOT')) {
     die("Sorry. You can't access directly to this file");
 }
 
-define('PLUGIN_FLOWBPMN_VERSION', '3.0.0');
+define('PLUGIN_FLOWBPMN_VERSION', '1.0.0');
 define('PLUGIN_FLOWBPMN_MIN_GLPI', '11.0.0');
 define('PLUGIN_FLOWBPMN_MAX_GLPI', '11.99.99');
 
@@ -83,7 +83,8 @@ function plugin_init_flowbpmn() {
         $PLUGIN_HOOKS['add_css']['flowbpmn'] = ['css/flowbpmn.css'];
 
         // Add JavaScript with cache buster
-        $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = ['js/flowbpmn.js?v=3.0.0'];
+        // JS
+        $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = ['js/flowbpmn.js?v=' . time()]; // Force cache refresh during dev
     }
 }
 
@@ -281,6 +282,12 @@ function plugin_flowbpmn_install() {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
 
         $DB->doQuery($query) or die($DB->error());
+    } else {
+        // Migration: Add svg_content if missing
+        if (!$DB->fieldExists('glpi_plugin_flowbpmn_templates', 'svg_content')) {
+            $query = "ALTER TABLE `glpi_plugin_flowbpmn_templates` ADD COLUMN `svg_content` longtext";
+            $DB->doQuery($query) or die($DB->error());
+        }
     }
     
     // Create profiles table with foreign key

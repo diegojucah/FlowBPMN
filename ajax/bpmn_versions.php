@@ -99,6 +99,21 @@ try {
     // 4. Prepare Response
     $formattedVersions = [];
     foreach ($iterator as $v) {
+        $svg = $v['svg_content'] ?? '';
+        
+        // Check for compression (standard flowbpmn pattern)
+        if (!empty($svg) && strpos($svg, 'COMPRESSED::') === 0) {
+            $encoded = substr($svg, 12);
+            $compressed = base64_decode($encoded);
+            if ($compressed) {
+                // Try decompress
+                $decompressed = @gzuncompress($compressed);
+                if ($decompressed !== false) {
+                    $svg = $decompressed;
+                }
+            }
+        }
+
         $formattedVersions[] = [
             'id' => $v['id'],
             'version_number' => $v['version_number'],
@@ -108,18 +123,23 @@ try {
             'user_name' => $v['user_name'] ?: 'Unknown',
             'date_creation' => $v['date_creation'],
             'date_creation_formatted' => $formatDate($v['date_creation']),
-            'svg_content' => $v['svg_content'] ?? null
+            'svg_content' => $svg
         ];
     }
 
     // 5. Check restore permissions
     $canRestore = PluginFlowbpmnProfile::canRestoreFlow($itemtype);
 
+    // Calculate actual version number (count of old versions, current is the latest)
+    // If there are 30 old versions, current is v30 (not v31)
+    $versionNumber = count($formattedVersions);
+    
     echo json_encode([
         'success' => true,
         'versions' => $formattedVersions,
         'current' => [
-            'id' => $currentFlow['id'],
+            'id' => $versionNumber, // Show version number for display
+            'flow_db_id' => $currentFlow['id'], // Real database ID for restore
             'name' => $currentFlow['name'],
             'date_mod' => $currentFlow['date_mod'],
             'date_mod_formatted' => $formatDate($currentFlow['date_mod']),

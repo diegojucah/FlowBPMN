@@ -52,13 +52,16 @@ class PluginFlowbpmnVersion extends CommonDBTM {
     static function createVersion($flow_id, $flowData) {
         global $DB;
         
+        error_log("flowBPMN DEBUG: createVersion START - flow_id=$flow_id");
+        
         if (!isset($_SESSION['glpi_currenttime'])) {
             $_SESSION['glpi_currenttime'] = date('Y-m-d H:i:s');
         }
         
-        // Get next version number
+        // Get next version number - Use QueryExpression for MAX()
+        error_log("flowBPMN DEBUG: Getting max version number");
         $iterator = $DB->request([
-            'SELECT' => 'MAX(version_number) as max_version',
+            'SELECT' => [new \Glpi\DBAL\QueryExpression('MAX(' . $DB->quoteName('version_number') . ') AS max_version')],
             'FROM'   => self::getTable(),
             'WHERE'  => ['plugin_flowbpmn_flows_id' => $flow_id]
         ]);
@@ -70,9 +73,11 @@ class PluginFlowbpmnVersion extends CommonDBTM {
         }
         
         $nextVersion = $maxVersion + 1;
+        error_log("flowBPMN DEBUG: Next version will be v$nextVersion");
         
         
         $bpmn_xml = $flowData['bpmn_xml'] ?? '';
+        error_log("flowBPMN DEBUG: BPMN XML length: " . strlen($bpmn_xml));
         
         // Compression for versions (Priority 2)
         // If not already compressed and large, compress it
@@ -80,10 +85,12 @@ class PluginFlowbpmnVersion extends CommonDBTM {
             $compressed = gzcompress($bpmn_xml, 6);
             if ($compressed !== false) {
                 $bpmn_xml = 'COMPRESSED::' . base64_encode($compressed);
+                error_log("flowBPMN DEBUG: XML compressed");
             }
         }
         
         // Create version record
+        error_log("flowBPMN DEBUG: Creating version record");
         $version = new self();
         $input = [
             'plugin_flowbpmn_flows_id' => $flow_id,
@@ -96,11 +103,17 @@ class PluginFlowbpmnVersion extends CommonDBTM {
             'date_creation' => $_SESSION['glpi_currenttime']
         ];
         
+        error_log("flowBPMN DEBUG: Calling version->add()");
         $versionId = $version->add($input);
+        error_log("flowBPMN DEBUG: version->add() returned: " . ($versionId ? $versionId : 'FALSE'));
         
         // Clean old versions if needed
         if ($versionId) {
+            error_log("flowBPMN DEBUG: Cleaning old versions");
             self::cleanOldVersions($flow_id);
+            error_log("flowBPMN DEBUG: createVersion SUCCESS - versionId=$versionId");
+        } else {
+            error_log("flowBPMN ERROR: version->add() failed!");
         }
         
         return $versionId;
@@ -213,8 +226,8 @@ class PluginFlowbpmnVersion extends CommonDBTM {
     static function cleanOldVersions($flow_id) {
         global $DB;
         
-        $config = new PluginFlowbpmnConfig();
-        $maxVersions = $config->getConfig('max_versions_per_item');
+        // Fixed limit: keep max 50 versions per flow
+        $maxVersions = 50;
         
         if ($maxVersions <= 0) {
             return; // No limit
