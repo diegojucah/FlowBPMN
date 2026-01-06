@@ -177,5 +177,34 @@ $LANG['plugin_flowbpmn'] = [
     'Unknown' => 'Desconocido',
     'No diagram' => 'Sin diagrama',
     'Creator' => 'Creador',
-    'Close' => 'Cerrar'
+    'Close' => 'Cerrar',
+
+    // JS Translations
+    'Please allow popups to export PDF.' => 'Por favor, permita ventanas emergentes para exportar PDF.',
+    'Error generating PDF: %s' => 'Error al generar PDF: %s',
+    'Error saving diagram: %s' => 'Error al guardar el diagrama: %s',
+    'Choose export format:\n1 - BPMN XML\n2 - SVG\n3 - PNG' => 'Elija el formato de exportación:\n1 - BPMN XML\n2 - SVG\n3 - PNG',
+    'Invalid format' => 'Formato inválido',
+    'File saved successfully!' => '¡Archivo guardado con éxito!',
+    'Error loading versions: %s' => 'Error al cargar versiones: %s',
+    'Error restoring version: %s' => 'Error al restaurar versión: %s',
+    'Image unavailable for this version.' => 'Imagen no disponible para esta versión.',
+    'Version restored! You can edit and save again.' => '¡Versión restaurada! Puede editar y guardar de nuevo.',
+    'Falha ao restaurar versão' => 'Error al restaurar versión',
+    'Failed to restore version' => 'Error al restaurar versión',
+    'Invalid format. Use .bpmn or .xml files' => 'Formato inválido. Use archivos .bpmn o .xml',
+    'Diagram imported successfully!' => '¡Diagrama importado con éxito!',
+    'Error importing diagram: %s' => 'Error al importar diagrama: %s',
+    'Error reading file' => 'Error al leer archivo',
+    'Error processing file: %s' => 'Error al procesar archivo: %s',
+    'Error saving template: %s' => 'Error al guardar plantilla: %s',
+    'Error applying template: %s' => 'Error al aplicar plantilla: %s',
+    'Failed to load diagram' => 'Error al cargar diagrama',
+    'Error loading items' => 'Error al cargar elementos',
+
+    // Remaining keys
+    'Error loading BPMN diagram' => 'Error al cargar el diagrama BPMN',
+    'Error exporting: %s' => 'Error al exportar: %s',
+    'Error listing templates: %s' => 'Error al listar plantillas: %s',
+    'Error: %s' => 'Error: %s'
 ];

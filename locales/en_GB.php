@@ -147,5 +147,34 @@ $LANG['plugin_flowbpmn'] = [
     'Unknown' => 'Unknown',
     'No diagram' => 'No diagram',
     'Creator' => 'Creator',
-    'Close' => 'Close'
+    'Close' => 'Close',
+
+    // JS Translations
+    'Please allow popups to export PDF.' => 'Please allow popups to export PDF.',
+    'Error generating PDF: %s' => 'Error generating PDF: %s',
+    'Error saving diagram: %s' => 'Error saving diagram: %s',
+    'Choose export format:\n1 - BPMN XML\n2 - SVG\n3 - PNG' => 'Choose export format:\n1 - BPMN XML\n2 - SVG\n3 - PNG',
+    'Invalid format' => 'Invalid format',
+    'File saved successfully!' => 'File saved successfully!',
+    'Error loading versions: %s' => 'Error loading versions: %s',
+    'Error restoring version: %s' => 'Error restoring version: %s',
+    'Image unavailable for this version.' => 'Image unavailable for this version.',
+    'Version restored! You can edit and save again.' => 'Version restored! You can edit and save again.',
+    'Falha ao restaurar versão' => 'Failed to restore version',
+    'Failed to restore version' => 'Failed to restore version',
+    'Invalid format. Use .bpmn or .xml files' => 'Invalid format. Use .bpmn or .xml files',
+    'Diagram imported successfully!' => 'Diagram imported successfully!',
+    'Error importing diagram: %s' => 'Error importing diagram: %s',
+    'Error reading file' => 'Error reading file',
+    'Error processing file: %s' => 'Error processing file: %s',
+    'Error saving template: %s' => 'Error saving template: %s',
+    'Error applying template: %s' => 'Error applying template: %s',
+    'Failed to load diagram' => 'Failed to load diagram',
+    'Error loading items' => 'Error loading items',
+
+    // Remaining keys
+    'Error loading BPMN diagram' => 'Error loading BPMN diagram',
+    'Error exporting: %s' => 'Error exporting: %s',
+    'Error listing templates: %s' => 'Error listing templates: %s',
+    'Error: %s' => 'Error: %s'
 ];

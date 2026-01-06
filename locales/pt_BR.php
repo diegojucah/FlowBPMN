@@ -199,5 +199,34 @@ $LANG['plugin_flowbpmn'] = [
     'Unknown' => 'Desconhecido',
     'No diagram' => 'Sem diagrama',
     'Creator' => 'Criador',
-    'Close' => 'Fechar'
+    'Close' => 'Fechar',
+    
+    // JS Translations
+    'Please allow popups to export PDF.' => 'Por favor, permita popups para exportar o PDF.',
+    'Error generating PDF: %s' => 'Erro ao gerar PDF: %s',
+    'Error saving diagram: %s' => 'Erro ao salvar diagrama: %s',
+    'Choose export format:\n1 - BPMN XML\n2 - SVG\n3 - PNG' => 'Escolha o formato de exportação:\n1 - BPMN XML\n2 - SVG\n3 - PNG',
+    'Invalid format' => 'Formato inválido',
+    'File saved successfully!' => 'Arquivo salvo com sucesso!',
+    'Error loading versions: %s' => 'Erro ao carregar versões: %s',
+    'Error restoring version: %s' => 'Erro ao restaurar versão: %s',
+    'Image unavailable for this version.' => 'Imagem indisponível para esta versão.',
+    'Version restored! You can edit and save again.' => 'Versão restaurada! Você pode editar e salvar novamente.',
+    'Falha ao restaurar versão' => 'Falha ao restaurar versão',
+    'Failed to restore version' => 'Falha ao restaurar versão',
+    'Invalid format. Use .bpmn or .xml files' => 'Formato inválido. Use arquivos .bpmn ou .xml',
+    'Diagram imported successfully!' => 'Diagrama importado com sucesso!',
+    'Error importing diagram: %s' => 'Erro ao importar diagrama: %s',
+    'Error reading file' => 'Erro ao ler arquivo',
+    'Error processing file: %s' => 'Erro ao processar arquivo: %s',
+    'Error saving template: %s' => 'Erro ao salvar template: %s',
+    'Error applying template: %s' => 'Erro ao aplicar modelo: %s',
+    'Failed to load diagram' => 'Falha ao carregar diagrama',
+    'Error loading items' => 'Erro ao carregar itens',
+    
+    // Remaining keys
+    'Error loading BPMN diagram' => 'Erro ao carregar diagrama BPMN',
+    'Error exporting: %s' => 'Erro ao exportar: %s',
+    'Error listing templates: %s' => 'Erro ao listar modelos: %s',
+    'Error: %s' => 'Erro: %s'
 ];

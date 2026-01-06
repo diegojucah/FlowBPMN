@@ -594,13 +594,39 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             'Save' => self::_t('Save'),
             'Search in' => self::_t('Search in'),
             'Are you sure you want to permanently delete this version?' => self::_t('Are you sure you want to permanently delete this version?'),
-            'Delete this template permanently?' => self::_t('Delete this template permanently?')
+            'Delete this template permanently?' => self::_t('Delete this template permanently?'),
+            
+            // Missing JS Keys
+            'Please allow popups to export PDF.' => self::_t('Please allow popups to export PDF.'),
+            'Error generating PDF: %s' => self::_t('Error generating PDF: %s'),
+            'Error saving diagram: %s' => self::_t('Error saving diagram: %s'),
+            'Choose export format:\n1 - BPMN XML\n2 - SVG\n3 - PNG' => self::_t('Choose export format:\n1 - BPMN XML\n2 - SVG\n3 - PNG'),
+            'Invalid format' => self::_t('Invalid format'),
+            'File saved successfully!' => self::_t('File saved successfully!'),
+            'Error loading versions: %s' => self::_t('Error loading versions: %s'),
+            'No preview available' => self::_t('No preview available'),
+            'Error restoring version: %s' => self::_t('Error restoring version: %s'),
+            'Image unavailable for this version.' => self::_t('Image unavailable for this version.'),
+            'Error deleting version: %s' => self::_t('Error deleting version: %s'),
+            'Version deleted successfully!' => self::_t('Version deleted successfully!'),
+            'Version restored! You can edit and save again.' => self::_t('Version restored! You can edit and save again.'),
+            'Falha ao restaurar versão' => self::_t('Falha ao restaurar versão'), // Legacy fallback
+            'Failed to restore version' => self::_t('Failed to restore version'),
+            'Invalid format. Use .bpmn or .xml files' => self::_t('Invalid format. Use .bpmn or .xml files'),
+            'Diagram imported successfully!' => self::_t('Diagram imported successfully!'),
+            'Error importing diagram: %s' => self::_t('Error importing diagram: %s'),
+            'Error reading file' => self::_t('Error reading file'),
+            'Error processing file: %s' => self::_t('Error processing file: %s'),
+            'Error saving template: %s' => self::_t('Error saving template: %s'),
+            'Error applying template: %s' => self::_t('Error applying template: %s'),
+            'Connection error when trying to delete.' => self::_t('Connection error when trying to delete.'),
+            'Failed to load diagram' => self::_t('Failed to load diagram'),
+            'Error loading items' => self::_t('Error loading items')
         ];
         
         echo "<script>
             window.FLOWBPMN_I18N = " . json_encode($jsTranslations, JSON_UNESCAPED_UNICODE) . ";
             console.log('[FlowBPMN PHP] Injected translations:', window.FLOWBPMN_I18N);
-            console.log('[FlowBPMN PHP] Import Diagram translation:', window.FLOWBPMN_I18N['Import Diagram']);
         </script>";
 
         echo "<div class='flowbpmn-container'>";

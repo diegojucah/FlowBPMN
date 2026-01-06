@@ -263,7 +263,7 @@ class BpmnFlowEditor {
             canvas.zoom('fit-viewport');
         } catch (err) {
             console.error('Error loading diagram:', err);
-            this.showError('Error loading BPMN diagram');
+            this.showError(this._t('Error loading BPMN diagram'));
         }
     }
 
@@ -383,7 +383,7 @@ class BpmnFlowEditor {
 
             const printWindow = window.open('', '_blank');
             if (!printWindow) {
-                alert('Por favor, permita popups para exportar o PDF.');
+                alert(this._t('Please allow popups to export PDF.'));
                 return;
             }
 
@@ -414,7 +414,7 @@ class BpmnFlowEditor {
 
         } catch (err) {
             console.error('Error exporting PDF:', err);
-            alert('Erro ao gerar PDF: ' + err.message);
+            alert(this._t('Error generating PDF: %s').replace('%s', err.message));
         }
     }
 
@@ -496,13 +496,13 @@ class BpmnFlowEditor {
             }
         } catch (err) {
             console.error('Erro ao salvar:', err);
-            this.showError('Erro ao salvar diagrama: ' + err.message);
+            this.showError(this._t('Error saving diagram: %s').replace('%s', err.message));
         }
     }
 
     async showExportModal() {
         try {
-            const format = prompt('Escolha o formato de exportação:\n1 - BPMN XML\n2 - SVG\n3 - PNG', '1');
+            const format = prompt(this._t('Choose export format:\\n1 - BPMN XML\\n2 - SVG\\n3 - PNG'), '1');
 
             if (!format) return;
 
@@ -517,10 +517,10 @@ class BpmnFlowEditor {
                     await this.exportPNG();
                     break;
                 default:
-                    alert('Formato inválido');
+                    alert(this._t('Invalid format'));
             }
         } catch (err) {
-            this.showError('Erro ao exportar: ' + err.message);
+            this.showError(this._t('Error exporting: %s').replace('%s', err.message));
         }
     }
 
@@ -593,7 +593,7 @@ class BpmnFlowEditor {
                 await writable.write(blob);
                 await writable.close();
 
-                this.showSuccess('Arquivo salvo com sucesso!');
+                this.showSuccess(this._t('File saved successfully!'));
                 return;
             }
         } catch (err) {
@@ -667,7 +667,7 @@ class BpmnFlowEditor {
 
         } catch (err) {
             console.error('Error loading versions:', err);
-            this.showError('Erro ao carregar versões: ' + err.message);
+            this.showError(this._t('Error loading versions: %s').replace('%s', err.message));
         }
     }
 
@@ -732,7 +732,7 @@ class BpmnFlowEditor {
 
     createVersionCard(version, canRestore) {
         // Thumbnail logic
-        let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> Sem pré-visualização</div>';
+        let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> ' + this._t('No preview available') + '</div>';
         let svgData = '';
 
         // Check if content exists and is not just "0" (DB default/error) and looks like SVG
@@ -797,7 +797,7 @@ class BpmnFlowEditor {
                 // Direct restore
                 this.restoreVersion(currentFlowId, versionId).catch(err => {
                     console.error('Error restoring version:', err);
-                    this.showError('Erro ao restaurar versão: ' + err.message);
+                    this.showError(this._t('Error restoring version: %s').replace('%s', err.message));
                 });
                 return;
             }
@@ -811,7 +811,7 @@ class BpmnFlowEditor {
                 this.showConfirmModal(this._t('Are you sure you want to permanently delete this version?'), () => {
                     this.deleteVersion(versionId).catch(err => {
                         console.error('Error deleting version:', err);
-                        this.showError('Erro ao excluir versão: ' + err.message);
+                        this.showError(this._t('Error deleting version: %s').replace('%s', err.message));
                     });
                 });
                 return;
@@ -849,7 +849,7 @@ class BpmnFlowEditor {
                         imgModal.show();
                     }
                 } else {
-                    alert('Imagem indisponível para esta versão.');
+                    alert(this._t('Image unavailable for this version.'));
                 }
                 return;
             }
@@ -935,13 +935,13 @@ class BpmnFlowEditor {
                 }
 
                 // Mostrar mensagem de sucesso
-                this.showSuccess('Versão restaurada! Você pode editar e salvar novamente.');
+                this.showSuccess(this._t('Version restored! You can edit and save again.'));
 
                 // Ajustar zoom para caber na tela
                 const canvas = this.modeler.get('canvas');
                 canvas.zoom('fit-viewport');
             } else {
-                throw new Error(result.message || 'Falha ao restaurar versão');
+                throw new Error(result.message || this._t('Failed to restore version'));
             }
         } catch (err) {
             console.error('Error in restoreVersion:', err);
@@ -959,7 +959,7 @@ class BpmnFlowEditor {
             const validExtensions = ['.bpmn', '.xml'];
             const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
             if (!validExtensions.includes(fileExtension)) {
-                this.showError('Formato inválido. Use arquivos .bpmn ou .xml');
+                this.showError(this._t('Invalid format. Use .bpmn or .xml files'));
                 return;
             }
 
@@ -977,26 +977,26 @@ class BpmnFlowEditor {
                     canvas.zoom('fit-viewport');
 
                     // Feedback visual
-                    this.showSuccess('Diagrama importado com sucesso!');
+                    this.showSuccess(this._t('Diagram imported successfully!'));
 
                     // Limpar input para permitir reimportação do mesmo arquivo
                     event.target.value = '';
 
                 } catch (err) {
                     console.error('Erro ao importar diagrama:', err);
-                    this.showError('Erro ao importar diagrama: ' + err.message);
+                    this.showError(this._t('Error importing diagram: %s').replace('%s', err.message));
                 }
             };
 
             reader.onerror = () => {
-                this.showError('Erro ao ler arquivo');
+                this.showError(this._t('Error reading file'));
             };
 
             reader.readAsText(file);
 
         } catch (err) {
             console.error('Erro no processo de importação:', err);
-            this.showError('Erro ao processar arquivo: ' + err.message);
+            this.showError(this._t('Error processing file: %s').replace('%s', err.message));
         }
     }
 
@@ -1030,7 +1030,7 @@ class BpmnFlowEditor {
             glpi_toast('error', message);
         } else {
             console.error(message);
-            alert('Error: ' + message);
+            alert(this._t('Error: %s').replace('%s', message));
         }
     }
 
@@ -1143,7 +1143,7 @@ class BpmnFlowEditor {
 
         } catch (err) {
             console.error('Error saving template:', err);
-            this.showError('Erro ao salvar template: ' + err.message);
+            this.showError(this._t('Error saving template: %s').replace('%s', err.message));
         }
     }
 
@@ -1289,7 +1289,7 @@ class BpmnFlowEditor {
 
         } catch (err) {
             console.error('Erro ao listar templates:', err);
-            this.showError('Erro ao listar templates: ' + err.message);
+            this.showError(this._t('Error listing templates: %s').replace('%s', err.message));
         }
     }
     createTemplateCardHTML(template) {
@@ -1362,7 +1362,7 @@ class BpmnFlowEditor {
                 // Direct apply
                 this.loadTemplate(id).catch(err => {
                     console.error('Error applying template:', err);
-                    this.showError('Erro ao aplicar modelo: ' + err.message);
+                    this.showError(this._t('Error applying template: %s').replace('%s', err.message));
                 });
                 return;
             }
@@ -1721,7 +1721,7 @@ class BpmnFlowEditor {
             const result = await response.json();
 
             if (!result.success) {
-                throw new Error(result.message || 'Failed to load diagram');
+                throw new Error(result.message || this._t('Failed to load diagram'));
             }
 
             if (!result.xml) {
@@ -1854,7 +1854,7 @@ class BpmnFlowEditor {
             console.error('Error loading gallery:', err);
             container.innerHTML = `<div class="text-center p-5 text-danger">
                 <i class="ti ti-alert-triangle mb-2"></i><br>
-                ${err.message || 'Error loading items'}
+                ${err.message || this._t('Error loading items')}
             </div>`;
         }
     }
@@ -1896,7 +1896,7 @@ class BpmnFlowEditor {
         const badge = `<span class="badge bg-dark mb-2">${type} #${item.id}</span>`;
 
         // Thumbnail Logic
-        let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> Sem pré-visualização</div>';
+        let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> ' + this._t('No preview available') + '</div>';
         let svgData = '';
 
         if (item.svg_content && item.svg_content !== '0' && item.svg_content.length > 50) {
