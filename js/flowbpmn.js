@@ -1990,12 +1990,15 @@ class BpmnFlowEditor {
                                 </ul>
                             </div>
                             
-                            <div class="d-flex gap-2 align-items-center">
+                            <!-- Import Button -->
+                            <div class="ms-auto me-3">
                                  <button class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('flowbpmn-import-file-input').click()">
                                     <i class="ti ti-upload"></i> ${this._t('Import from File')}
                                 </button>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
+                            
+                            <!-- Close Button -->
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
                         <!-- Body -->
