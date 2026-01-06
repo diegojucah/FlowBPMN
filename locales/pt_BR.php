@@ -22,6 +22,9 @@ $LANG['plugin_flowbpmn'] = [
     'BPMN Flow Editor' => 'Editor de Fluxo BPMN',
     'Editor de Fluxo BPMN' => 'Editor de Fluxo BPMN',
     'Save' => 'Salvar',
+    'Search in' => 'Pesquisar em',
+    'Are you sure you want to permanently delete this version?' => 'Tem certeza que deseja excluir permanentemente esta versão?',
+    'Delete this template permanently?' => 'Excluir este modelo permanentemente?',
     'Salvar' => 'Salvar',
     'Export' => 'Exportar',
     'Exportar' => 'Exportar',
@@ -140,6 +143,8 @@ $LANG['plugin_flowbpmn'] = [
     'Error deleting version' => 'Erro ao excluir versão',
     'Connection error when trying to delete.' => 'Erro de conexão ao tentar excluir.',
     'Are you sure you want to permanently delete this version?' => 'Tem certeza que deseja excluir esta versão permanentemente?',
+    'Template Name' => 'Nome do Modelo',
+    'Please enter a template name' => 'Por favor, insira um nome para o modelo',
 
     // Messages
     'BPMN diagram saved successfully!' => 'Diagrama BPMN salvo com sucesso!',

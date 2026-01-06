@@ -11,14 +11,8 @@ declare(strict_types=1);
 // Start output buffering to prevent any unwanted output
 ob_start();
 
-// Bootstrap GLPI manually (since this file is called directly, not through front controller)
+// Bootstrap GLPI manually
 $glpi_root = dirname(__DIR__, 3);
-
-/*
-if (!defined('GLPI_ROOT')) {
-    define('GLPI_ROOT', $glpi_root);
-}
-*/
 
 // Include autoloader
 require_once $glpi_root . '/vendor/autoload.php';
@@ -252,6 +246,26 @@ try {
             $data = $flow->getForItem($itemtype, $items_id);
             
             echo json_encode(['success' => true, 'data' => $data]);
+            break;
+
+        case 'get_xml':
+            $itemtype = $input['itemtype'] ?? '';
+            $items_id = (int)($input['items_id'] ?? 0);
+
+            if (empty($itemtype) || $items_id <= 0) {
+                throw new Exception('Missing required parameters for import');
+            }
+
+            $flow = new PluginFlowbpmnFlow();
+            $data = $flow->getForItem($itemtype, $items_id);
+
+            if (!$data || empty($data['bpmn_xml'])) {
+                // If not found, return empty success so frontend handles "No content" or error
+                // JS expects { success: true, xml: ... }
+                echo json_encode(['success' => true, 'xml' => '']);
+            } else {
+                echo json_encode(['success' => true, 'xml' => $data['bpmn_xml']]);
+            }
             break;
 
         case 'delete_version':

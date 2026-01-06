@@ -20,6 +20,9 @@ const BPMN_FONT = '/plugins/flowbpmn/lib/bpmn-js/bpmn-embedded.css';
  */
 class BpmnFlowEditor {
     constructor(options) {
+        // Expose instance for global access (needed for modal onclick events)
+        window.BpmnFlowEditor_instance = this;
+
         this.container = document.querySelector(options.container);
         if (!this.container) {
             console.error('Container not found:', options.container);
@@ -65,10 +68,8 @@ class BpmnFlowEditor {
      */
     _t(key) {
         if (window.FLOWBPMN_I18N && window.FLOWBPMN_I18N[key]) {
-            console.log(`[FlowBPMN i18n] Translating '${key}' => '${window.FLOWBPMN_I18N[key]}'`);
             return window.FLOWBPMN_I18N[key];
         }
-        console.warn(`[FlowBPMN i18n] Missing translation for key: '${key}'`);
         return key;
     }
 
@@ -354,13 +355,15 @@ class BpmnFlowEditor {
         }
 
         // Templates Buttons (Priority 4.1)
-        const saveTemplateBtn = document.getElementById('bpmn-save-template-btn');
-        if (saveTemplateBtn) {
-            saveTemplateBtn.addEventListener('click', (e) => {
+        // Templates Buttons (Priority 4.1) - Event Delegation for robustness inside Dropdowns
+        document.addEventListener('click', (e) => {
+            const saveBtn = e.target.closest('#bpmn-save-template-btn');
+            if (saveBtn) {
                 e.preventDefault();
+                e.stopPropagation();
                 this.saveAsTemplate();
-            });
-        }
+            }
+        });
 
         const loadTemplateBtn = document.getElementById('bpmn-load-template-btn');
         if (loadTemplateBtn) {
@@ -799,6 +802,21 @@ class BpmnFlowEditor {
                 return;
             }
 
+            // Delete Action
+            const deleteBtn = e.target.closest('.flowbpmn-delete-version');
+            if (deleteBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const versionId = deleteBtn.dataset.versionId;
+                this.showConfirmModal(this._t('Are you sure you want to permanently delete this version?'), () => {
+                    this.deleteVersion(versionId).catch(err => {
+                        console.error('Error deleting version:', err);
+                        this.showError('Erro ao excluir versão: ' + err.message);
+                    });
+                });
+                return;
+            }
+
             // View Action
             const viewBtn = e.target.closest('.flowbpmn-view-image');
             if (viewBtn) {
@@ -836,17 +854,7 @@ class BpmnFlowEditor {
                 return;
             }
 
-            // Delete Action
-            const deleteBtn = e.target.closest('.flowbpmn-delete-version');
-            if (deleteBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const versionId = deleteBtn.dataset.versionId;
-                if (confirm(this._t('Are you sure you want to permanently delete this version?'))) {
-                    this.deleteVersion(versionId).catch(console.error);
-                }
-                return;
-            }
+
         };
     }
 
@@ -1018,22 +1026,97 @@ class BpmnFlowEditor {
     }
 
     showError(message) {
-        alert('Error: ' + message);
+        if (typeof glpi_toast !== 'undefined') {
+            glpi_toast('error', message);
+        } else {
+            console.error(message);
+            alert('Error: ' + message);
+        }
     }
 
     /**
-     * Save current diagram as Template
+     * Show Confirmation Modal (Replaces native confirm)
+     */
+    showConfirmModal(message, onConfirm) {
+        // Remove existing if any
+        const existing = document.getElementById('flowbpmn-confirm-modal');
+        if (existing) existing.remove();
+
+        const html = `
+        <div class="modal fade" id="flowbpmn-confirm-modal" tabindex="-1" style="z-index: 1070;">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="ti ti-alert-circle text-warning"></i> ${this._t('Confirm')}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0">${message}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">${this._t('Cancel')}</button>
+                        <button type="button" class="btn btn-danger btn-sm" id="flowbpmn-confirm-btn-yes">${this._t('Confirm')}</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+        document.body.insertAdjacentHTML('beforeend', html);
+        const modalEl = document.getElementById('flowbpmn-confirm-modal');
+        const modal = new bootstrap.Modal(modalEl);
+
+        document.getElementById('flowbpmn-confirm-btn-yes').onclick = () => {
+            modal.hide();
+            if (typeof onConfirm === 'function') onConfirm();
+        };
+
+        modal.show();
+    }
+
+    /**
+     * Show Save Template Modal
      */
     async saveAsTemplate() {
-        const name = prompt("Nome do Template:", "Novo Template");
-        if (!name) return;
+        // Create modal if it doesn't exist
+        if (!document.getElementById('flowbpmn-save-template-modal')) {
+            const modalHTML = this.createSaveTemplateModalHTML();
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
 
+            // Bind Save Event
+            document.getElementById('flowbpmn-confirm-save-template').addEventListener('click', () => {
+                const nameInput = document.getElementById('flowbpmn-template-name-input');
+                const name = nameInput.value.trim();
+                if (name) {
+                    this.performSaveTemplate(name);
+                    const modalEl = document.getElementById('flowbpmn-save-template-modal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+                } else {
+                    alert(this._t('Please enter a template name'));
+                }
+            });
+        }
+
+        // Reset input
+        document.getElementById('flowbpmn-template-name-input').value = 'Novo Template';
+
+        // Show Modal
+        const modal = new bootstrap.Modal(document.getElementById('flowbpmn-save-template-modal'));
+        modal.show();
+    }
+
+    /**
+     * Perform the actual save logic
+     */
+    async performSaveTemplate(name) {
         try {
             const { xml } = await this.modeler.saveXML({ format: true });
             const { svg } = await this.modeler.saveSVG();
 
-            const pluginUrl = this.pluginUrl || '/plugins/flowbpmn';
-            const url = `${pluginUrl}/ajax/flow.php?action=save_template`;
+            const root = typeof CFG_GLPI !== 'undefined' ? CFG_GLPI.root_doc : '';
+            const url = `${root}/plugins/flowbpmn/ajax/template.php?action=save`;
+
+            console.log('FlowBPMN: Saving template to', url);
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -1042,7 +1125,7 @@ class BpmnFlowEditor {
                     'X-Glpi-Csrf-Token': this.getCSRFToken()
                 },
                 body: JSON.stringify({
-                    action: 'save_template',
+                    action: 'save',
                     name: name,
                     bpmn_xml: xml,
                     svg_content: svg,
@@ -1051,16 +1134,41 @@ class BpmnFlowEditor {
             });
 
             const result = await response.json();
+
             if (result.success) {
-                this.showSuccess('Template salvo com sucesso!');
+                this.showSuccess(this._t('Template saved successfully!'));
             } else {
                 throw new Error(result.message);
             }
 
         } catch (err) {
-            console.error('Erro ao salvar template:', err);
+            console.error('Error saving template:', err);
             this.showError('Erro ao salvar template: ' + err.message);
         }
+    }
+
+    createSaveTemplateModalHTML() {
+        return `
+        <div class="modal fade" id="flowbpmn-save-template-modal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">${this._t('Save as Template')}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="flowbpmn-template-name-input" class="form-label">${this._t('Template Name')}</label>
+                            <input type="text" class="form-control" id="flowbpmn-template-name-input" placeholder="Ex: Onboarding Process">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Cancel')}</button>
+                        <button type="button" class="btn btn-primary" id="flowbpmn-confirm-save-template">${this._t('Save')}</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
     }
 
     /**
@@ -1069,7 +1177,7 @@ class BpmnFlowEditor {
     async showLoadTemplateModal() {
         try {
             const pluginUrl = this.pluginUrl || '/plugins/flowbpmn';
-            const url = `${pluginUrl}/ajax/flow.php?action=list_templates`;
+            const url = `${pluginUrl}/ajax/template.php?action=list`;
 
             const response = await fetch(url);
             const result = await response.json();
@@ -1114,21 +1222,33 @@ class BpmnFlowEditor {
                 </div>
             </div>
             
-            <!-- Shared Image Preview Modal (Identical to Versions) -->
-            <div class="modal fade" id="flowbpmn-image-modal" tabindex="-1" aria-hidden="true">
+            <!-- Shared Image Preview Modal (Specific for Templates to avoid ID conflict) -->
+            <div class="modal fade" id="flowbpmn-templates-image-modal" tabindex="-1" aria-hidden="true" style="z-index: 1065;">
                 <div class="modal-dialog modal-xl modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-body position-relative">
                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px; z-index: 10;"></button>
-                             <div id="flowbpmn-image-container" class="d-flex justify-content-center"></div>
+                             <div id="flowbpmn-templates-image-container" class="d-flex justify-content-center"></div>
                         </div>
                     </div>
                 </div>
             </div>`;
 
             // Clean old modal
-            const oldModal = document.getElementById('flowbpmn-templates-modal');
-            if (oldModal) oldModal.remove();
+            const oldModalEl = document.getElementById('flowbpmn-templates-modal');
+            if (oldModalEl) {
+                const oldInstance = bootstrap.Modal.getInstance(oldModalEl);
+                if (oldInstance) {
+                    oldInstance.dispose(); // Unbind events, don't animate hide
+                }
+                oldModalEl.remove(); // Remove element immediately
+
+                // Manual Backdrop Cleanup (Essential since we skipped hide())
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.paddingRight = '';
+                document.body.style.overflow = '';
+            }
 
             document.body.insertAdjacentHTML('beforeend', html);
 
@@ -1226,14 +1346,10 @@ class BpmnFlowEditor {
     bindTemplateActions() {
         const grid = document.getElementById('flowbpmn-templates-grid');
         if (!grid) {
-            console.error('Template grid not found during binding');
             return;
         }
 
-        console.log('Binding template actions to grid:', grid);
-
         grid.onclick = (e) => {
-            console.log('Grid clicked:', e.target); // Debug click
 
             // Apply Template
             const applyBtn = e.target.closest('.flowbpmn-apply-template');
@@ -1259,7 +1375,7 @@ class BpmnFlowEditor {
                 const svgContent = decodeURIComponent(viewBtn.dataset.svg);
 
                 if (svgContent) {
-                    const container = document.getElementById('flowbpmn-image-container');
+                    const container = document.getElementById('flowbpmn-templates-image-container');
                     if (!container) return;
 
                     container.innerHTML = svgContent;
@@ -1273,7 +1389,7 @@ class BpmnFlowEditor {
                         svgEl.style.maxWidth = '100%';
                     }
 
-                    const imgModal = new bootstrap.Modal(document.getElementById('flowbpmn-image-modal'));
+                    const imgModal = new bootstrap.Modal(document.getElementById('flowbpmn-templates-image-modal'));
                     imgModal.show();
                 }
                 return;
@@ -1285,9 +1401,9 @@ class BpmnFlowEditor {
                 e.preventDefault();
                 e.stopPropagation();
                 const id = deleteBtn.dataset.templateId;
-                if (confirm(this._t('Delete this template permanently?'))) {
+                this.showConfirmModal(this._t('Delete this template permanently?'), () => {
                     this.deleteTemplate(id).catch(console.error);
-                }
+                });
                 return;
             }
         };
@@ -1485,10 +1601,11 @@ class BpmnFlowEditor {
 
         if (type === 'versions') {
             grid.innerHTML = pageData.map(v => this.createVersionCard(v, canRestore)).join('');
-            // this.bindVersionActions(null, canRestore); // DELEGATION HANDLES THIS NOW
         } else if (type === 'templates') {
             grid.innerHTML = pageData.map(t => this.createTemplateCardHTML(t)).join('');
-            // this.bindTemplateActions(); // DELEGATION HANDLES THIS NOW
+        } else if (type.startsWith('import-')) {
+            const itemType = type.replace('import-', ''); // e.g. Ticket
+            grid.innerHTML = pageData.map(item => this.createImportCardHTML(itemType, item)).join('');
         }
 
         // Update pagination state
@@ -1537,19 +1654,16 @@ class BpmnFlowEditor {
         let existing = document.getElementById('flowbpmn-image-modal');
         if (existing) existing.remove();
 
+        // Match structure of Versions image modal
         const html = `
         <div class="modal fade" id="flowbpmn-image-modal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
-            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">${this._t('Diagram Preview')}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body text-center bg-light" style="overflow: auto; padding: 20px;">
-                        ${content}
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Close')}</button>
+                    <div class="modal-body position-relative">
+                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px; z-index: 10;"></button>
+                         <div id="flowbpmn-image-container" class="d-flex justify-content-center align-items-center" style="min-height: 400px; padding: 20px; overflow: auto;">
+                            ${content}
+                         </div>
                     </div>
                 </div>
             </div>
@@ -1557,6 +1671,22 @@ class BpmnFlowEditor {
 
         document.body.insertAdjacentHTML('beforeend', html);
         const el = document.getElementById('flowbpmn-image-modal');
+
+        // Apply SVG resizing logic matches Versions modal
+        const container = document.getElementById('flowbpmn-image-container');
+        if (container) {
+            const svgEl = container.querySelector('svg');
+            if (svgEl) {
+                svgEl.removeAttribute('width');
+                svgEl.removeAttribute('height');
+                svgEl.style.width = '100%';
+                svgEl.style.height = 'auto'; // Maintain aspect ratio
+                svgEl.style.maxWidth = '100%';
+                // Ensure it expands
+                svgEl.style.minHeight = '300px';
+            }
+        }
+
         const modal = new bootstrap.Modal(el);
         modal.show();
 
@@ -1573,14 +1703,17 @@ class BpmnFlowEditor {
             const root = typeof CFG_GLPI !== 'undefined' ? CFG_GLPI.root_doc : '';
             const url = `${root}/plugins/flowbpmn/ajax/flow.php`;
 
-            const formData = new FormData();
-            formData.append('action', 'get_xml');
-            formData.append('itemtype', itemtype);
-            formData.append('items_id', items_id);
-
             const response = await fetch(url, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Glpi-Csrf-Token': this.getCSRFToken()
+                },
+                body: JSON.stringify({
+                    action: 'get_xml',
+                    itemtype: itemtype,
+                    items_id: items_id
+                })
             });
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -1637,129 +1770,287 @@ class BpmnFlowEditor {
      * Show Modal to Import Diagrams (Unified)
      */
     showImportModal() {
-        // Debug: Check if translations are loaded
-        console.log('[FlowBPMN] showImportModal called');
-        console.log('[FlowBPMN] window.FLOWBPMN_I18N exists:', !!window.FLOWBPMN_I18N);
-        if (window.FLOWBPMN_I18N) {
-            console.log('[FlowBPMN] Sample translations:', {
-                'Import Diagram': window.FLOWBPMN_I18N['Import Diagram'],
-                'Ticket': window.FLOWBPMN_I18N['Ticket'],
-                'Close': window.FLOWBPMN_I18N['Close']
-            });
-        }
-
         const modalId = 'flowbpmn-import-modal';
         let modal = document.getElementById(modalId);
         if (modal) modal.remove();
 
-        const html = `
-        <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-xl" style="width: 65vw; max-width: 65vw; margin-top: 1.75rem;">
-                <div class="modal-content" style="height: 60vh; max-height: 60vh; background-color: white !important; display: flex; flex-direction: column;">
-                    <div class="modal-header">
-                         <h5 class="modal-title">
-                            <i class="ti ti-download"></i> ${this._t('Import Diagram')}
-                         </h5>
-                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    
-                    <div class="modal-body" style="background-color: #f5f7fa; padding: 0;">
-                        
-                        <!-- TOOLBAR (Sticky Top like Templates) -->
-                        <div class="d-flex justify-content-between align-items-center mb-0 px-3 py-3 border-bottom bg-white sticky-top" style="z-index: 5;">
-                            <div class="d-flex align-items-center gap-3">
-                                <button class="btn btn-ghost-secondary btn-icon d-none" id="flowbpmn-back-to-types" title="${this._t('Back')}">
-                                    <i class="ti ti-arrow-left fs-2"></i>
-                                </button>
-                                <h3 class="mb-0 fw-bold text-dark" id="flowbpmn-list-title"></h3>
-                            </div>
-                            
-                            <div class="d-flex gap-2 align-items-center" style="flex-grow: 1; justify-content: flex-end;">
-                                 <!-- Search Bar (Standardized Full Width) -->
-                                 <div id="flowbpmn-search-wrapper" class="d-none me-3" style="flex-grow: 1; max-width: 400px;">
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="ti ti-search"></i></span>
-                                        <input type="text" id="flowbpmn-import-search" class="form-control" placeholder="${this._t('Search...')}">
-                                    </div>
-                                 </div>
-
-                                 <!-- File Import Button -->
-                                 <input type="file" id="bpmn-import-file-input" accept=".bpmn,.xml" style="display: none;">
-                                 <button class="btn btn-primary" id="bpmn-import-file-btn" style="flex-shrink: 0;">
-                                     <i class="ti ti-upload me-2"></i> ${this._t('Import from File')}
-                                 </button>
-                            </div>
-                        </div>
-
-                        <!-- CONTENT (Scrollable area) -->
-                        <div style="flex-grow: 1; overflow-y: auto; padding: 1.5rem; height: 100%;">
-                            
-                            <!-- TYPES -->
-                            <div id="flowbpmn-import-types" class="h-100 d-flex align-items-center">
-                                <div class="row g-4 w-100 justify-content-center">
-                                    ${this.createImportTypeCard('Ticket', 'ti-ticket', '#0d6efd')}
-                                    ${this.createImportTypeCard('Problem', 'ti-alert-triangle', '#dc3545')}
-                                    ${this.createImportTypeCard('Change', 'ti-git-merge', '#fd7e14')}
-                                </div>
-                            </div>
-
-                            <!-- LIST -->
-                            <div id="flowbpmn-import-list-container" class="d-none flex-column h-100">
-                                 <div class="flex-grow-1">
-                                     <div id="flowbpmn-import-grid" class="flowbpmn-versions-grid"></div>
-                                 </div>
-                                 <div class="mt-2 pt-2 border-top" id="flowbpmn-import-pagination"></div>
-                            </div>
-                        </div>
-
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Close')}</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Image Preview -->
-        <div class="modal fade" id="flowbpmn-image-modal" tabindex="-1" style="z-index: 1070;">
-            <div class="modal-dialog modal-xl modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body position-relative">
-                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px; z-index: 10;"></button>
-                         <div id="flowbpmn-image-container" class="d-flex justify-content-center"></div>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-
+        const html = this.createImportModalHTML();
         document.body.insertAdjacentHTML('beforeend', html);
+
         modal = document.getElementById(modalId);
         const bsModal = new bootstrap.Modal(modal);
         bsModal.show();
 
         this.bindImportEvents(modal);
+        this.loadImportGallery('Ticket'); // Load default
     }
 
-    bindImportEvents(modal) {
-        const typesContainer = modal.querySelector('#flowbpmn-import-types');
-        const listContainer = modal.querySelector('#flowbpmn-import-list-container');
-        const listTitle = modal.querySelector('#flowbpmn-list-title');
-        const backBtn = modal.querySelector('#flowbpmn-back-to-types');
-        const searchWrapper = modal.querySelector('#flowbpmn-search-wrapper');
-        const fileBtn = modal.querySelector('#bpmn-import-file-btn');
-        const fileInput = modal.querySelector('#bpmn-import-file-input');
+    async loadImportGallery(type, search = '') {
+        const container = document.getElementById(`flowbpmn-import-grid-${type}`);
+        if (!container) return;
 
+        // Show loading state
+        if (!search) {
+            const searchInput = document.getElementById(`flowbpmn-import-search-${type}`);
+            if (searchInput) searchInput.value = '';
+        }
+        container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">' + this._t('Loading items...') + '</p></div>';
+
+        const root = typeof CFG_GLPI !== 'undefined' ? CFG_GLPI.root_doc : '';
+        const url = `${root}/plugins/flowbpmn/ajax/import_items.php`;
+
+        try {
+            const formData = new FormData();
+            formData.append('itemtype', type);
+            formData.append('search', search);
+
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Glpi-Csrf-Token': this.getCSRFToken() }
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message);
+            }
+
+            // Clean old pagination
+            const parent = container.parentNode;
+            Array.from(parent.children).forEach(child => {
+                if (child !== container && (child.classList.contains('flowbpmn-import-pagination-wrapper') || child.querySelector('.pagination'))) {
+                    child.remove();
+                }
+            });
+
+            if (result.items.length === 0) {
+                container.innerHTML = `<div class="text-center p-5 text-muted">
+                    <i class="ti ti-ghost mb-3" style="font-size: 2rem;"></i>
+                    <p>${this._t('No diagram found')}</p>
+                </div>`;
+                return;
+            }
+
+            // Store all data for pagination
+            const itemsPerPage = 6;
+            const totalPages = Math.ceil(result.items.length / itemsPerPage);
+
+            // Render first page immediately
+            this.renderImportPage(type, 1, result.items);
+
+            // Add pagination controls if needed
+            if (totalPages > 1) {
+                const paginationHtml = this.createPaginationHTML(`import-${type}`, totalPages, result.items);
+                const paginationContainer = document.createElement('div');
+                paginationContainer.className = 'flowbpmn-import-pagination-wrapper';
+                paginationContainer.innerHTML = paginationHtml;
+                container.parentNode.appendChild(paginationContainer); // Append AFTER grid
+
+                this.bindPaginationEvents(`import-${type}`, result.items);
+            }
+
+        } catch (err) {
+            console.error('Error loading gallery:', err);
+            container.innerHTML = `<div class="text-center p-5 text-danger">
+                <i class="ti ti-alert-triangle mb-2"></i><br>
+                ${err.message || 'Error loading items'}
+            </div>`;
+        }
+    }
+
+    renderImportPage(type, page, allItems) {
+        const container = document.getElementById(`flowbpmn-import-grid-${type}`);
+        if (!container) return;
+
+        const itemsPerPage = 6;
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageItems = allItems.slice(start, end);
+
+        container.className = 'flowbpmn-versions-grid';
+        container.style.padding = '0';
+
+        // Ensure container has data attributes for pagination to work
+        container.dataset.currentPage = page;
+        container.dataset.totalPages = Math.ceil(allItems.length / itemsPerPage);
+
+        container.innerHTML = pageItems.map(item => this.createImportCardHTML(type, item)).join('');
+
+        // Update pagination active state
+        const pagination = document.getElementById(`flowbpmn-import-${type}-pagination`);
+        if (pagination) {
+            pagination.querySelectorAll('.page-item[data-page]').forEach(li => {
+                li.classList.toggle('active', parseInt(li.dataset.page) === page);
+            });
+            // Update prev/next buttons
+            const prevBtn = document.getElementById(`flowbpmn-import-${type}-prev`);
+            const nextBtn = document.getElementById(`flowbpmn-import-${type}-next`);
+
+            if (prevBtn) prevBtn.classList.toggle('disabled', page === 1);
+            if (nextBtn) nextBtn.classList.toggle('disabled', page === Math.ceil(allItems.length / itemsPerPage));
+        }
+    }
+
+    createImportCardHTML(type, item) {
+        const badge = `<span class="badge bg-dark mb-2">${type} #${item.id}</span>`;
+
+        // Thumbnail Logic
+        let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> Sem pré-visualização</div>';
+        let svgData = '';
+
+        if (item.svg_content && item.svg_content !== '0' && item.svg_content.length > 50) {
+            thumbnail = item.svg_content; // Directly embed SVG
+            svgData = encodeURIComponent(item.svg_content);
+        } else {
+            thumbnail = `
+                 <div class="text-center">
+                    <i class="ti ti-file-import mb-2" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    <div class="small">${this._t('No Preview')}</div>
+                 </div>`;
+        }
+
+        return `
+        <div class="flowbpmn-version-card">
+            <div class="flowbpmn-version-preview text-muted d-flex align-items-center justify-content-center" style="background: #f8f9fa;">
+                 ${thumbnail}
+                 <div class="flowbpmn-version-overlay">
+                     <button type="button" class="btn-flowbpmn-action flowbpmn-view-import-image" data-svg="${svgData}" ${!svgData ? 'disabled' : ''}>
+                        <i class="ti ti-eye"></i> ${this._t('View')}
+                    </button>
+                 </div>
+            </div>
+            
+            <div class="flowbpmn-version-info">
+                <div class="flowbpmn-version-header d-flex justify-content-between align-items-center">
+                    ${badge}
+                </div>
+                <div class="mb-2"><strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong></div>
+
+                <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
+                    <i class="ti ti-calendar"></i> ${item.date_mod_formatted}
+                </div>
+                <div class="flowbpmn-meta" title="${this._t('Author')}">
+                    <i class="ti ti-user"></i> ${item.user_name || this._t('Unknown')}
+                </div>
+
+                <div class="flowbpmn-actions mt-3">
+                    <button type="button" class="btn btn-warning w-100" 
+                            style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;"
+                            onclick="window.BpmnFlowEditor_instance.loadDiagramFromItem('${type}', ${item.id}, document.getElementById('flowbpmn-import-modal'))">
+                        <i class="ti ti-download me-1"></i> ${this._t('Import')}
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    /**
+     * Debounce Search Input
+     * @param {string} type - 'Ticket', 'Problem', 'Change'
+     * @param {string} value - Search term
+     */
+    debounceSearch(type, value) {
+        if (this.searchTimeout) clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => {
+            this.loadImportGallery(type, value);
+        }, 500); // 500ms delay
+    }
+
+    createImportModalHTML() {
+        return `
+            <div class="modal fade" id="flowbpmn-import-modal" tabindex="-1" style="z-index: 1060;">
+                <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 0.5rem;">
+                    <div class="modal-content" style="background-color: white !important;">
+                        
+                        <!-- Header -->
+                        <div class="modal-header d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <h5 class="modal-title m-0">
+                                    <i class="ti ti-download me-2"></i>${this._t('Import Diagram')}
+                                </h5>
+                                
+                                <!-- Tabs -->
+                                <ul class="nav nav-pills nav-sm" role="tablist">
+                                    <li class="nav-item">
+                                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Ticket" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Ticket')">
+                                            ${this._t('Tickets')}
+                                        </button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Problem" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Problem')">
+                                            ${this._t('Problems')}
+                                        </button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Change" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Change')">
+                                            ${this._t('Changes')}
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="d-flex gap-2 align-items-center">
+                                 <button class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('flowbpmn-import-file-input').click()">
+                                    <i class="ti ti-upload"></i> ${this._t('Import from File')}
+                                </button>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="modal-body pb-3" style="background-color: white;">
+                             <input type="file" id="flowbpmn-import-file-input" accept=".bpmn,.xml" style="display: none;">
+                             
+                             <div class="tab-content">
+                                ${['Ticket', 'Problem', 'Change'].map((type, index) => `
+                                    <div class="tab-pane fade ${index === 0 ? 'show active' : ''}" id="flowbpmn-panel-${type}" role="tabpanel">
+                                        <div class="d-flex flex-column">
+                                            <!-- Search Bar (Compact Standardized) -->
+                                            <div class="mb-2 sticky-top bg-white py-2" style="top: -16px; z-index: 5; margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; border-bottom: 1px solid #dee2e6;">
+                                                <div class="input-group">
+                                                    <span class="input-group-text"><i class="ti ti-search"></i></span>
+                                                    <input type="text" id="flowbpmn-import-search-${type}" class="form-control" 
+                                                           placeholder="${this._t('Search in')} ${this._t(type)}..."
+                                                           autocomplete="off"
+                                                           oninput="window.BpmnFlowEditor_instance.debounceSearch('${type}', this.value)">
+                                                    <span class="input-group-text bg-transparent border-start-0" onclick="document.getElementById('flowbpmn-import-search-${type}').value = ''; window.BpmnFlowEditor_instance.loadImportGallery('${type}','')" style="cursor:pointer; display:none;" id="flowbpmn-clear-search-${type}">
+                                                        <i class="ti ti-x text-muted"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Grid -->
+                                            <div>
+                                                <div id="flowbpmn-import-grid-${type}" class="container-fluid"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                             </div>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Close')}</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>`;
+    }
+    bindImportEvents(modalEl) {
         // File Import Logic
-        if (fileBtn && fileInput) {
-            fileBtn.addEventListener('click', () => fileInput.click());
-
+        const fileInput = modalEl.querySelector('#flowbpmn-import-file-input');
+        if (fileInput) {
             fileInput.addEventListener('change', () => {
                 if (fileInput.files.length === 0) return;
                 const file = fileInput.files[0];
                 const reader = new FileReader();
+
                 reader.onload = (e) => {
                     this.loadDiagram(e.target.result);
-                    const modalInstance = bootstrap.Modal.getInstance(modal);
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
                     if (modalInstance) modalInstance.hide();
                     this.showSuccess(this._t('Diagram imported from file.'));
                 };
@@ -1767,405 +2058,20 @@ class BpmnFlowEditor {
             });
         }
 
-        // Type Cards Click
-        if (typesContainer) {
-            typesContainer.querySelectorAll('.flowbpmn-type-card').forEach(card => {
-                card.addEventListener('click', (e) => {
-                    const type = e.currentTarget.dataset.type;
-
-                    // Switch View
-                    typesContainer.classList.add('d-none');
-                    typesContainer.classList.remove('d-flex');
-
-                    listContainer.classList.remove('d-none');
-                    listContainer.classList.add('d-flex'); // Flex for column layout
-
-                    // Update Toolbar
-                    if (backBtn) {
-                        backBtn.classList.remove('d-none');
-                        backBtn.dataset.currentType = type;
-                    }
-                    if (listTitle) {
-                        // Simple pluralization or translation look up
-                        const pluralMap = {
-                            'Ticket': this._t('Tickets'),
-                            'Problem': this._t('Problems'),
-                            'Change': this._t('Changes')
-                        };
-                        listTitle.innerHTML = `<span class="badge bg-secondary-lt text-dark" style="font-size: 1rem;">${pluralMap[type] || type}</span>`;
-                    }
-                    if (searchWrapper) searchWrapper.classList.remove('d-none');
-
-                    // Load Items
-                    this.loadItemsForImport(type, modal);
-                });
-            });
-        }
-
-        // Back Button Click
-        if (backBtn) {
-            backBtn.addEventListener('click', () => {
-                // Return to Type Selection
-                if (listContainer) {
-                    listContainer.classList.add('d-none');
-                    listContainer.classList.remove('d-flex');
-                }
-                if (typesContainer) {
-                    typesContainer.classList.remove('d-none');
-                    typesContainer.classList.add('d-flex');
-                }
-
-                // Reset Toolbar
-                backBtn.classList.add('d-none');
-                if (listTitle) listTitle.textContent = '';
-                if (searchWrapper) searchWrapper.classList.add('d-none');
-            });
-        }
-
-        // Search Logic
-        const searchInput = modal.querySelector('#flowbpmn-import-search');
-        if (searchInput && backBtn) {
-            searchInput.addEventListener('keyup', (e) => {
-                if (e.key === 'Enter') {
-                    const type = backBtn.dataset.currentType;
-                    if (type) this.loadItemsForImport(type, modal, 1, e.target.value);
-                }
-            });
-        }
-    }
-
-
-    async loadItemsForImport(type, modal, page = 1) {
-        // Enforce correct title translation
-        const pluralMap = {
-            'Ticket': this._t('Tickets'),
-            'Problem': this._t('Problems'),
-            'Change': this._t('Changes')
-        };
-        const titleEl = modal.querySelector('#flowbpmn-list-title');
-        // fallback to type if translation fails, but do not append ' s' manually
-        if (titleEl) titleEl.innerHTML = `<span class="badge bg-secondary-lt text-dark" style="font-size: 1rem;">${pluralMap[type] || this._t(type)}</span>`;
-        if (typeof titleEl !== 'undefined' && titleEl) {
-            console.log('Title set to:', titleEl.textContent);
-        }
-
-        // Switch View
-        const typeView = document.getElementById('flowbpmn-import-types');
-        const listView = document.getElementById('flowbpmn-import-list-container');
-
-        if (typeView) typeView.style.display = 'none';
-        if (listView) listView.style.display = 'block';
-
-        const grid = document.getElementById('flowbpmn-import-grid');
-        const paginationContainer = document.getElementById('flowbpmn-import-pagination');
-
-        // Robust Loader Handling
-        let loader = document.getElementById('flowbpmn-import-loading');
-        if (!loader && grid && grid.parentNode) {
-            loader = document.createElement('div');
-            loader.id = 'flowbpmn-import-loading';
-            loader.className = 'text-center py-5';
-            loader.innerHTML = '<div class="spinner-border text-primary" role="status"></div><div class="mt-2 text-muted small">Loading items...</div>';
-            loader.style.display = 'none';
-            grid.parentNode.insertBefore(loader, grid);
-        }
-
-        if (grid) grid.innerHTML = '';
-        if (paginationContainer) paginationContainer.innerHTML = ''; // Clear pagination
-        if (loader) loader.style.display = 'block';
-
-        try {
-            const root = typeof CFG_GLPI !== 'undefined' ? CFG_GLPI.root_doc : '';
-            // Limit 6 enforced requests
-            const url = `${root}/plugins/flowbpmn/ajax/list_items_with_diagrams.php?itemtype=${type}&limit=6&page=${page}`;
-
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Server Error ${response.status} `);
-
-            const result = await response.json();
-            if (!result.success) throw new Error(result.message);
-
-            this.renderImportItems(result.items, grid, modal, type);
-
-            // Render Pagination
-            if (paginationContainer) {
-                this.renderPaginationControl(paginationContainer, result.pagination, type, modal);
-            }
-
-        } catch (err) {
-            console.error('Error loading items:', err);
-            if (grid) grid.innerHTML = `< div class="alert alert-danger w-100" > Error loading items: ${err.message}</div > `;
-        } finally {
-            if (loader) loader.style.display = 'none';
-        }
-    }
-
-    renderPaginationControl(container, pagination, type, modal) {
-        if (!pagination || pagination.total <= 6) return;
-
-        const totalPages = Math.ceil(pagination.total / 6);
-        const currentPage = pagination.page;
-
-        let itemsHtml = '';
-
-        // Previous Arrow
-        itemsHtml += `
-            <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
-                <button class="page-link border-0 text-secondary" data-page="${currentPage - 1}" aria-label="Previous">
-                    <span aria-hidden="true">&lsaquo;</span>
-                </button>
-            </li>`;
-
-        // Page Numbers
-        // Simple logic: show all for now, or sliding window if needed. 
-        // For < 10 pages, show all is fine.
-        for (let i = 1; i <= totalPages; i++) {
-            const active = i === currentPage ? 'active' : '';
-            const bgStyle = i === currentPage ? 'background-color: #FFC107; border-color: #FFC107; color: #000;' : 'color: #6c757d;';
-
-            itemsHtml += `
-            <li class="page-item ${active}">
-                <button class="page-link border-0 rounded mx-1" data-page="${i}" style="${bgStyle} min-width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                    ${i}
-                </button>
-            </li>`;
-        }
-
-        // Next Arrow
-        itemsHtml += `
-            <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
-                <button class="page-link border-0 text-secondary" data-page="${currentPage + 1}" aria-label="Next">
-                    <span aria-hidden="true">&rsaquo;</span>
-                </button>
-            </li>`;
-
-        const html = `
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center align-items-center mb-0" style="gap: 5px;">
-                    ${itemsHtml}
-                </ul>
-            </nav>
-            `;
-
-        container.innerHTML = html;
-
-        container.querySelectorAll('button.page-link').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                // Prevent click on disabled or active
-                if (btn.parentElement.classList.contains('disabled') || btn.parentElement.classList.contains('active')) return;
-
-                // Get page from button (handling icon click)
-                const targetBtn = e.target.closest('button');
-                const nextPage = parseInt(targetBtn.dataset.page);
-
-                if (nextPage > 0 && nextPage <= totalPages) {
-                    this.loadItemsForImport(type, modal, nextPage);
-                }
-            });
-        });
-    }
-
-    renderImportItems(items, grid, modal, type) {
-        if (!items || items.length === 0) {
-            grid.innerHTML = `< div class="alert alert-info w-100 text-center" > No items found for this type.</div > `;
-            return;
-        }
-
-        // Setup Grid
-        grid.style.display = 'grid';
-        grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
-        grid.style.gap = '1.5rem';
-
-        const escape = (s) => this.escapeHtml(s);
-        const t = (k) => this._t(k);
-
-        const html = items.map(item => {
-            // Determine Preview Content and SVG Data for Overlay
-            let thumbnail = '';
-            let svgData = '';
-
-            if (item.svg_content && item.svg_content.length > 50) {
-                // Use SVG content directly if clean, or encode for data URI
-                // Template gallery uses direct SVG often, but here we can try consistency
-                // If createVersionCard uses direct SVG, we follow. 
-                // Looking at createVersionCard: thumbnail = version.svg_content if exists
-                thumbnail = item.svg_content;
-                svgData = encodeURIComponent(item.svg_content);
-            } else if (item.has_diagram) {
-                thumbnail = `< div class="d-flex align-items-center justify-content-center h-100" > <i class="ti ti-schema" style="font-size: 3rem; color: #FFC107;"></i></div > `;
-            } else {
-                thumbnail = `< div class="text-muted d-flex align-items-center justify-content-center h-100" > <i class="ti ti-photo-off me-2"></i> ${t('No Preview')}</div > `;
-            }
-
-            // User Info
-            const userInfo = item.user_name ? escape(item.user_name) : t('Unknown');
-
-            // Button State
-            const btnClass = item.has_diagram ? 'btn-warning' : 'btn-light disabled';
-            const btnText = item.has_diagram ? t('Import') : t('No diagram');
-            const btnDisabled = item.has_diagram ? '' : 'disabled';
-            const btnStyle = item.has_diagram ? 'background-color: #FFC107; border: none; color: #212529; font-weight: 500;' : '';
-
-            // EXACT Structure from createVersionCard
-            return `
-            <div class="flowbpmn-version-card" style="height: 100%;">
-                <div class="flowbpmn-version-preview">
-                    ${thumbnail}
-                    <div class="flowbpmn-version-overlay">
-                         ${item.has_diagram ? `
-                        <button type="button" class="btn-flowbpmn-action flowbpmn-view-image-import" data-svg="${svgData}">
-                            <i class="ti ti-eye"></i> ${t('View')}
-                        </button>` : ''}
-                    </div>
-                </div>
-                <div class="flowbpmn-version-info">
-                    <div class="flowbpmn-version-header">
-                         <span class="flowbpmn-badge" style="background: #212529; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 8px;">#${item.id}</span>
-                         <h6 class="fw-bold text-dark mb-0 text-truncate" title="${escape(item.name)}" style="display: inline-block; vertical-align: middle; max-width: 180px;">
-                            ${escape(item.name)}
-                         </h6>
-                    </div>
-                    
-                    <div class="flowbpmn-meta" title="${t('Modification Date')}">
-                        <i class="ti ti-calendar"></i> ${item.date_mod_formatted}
-                    </div>
-                    <div class="flowbpmn-meta" title="${t('Creator')}">
-                        <i class="ti ti-user"></i> ${userInfo}
-                    </div>
-
-                    <div class="flowbpmn-actions mt-3">
-                         <button type="button" class="btn ${btnClass} w-100 flowbpmn-import-btn" data-id="${item.id}" ${btnDisabled} style="${btnStyle}">
-                            ${item.has_diagram ? '<i class="ti ti-check me-1"></i>' : ''} ${btnText}
-                        </button>
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-
-        grid.innerHTML = html;
-
-        // Bind Import Clicks (Delegation for robustness)
-        // Note: We already bound individual clicks, but verify if they are lost.
-        // Actually, since we rewrite innerHTML just above, these fresh querySelectorAll SHOULD work.
-        // However, let's use a cleaner approach if needed. 
-        // For now, let's just make sure we capture the click correctly.
-        // Bind Import Clicks (Delegation for robustness)
-        grid.querySelectorAll('.flowbpmn-import-btn').forEach(btn => {
-            if (!btn.disabled) {
-                // Ensure we remove any old listeners if element was somehow persistent (it wasn't)
-                btn.onclick = (e) => {
-                    e.preventDefault(); // Good practice
-                    e.stopPropagation();
-                    console.log('Import button clicked for:', btn.dataset.id); // Debug
-                    try {
-                        this.loadDiagramFromItem(type, btn.dataset.id, modal);
-                    } catch (err) {
-                        console.error('Failed to call loadDiagramFromItem:', err);
-                        alert('Error initiating import: ' + err.message);
-                    }
-                };
-            }
-        });
-
-        // Bind View Layout Clicks (Standard Logic)
-        grid.querySelectorAll('.flowbpmn-view-image-import').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
+        // View Image Delegation
+        modalEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('.flowbpmn-view-import-image');
+            if (btn && !btn.disabled) {
                 e.preventDefault();
-
-                const svgEncoded = btn.dataset.svg;
-                const svgContent = decodeURIComponent(svgEncoded);
-
-                if (svgContent) {
-                    const container = document.getElementById('flowbpmn-image-container');
-
-                    // Safety check: if container missing (e.g. modal closed/reopened weirdly), re-fetch it or alert
-                    if (!container) {
-                        console.error('Image container not found');
-                        return;
-                    }
-
-                    container.innerHTML = svgContent;
-
-                    // Fix SVG size for modal (STANDARD LOGIC)
-                    const svgEl = container.querySelector('svg');
-                    if (svgEl) {
-                        svgEl.removeAttribute('width');
-                        svgEl.removeAttribute('height');
-                        svgEl.style.width = '100%';
-                        svgEl.style.height = 'auto';
-                        svgEl.style.maxWidth = '100%';
-                    }
-
-                    const imgModalEl = document.getElementById('flowbpmn-image-modal');
-                    if (imgModalEl) {
-                        const imgModal = new bootstrap.Modal(imgModalEl);
-                        imgModal.show();
-                    }
+                e.stopPropagation();
+                if (btn.dataset.svg) {
+                    this.showImageModal(decodeURIComponent(btn.dataset.svg));
                 }
-            });
+            }
         });
     }
 
-    async checkAndEnableItem(btn, type, id, modal) {
-        // ... (this function is likely dead code if we render status directly, but keeping for safety if reused)
-    }
-
-    async loadDiagramFromItem(itemtype, items_id, modalEl) {
-        console.log('loadDiagramFromItem called for:', itemtype, items_id); // LOG BEFORE CONFIRM
-
-        // Confirmation removed to prevent browser blocking issues
-        // if (!confirm(this._t('This will overwrite the current diagram. Continue?'))) {
-        //     console.log('Import cancelled by user');
-        //     return;
-        // }
-
-        console.log('User intent confirmed (Direct action)');
-
-        try {
-            const root = typeof CFG_GLPI !== 'undefined' ? CFG_GLPI.root_doc : '';
-            const formData = new FormData();
-            formData.append('itemtype', itemtype);
-            formData.append('items_id', items_id);
-
-            console.log('Fetching diagram XML...'); // Debug
-            const response = await fetch(`${root}/plugins/flowbpmn/ajax/load_diagram_from_item.php`, {
-                method: 'POST',
-                body: formData
-            });
-            console.log('Fetch response status:', response.status); // Debug
-
-            const res = await response.json();
-            console.log('Fetch result:', res); // Debug
-
-            if (res.success) {
-                console.log('XML received, length:', res.bpmn_xml ? res.bpmn_xml.length : 0); // Debug
-                if (!res.bpmn_xml) throw new Error('Received empty XML');
-
-                await this.loadDiagram(res.bpmn_xml);
-                console.log('loadDiagram completed'); // Debug
-
-                // Hide modal using standard bootstrap
-                const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                if (modalInstance) {
-                    modalInstance.hide();
-                } else {
-                    // Fallback if instance not found (e.g. jQuery init)
-                    $(modalEl).modal('hide');
-                }
-
-                this.showSuccess('Diagram imported successfully!');
-            } else {
-                throw new Error(res.message);
-            }
-        } catch (e) {
-            console.error('Import error:', e);
-            this.showError('Import failed: ' + e.message);
-        }
-    }
-
-} // End class
-
+} // End Class
 
 // Export to global scope
 window.BpmnFlowEditor = BpmnFlowEditor;

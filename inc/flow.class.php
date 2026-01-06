@@ -588,7 +588,13 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             'Creator' => self::_t('Creator'),
             'Ticket' => self::_t('Ticket'),
             'Problem' => self::_t('Problem'),
-            'Change' => self::_t('Change')
+            'Change' => self::_t('Change'),
+            'Template Name' => self::_t('Template Name'),
+            'Please enter a template name' => self::_t('Please enter a template name'),
+            'Save' => self::_t('Save'),
+            'Search in' => self::_t('Search in'),
+            'Are you sure you want to permanently delete this version?' => self::_t('Are you sure you want to permanently delete this version?'),
+            'Delete this template permanently?' => self::_t('Delete this template permanently?')
         ];
         
         echo "<script>
@@ -621,14 +627,14 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "</ul>";
             echo "</div>";
 
-            // Botão Importar (Unified)
-            echo "<button type='button' class='btn btn-success ms-2' id='bpmn-import-unified-btn'>";
-            echo "<i class='ti ti-download'></i> " . self::_t('Import');
-            echo "</button>";
-
             // Botão Modelos (Simplified - Opens Gallery Directly)
             echo "<button type='button' class='btn btn-outline-secondary ms-2' id='bpmn-load-template-btn'>";
             echo "<i class='ti ti-template'></i> " . self::_t('Templates');
+            echo "</button>";
+
+            // Botão Importar (Unified)
+            echo "<button type='button' class='btn btn-success ms-2' id='bpmn-import-unified-btn'>";
+            echo "<i class='ti ti-download'></i> " . self::_t('Import');
             echo "</button>";
 
             echo "<div class='btn-group ms-2' role='group'>";

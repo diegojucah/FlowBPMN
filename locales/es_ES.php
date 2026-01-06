@@ -20,6 +20,9 @@ $LANG['plugin_flowbpmn'] = [
     // Editor
     'BPMN Flow Editor' => 'Editor de Flujo BPMN',
     'Save' => 'Guardar',
+    'Search in' => 'Buscar en',
+    'Are you sure you want to permanently delete this version?' => '¿Está seguro de que desea eliminar permanentemente esta versión?',
+    'Delete this template permanently?' => '¿Eliminar este modelo permanentemente?',
     'Export' => 'Exportar',
     'Versions' => 'Versiones',
     'Import' => 'Importar',
@@ -149,6 +152,8 @@ $LANG['plugin_flowbpmn'] = [
     'You do not have permission to view this item' => 'No tiene permiso para ver este elemento',
     'Import diagram from %s?' => '¿Importar diagrama de %s?',
     'This will replace your current diagram' => 'Esto reemplazará su diagrama actual',
+    'Template Name' => 'Nombre de la Plantilla',
+    'Please enter a template name' => 'Por favor, introduzca un nombre para la plantilla',
 
     // New Import Modal
     'Import Diagram' => 'Importar Diagrama',

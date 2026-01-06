@@ -2,6 +2,8 @@
 // Buffer output immediately to catch Warnings during boot
 ob_start();
 
+// Bootstrap GLPI manually
+// Bootstrap GLPI manually
 $glpi_root = dirname(__DIR__, 3);
 require_once $glpi_root . '/vendor/autoload.php';
 
@@ -46,7 +48,8 @@ try {
             $keyword = $_GET['keyword'] ?? ''; // Potential future search
             
             if (!class_exists('PluginFlowbpmnTemplate')) {
-                 include_once(GLPI_ROOT . '/plugins/flowbpmn/inc/template.class.php');
+                 // Use reliable relative path
+                 include_once(__DIR__ . '/../inc/template.class.php');
             }
             
             $templates = PluginFlowbpmnTemplate::getAvailableTemplates();
@@ -61,16 +64,21 @@ try {
                     'xml_url' => '', // Could provide URL to fetch XML separately if needed
                     // Send minimal data for list, fetch full XML on select if list is huge
                     // For now, sending full data since templates are few
-                    'bpmn_xml' => $t['bpmn_xml'] 
+                    'bpmn_xml' => $t['bpmn_xml'],
+                    'svg_content' => $t['svg_content'],
+                    'author_name' => $t['author_name'],
+                    'date_mod' => $t['date_mod'],
+                    'can_delete' => $t['can_delete'] 
                 ];
             }, $templates);
             
+            ob_clean();
             echo json_encode(['success' => true, 'templates' => $list]);
             break;
             
         case 'save':
             if (!class_exists('PluginFlowbpmnTemplate')) {
-                 include_once(GLPI_ROOT . '/plugins/flowbpmn/inc/template.class.php');
+                 include_once(__DIR__ . '/../inc/template.class.php');
             }
             
             $name = $input['name'] ?? '';
@@ -92,17 +100,55 @@ try {
             ]);
             
             if ($newID) {
+                ob_clean();
                 echo json_encode(['success' => true, 'message' => 'Template salvo com sucesso', 'id' => $newID]);
             } else {
                 throw new Exception('Erro ao salvar template no banco');
             }
             break;
             
+            break;
+
+        case 'delete':
+            if (!class_exists('PluginFlowbpmnTemplate')) {
+                 include_once(__DIR__ . '/../inc/template.class.php');
+            }
+            
+            $id = (int)($_GET['id'] ?? ($input['id'] ?? 0));
+            if ($id <= 0) {
+                throw new Exception('ID inválido');
+            }
+            
+            $template = new PluginFlowbpmnTemplate();
+            // Check permissions strictly
+            if (!$template->can($id, PURGE)) {
+                 // Check if owner
+                 $tData = $template->getFromDB($id);
+                 $uid = Session::getLoginUserID();
+                 if (!$tData || $template->fields['users_id'] != $uid) {
+                     throw new Exception('Permissão negada');
+                 }
+            }
+            
+            if ($template->delete(['id' => $id])) {
+                ob_clean();
+                echo json_encode(['success' => true, 'message' => 'Template excluído']);
+            } else {
+                throw new Exception('Erro ao excluir template');
+            }
+            break;
+
         default:
             throw new Exception('Ação inválida');
     }
-} catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+} catch (Throwable $e) {
+    http_response_code(500);
+    error_log("FlowBPMN Template Error: " . $e->getMessage());
+    ob_clean();
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Erro interno: ' . $e->getMessage(),
+        'debug' => $e->getTraceAsString()
+    ]);
 }
 ob_end_flush();
