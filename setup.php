@@ -37,6 +37,13 @@ define('PLUGIN_FLOWBPMN_MIN_GLPI', '11.0.0');
 define('PLUGIN_FLOWBPMN_MAX_GLPI', '11.99.99');
 
 /**
+ * Standard GLPI Hook for profile update
+ * Recovers data from the standard profile form
+ */
+// This logic is now handled in PluginFlowbpmnProfile::updateProfileRight via hook
+
+
+/**
  * Initialize plugin
  */
 function plugin_init_flowbpmn() {
@@ -85,6 +92,38 @@ function plugin_init_flowbpmn() {
         // Add JavaScript with cache buster
         // JS
         $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = ['js/flowbpmn.js?v=' . time()]; // Force cache refresh during dev
+
+        // Hook for saving Profile rights
+        // GLOBAL LISTENER: Catch ALL updates (Fallback)
+        $PLUGIN_HOOKS['item_update']['flowbpmn'] = 'PluginFlowbpmnProfile::updateProfileRight';
+
+    }
+    
+    // FORCE SAVE ON INIT
+    // If the Hook system fails (common in some envs), we catch the POST manually here.
+    if (isset($_POST['_glpi_plugin_flowbpmn_marker']) && isset($_POST['profiles_id'])) {
+        $log_file = '/tmp/MANUAL_DEBUG.log';
+        if (!file_exists($log_file)) { touch($log_file); chmod($log_file, 0777); }
+        error_log(date('Y-m-d H:i:s') . " - FlowBPMN: Manual Init Detection! Profile ID: " . $_POST['profiles_id'] . "\n", 3, $log_file);
+        
+        // Ensure class is loaded
+        if (!class_exists('PluginFlowbpmnProfile')) {
+             // Try to load it manually if autoloader missed it
+             // Assume standard path
+             $cls_file = __DIR__ . '/inc/profile.class.php';
+             if (file_exists($cls_file)) {
+                 include_once($cls_file);
+             }
+        }
+        
+        if (class_exists('PluginFlowbpmnProfile')) {
+            $prof = new Profile();
+            $prof->fields['id'] = $_POST['profiles_id'];
+            // We spoof the object to satisfy the type hint
+            PluginFlowbpmnProfile::updateProfileRight($prof);
+        } else {
+             error_log("FlowBPMN: FATAL - Class PluginFlowbpmnProfile not found in Init.\n", 3, $log_file);
+        }
     }
 }
 
