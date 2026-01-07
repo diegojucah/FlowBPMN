@@ -260,7 +260,12 @@ class BpmnFlowEditor {
         try {
             await this.modeler.importXML(xml);
             const canvas = this.modeler.get('canvas');
-            canvas.zoom('fit-viewport');
+
+            // Use fit-viewport with padding to avoid overlap with toolbar
+            // The toolbar is approximately 50px high, so add padding
+            canvas.zoom('fit-viewport', {
+                padding: { top: 60, bottom: 20, left: 20, right: 20 }
+            });
         } catch (err) {
             console.error('Error loading diagram:', err);
             this.showError(this._t('Error loading BPMN diagram'));
@@ -939,7 +944,10 @@ class BpmnFlowEditor {
 
                 // Ajustar zoom para caber na tela
                 const canvas = this.modeler.get('canvas');
-                canvas.zoom('fit-viewport');
+                // Add padding to avoid overlap with toolbar
+                canvas.zoom('fit-viewport', {
+                    padding: { top: 60, bottom: 20, left: 20, right: 20 }
+                });
             } else {
                 throw new Error(result.message || this._t('Failed to restore version'));
             }
@@ -974,7 +982,10 @@ class BpmnFlowEditor {
 
                     // Ajustar zoom
                     const canvas = this.modeler.get('canvas');
-                    canvas.zoom('fit-viewport');
+                    // Add padding to avoid overlap with toolbar
+                    canvas.zoom('fit-viewport', {
+                        padding: { top: 60, bottom: 20, left: 20, right: 20 }
+                    });
 
                     // Feedback visual
                     this.showSuccess(this._t('Diagram imported successfully!'));
