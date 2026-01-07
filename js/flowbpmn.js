@@ -687,7 +687,7 @@ class BpmnFlowEditor {
                 <div class="modal-content" style="background-color: white !important;">
                     <div class="modal-header">
                         <h5 class="modal-title m-0" id="flowbpmnVersionsModalLabel">
-                            <i class="ti ti-history"></i> ${this._t('Version History')}
+                            <i class="fas fa-history"></i> ${this._t('Version History')}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -696,11 +696,11 @@ class BpmnFlowEditor {
                         <!-- Current Version Info -->
                         <div class="alert alert-info mb-3 d-flex align-items-center justify-content-between" style="min-height: 38px; padding: 0.5rem 1rem;">
                             <div>
-                                <i class="ti ti-info-circle me-2"></i>
+                                <i class="fas fa-info-circle me-2"></i>
                                 <strong>${this._t('Current Version')}:</strong> v${data.current.id || 'N/A'}
                             </div>
                             <small class="text-muted">
-                                <i class="ti ti-calendar me-1"></i>${data.current.date_mod || ''}
+                                <i class="fas fa-calendar-alt me-1"></i>${data.current.date_mod || ''}
                             </small>
                         </div>
                         
@@ -737,7 +737,7 @@ class BpmnFlowEditor {
 
     createVersionCard(version, canRestore) {
         // Thumbnail logic
-        let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> ' + this._t('No preview available') + '</div>';
+        let thumbnail = '<div class="text-muted"><i class="fas fa-eye-slash"></i> ' + this._t('No preview available') + '</div>';
         let svgData = '';
 
         // Check if content exists and is not just "0" (DB default/error) and looks like SVG
@@ -745,7 +745,7 @@ class BpmnFlowEditor {
             thumbnail = version.svg_content; // Directly embed SVG
             svgData = encodeURIComponent(version.svg_content);
         } else {
-            thumbnail = `<div class="text-muted"><i class="ti ti-photo-off"></i> ${this._t('No preview available')}</div>`;
+            thumbnail = `<div class="text-muted"><i class="fas fa-eye-slash"></i> ${this._t('No preview available')}</div>`;
         }
 
         return `
@@ -754,10 +754,10 @@ class BpmnFlowEditor {
                 ${thumbnail}
                 <div class="flowbpmn-version-overlay">
                     <button type="button" class="btn-flowbpmn-action flowbpmn-view-image" data-svg="${svgData}">
-                        <i class="ti ti-eye"></i> ${this._t('View')}
+                        <i class="fas fa-eye"></i> ${this._t('View')}
                     </button>
                     <button type="button" class="btn-flowbpmn-action flowbpmn-delete-version" data-version-id="${version.id}">
-                        <i class="ti ti-trash"></i> ${this._t('Delete')}
+                        <i class="fas fa-trash"></i> ${this._t('Delete')}
                     </button>
                 </div>
             </div>
@@ -767,10 +767,10 @@ class BpmnFlowEditor {
                 </div>
                 
                 <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
-                    <i class="ti ti-calendar"></i> ${version.date_creation_formatted}
+                    <i class="fas fa-calendar-alt"></i> ${version.date_creation_formatted}
                 </div>
                 <div class="flowbpmn-meta" title="${this._t('Responsible User')}">
-                    <i class="ti ti-user"></i> ${version.user_name}
+                    <i class="fas fa-user"></i> ${version.user_name}
                 </div>
 
                 <div class="flowbpmn-actions">
@@ -778,7 +778,7 @@ class BpmnFlowEditor {
                 `<button type="button" class="btn btn-warning w-100 flowbpmn-restore-version btn-flowbpmn-restore"
                                 data-version-id="${version.id}"
                                 style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;">
-                            <i class="ti ti-refresh"></i> ${this._t('Restore')}
+                            <i class="fas fa-sync"></i> ${this._t('Restore')}
                         </button>` : ''
             }
                 </div>
@@ -1065,7 +1065,7 @@ class BpmnFlowEditor {
             <div class="modal-dialog modal-dialog-centered modal-sm">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title"><i class="ti ti-alert-circle text-warning"></i> ${this._t('Confirm')}</h5>
+                        <h5 class="modal-title"><i class="fas fa-exclamation-circle text-warning"></i> ${this._t('Confirm')}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -1212,7 +1212,7 @@ class BpmnFlowEditor {
                     <div class="modal-content" style="background-color: white !important;">
                         <div class="modal-header">
                             <h5 class="modal-title m-0" id="flowbpmnTemplatesModalLabel">
-                                <i class="ti ti-template"></i> ${this._t('Template Gallery')}
+                                <i class="fas fa-layer-group"></i> ${this._t('Template Gallery')}
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
@@ -1221,7 +1221,7 @@ class BpmnFlowEditor {
                             <!-- Search Field -->
                             <div class="mb-3 sticky-top bg-white pt-2 pb-2" style="top: -16px; z-index: 5;">
                                 <div class="input-group">
-                                    <span class="input-group-text"><i class="ti ti-search"></i></span>
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
                                     <input type="text" id="flowbpmn-template-search" class="form-control" placeholder="${this._t('Search templates by name...')}">
                                 </div>
                             </div>
@@ -1312,19 +1312,19 @@ class BpmnFlowEditor {
     }
     createTemplateCardHTML(template) {
         // Thumbnail logic
-        let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> Sem pré-visualização</div>';
+        let thumbnail = '<div class="text-muted"><i class="fas fa-eye-slash"></i> Sem pré-visualização</div>';
         let svgData = '';
 
         if (template.svg_content && template.svg_content !== '0' && template.svg_content.length > 50) {
             thumbnail = template.svg_content; // Directly embed SVG
             svgData = encodeURIComponent(template.svg_content);
         } else {
-            thumbnail = `<div class="text-muted"><i class="ti ti-photo-off"></i> ${this._t('No preview available')}</div>`;
+            thumbnail = `<div class="text-muted"><i class="fas fa-eye-slash"></i> ${this._t('No preview available')}</div>`;
         }
 
         const deleteBtn = template.can_delete ?
             `<button type="button" class="btn-flowbpmn-action flowbpmn-delete-template" data-template-id="${template.id}">
-                <i class="ti ti-trash"></i> ${this._t('Delete')}
+                <i class="fas fa-trash"></i> ${this._t('Delete')}
             </button>` : '';
 
         return `
@@ -1333,7 +1333,7 @@ class BpmnFlowEditor {
                 ${thumbnail}
                 <div class="flowbpmn-version-overlay">
                     <button type="button" class="btn-flowbpmn-action flowbpmn-view-image-template" data-svg="${svgData}">
-                        <i class="ti ti-eye"></i> ${this._t('View')}
+                        <i class="fas fa-eye"></i> ${this._t('View')}
                     </button>
                     ${deleteBtn}
                 </div>
@@ -1344,17 +1344,17 @@ class BpmnFlowEditor {
                 </div>
                 
                 <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
-                    <i class="ti ti-calendar"></i> ${template.date_mod}
+                    <i class="fas fa-calendar-alt"></i> ${template.date_mod}
                 </div>
                 <div class="flowbpmn-meta" title="${this._t('Author')}">
-                    <i class="ti ti-user"></i> ${template.author_name}
+                    <i class="fas fa-user"></i> ${template.author_name}
                 </div>
 
                 <div class="flowbpmn-actions">
                     <button type="button" class="btn btn-warning w-100 flowbpmn-apply-template"
                             data-template-id="${template.id}"
                             style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;">
-                        <i class="ti ti-check"></i> ${this._t('Apply')}
+                        <i class="fas fa-check"></i> ${this._t('Apply')}
                     </button>
                 </div>
             </div>
@@ -1535,7 +1535,7 @@ class BpmnFlowEditor {
             <ul class="pagination justify-content-center" id="flowbpmn-${type}-pagination">
                 <li class="page-item disabled" id="flowbpmn-${type}-prev">
                     <a class="page-link" href="#" tabindex="-1">
-                        <i class="ti ti-chevron-left"></i>
+                        <i class="fas fa-chevron-left"></i>
                     </a>
                 </li>`;
 
@@ -1549,7 +1549,7 @@ class BpmnFlowEditor {
         html += `
                 <li class="page-item ${totalPages === 1 ? 'disabled' : ''}" id="flowbpmn-${type}-next">
                     <a class="page-link" href="#">
-                        <i class="ti ti-chevron-right"></i>
+                        <i class="fas fa-chevron-right"></i>
                     </a>
                 </li>
             </ul>
@@ -1844,7 +1844,7 @@ class BpmnFlowEditor {
 
             if (result.items.length === 0) {
                 container.innerHTML = `<div class="text-center p-5 text-muted">
-                    <i class="ti ti-ghost mb-3" style="font-size: 2rem;"></i>
+                    <i class="fas fa-ghost mb-3" style="font-size: 2rem;"></i>
                     <p>${this._t('No diagram found')}</p>
                 </div>`;
                 return;
@@ -1871,7 +1871,7 @@ class BpmnFlowEditor {
         } catch (err) {
             console.error('Error loading gallery:', err);
             container.innerHTML = `<div class="text-center p-5 text-danger">
-                <i class="ti ti-alert-triangle mb-2"></i><br>
+                <i class="fas fa-exclamation-triangle mb-2"></i><br>
                 ${err.message || this._t('Error loading items')}
             </div>`;
         }
@@ -1917,7 +1917,7 @@ class BpmnFlowEditor {
         const badge = `<span class="badge" style="background-color: #6c757d; color: #fff; font-size: 0.85em; padding: 5px 10px; border-radius: 4px;">${translatedType} #${item.id}</span>`;
 
         // Thumbnail Logic
-        let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> ' + this._t('No preview available') + '</div>';
+        let thumbnail = '<div class="text-muted"><i class="fas fa-eye-slash"></i> ' + this._t('No preview available') + '</div>';
         let svgData = '';
 
         if (item.svg_content && item.svg_content !== '0' && item.svg_content.length > 50) {
@@ -1926,7 +1926,7 @@ class BpmnFlowEditor {
         } else {
             thumbnail = `
                  <div class="text-center">
-                    <i class="ti ti-file-import mb-2" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    <i class="fas fa-file-import mb-2" style="font-size: 2.5rem; opacity: 0.5;"></i>
                     <div class="small">${this._t('No Preview')}</div>
                  </div>`;
         }
@@ -1937,7 +1937,7 @@ class BpmnFlowEditor {
                  ${thumbnail}
                  <div class="flowbpmn-version-overlay">
                      <button type="button" class="btn-flowbpmn-action flowbpmn-view-import-image" data-svg="${svgData}" ${!svgData ? 'disabled' : ''}>
-                        <i class="ti ti-eye"></i> ${this._t('View')}
+                        <i class="fas fa-eye"></i> ${this._t('View')}
                     </button>
                  </div>
             </div>
@@ -1949,17 +1949,17 @@ class BpmnFlowEditor {
                 <div class="mb-2"><strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong></div>
 
                 <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
-                    <i class="ti ti-calendar"></i> ${item.date_mod_formatted}
+                    <i class="fas fa-calendar-alt"></i> ${item.date_mod_formatted}
                 </div>
                 <div class="flowbpmn-meta" title="${this._t('Author')}">
-                    <i class="ti ti-user"></i> ${item.user_name || this._t('Unknown')}
+                    <i class="fas fa-user"></i> ${item.user_name || this._t('Unknown')}
                 </div>
 
                 <div class="flowbpmn-actions mt-3">
                     <button type="button" class="btn btn-warning w-100" 
                             style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;"
                             onclick="window.BpmnFlowEditor_instance.loadDiagramFromItem('${type}', ${item.id}, document.getElementById('flowbpmn-import-modal'))">
-                        <i class="ti ti-download me-1"></i> ${this._t('Import')}
+                        <i class="fas fa-download me-1"></i> ${this._t('Import')}
                     </button>
                 </div>
             </div>
@@ -1988,24 +1988,24 @@ class BpmnFlowEditor {
                         <div class="modal-header d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-3">
                                 <h5 class="modal-title m-0">
-                                    <i class="ti ti-download me-2"></i>${this._t('Import Diagram')}
+                                    <i class="fas fa-download me-2"></i>${this._t('Import Diagram')}
                                 </h5>
                                 
                                 <!-- Tabs -->
                                 <ul class="nav nav-pills nav-sm" role="tablist">
                                     <li class="nav-item">
                                         <button class="nav-link active d-flex align-items-center gap-2" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Ticket" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Ticket')">
-                                            <i class="ti ti-ticket"></i> ${this._t('Tickets')}
+                                            <i class="fas fa-ticket-alt"></i> ${this._t('Tickets')}
                                         </button>
                                     </li>
                                     <li class="nav-item">
                                         <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Problem" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Problem')">
-                                            <i class="ti ti-alert-circle"></i> ${this._t('Problems')}
+                                            <i class="fas fa-exclamation-circle"></i> ${this._t('Problems')}
                                         </button>
                                     </li>
                                     <li class="nav-item">
                                         <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Change" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Change')">
-                                            <i class="ti ti-exchange"></i> ${this._t('Changes')}
+                                            <i class="fas fa-exchange-alt"></i> ${this._t('Changes')}
                                         </button>
                                     </li>
                                 </ul>
@@ -2014,7 +2014,7 @@ class BpmnFlowEditor {
                             <!-- Import Button -->
                             <div class="ms-auto me-3">
                                  <button class="btn btn-outline-secondary" onclick="document.getElementById('flowbpmn-import-file-input').click()">
-                                    <i class="ti ti-upload"></i> ${this._t('Import from File')}
+                                    <i class="fas fa-upload"></i> ${this._t('Import from File')}
                                 </button>
                             </div>
                             
@@ -2033,13 +2033,13 @@ class BpmnFlowEditor {
                                             <!-- Search Bar (Compact Standardized) -->
                                             <div class="mb-2 sticky-top bg-white py-2" style="top: -16px; z-index: 5; margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; border-bottom: 1px solid #dee2e6;">
                                                 <div class="input-group">
-                                                    <span class="input-group-text"><i class="ti ti-search"></i></span>
+                                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
                                                     <input type="text" id="flowbpmn-import-search-${type}" class="form-control" 
                                                            placeholder="${this._t('Search in')} ${this._t(type)}..."
                                                            autocomplete="off"
                                                            oninput="window.BpmnFlowEditor_instance.debounceSearch('${type}', this.value)">
                                                     <span class="input-group-text bg-transparent border-start-0" onclick="document.getElementById('flowbpmn-import-search-${type}').value = ''; window.BpmnFlowEditor_instance.loadImportGallery('${type}','')" style="cursor:pointer; display:none;" id="flowbpmn-clear-search-${type}">
-                                                        <i class="ti ti-x text-muted"></i>
+                                                        <i class="fas fa-times text-muted"></i>
                                                     </span>
                                                 </div>
                                             </div>

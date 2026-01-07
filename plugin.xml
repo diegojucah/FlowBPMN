@@ -2,7 +2,7 @@
 <glpi_plugin>
     <name>flowBPMN</name>
     <display_name>BPMN Flow</display_name>
-    <version>2.2.0</version>
+    <version>2.2.0-glpi10</version>
     <author>Diego Jucá - KactuX</author>
     <license>GPLv3+</license>
     <homepage>https://github.com/diegojucah/pluginBPMN</homepage>
@@ -16,12 +16,12 @@
             <pt_BR>Editor e Visualizador BPMN para GLPI com suporte para chamados, mudanças e problemas. Crie, edite, versione e exporte diagramas BPMN.</pt_BR>
         </long>
     </description>
-    <min_glpi_version>11.0.0</min_glpi_version>
-    <max_glpi_version>11.99.99</max_glpi_version>
+    <min_glpi_version>10.0.0</min_glpi_version>
+    <max_glpi_version>10.0.99</max_glpi_version>
     
     <requirements>
-        <requirement type="php" version="8.0"/>
-        <requirement type="glpi" version="11.0.0" max_version="11.99.99"/>
+        <requirement type="php" version="7.4"/>
+        <requirement type="glpi" version="10.0.0" max_version="10.0.99"/>
     </requirements>
     
     <tables>
