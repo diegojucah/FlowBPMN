@@ -683,15 +683,15 @@ class BpmnFlowEditor {
 
         let html = `
         <div class="modal fade" id="flowbpmn-versions-modal" tabindex="-1" aria-labelledby="flowbpmnVersionsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 1.75rem;">
-                <div class="modal-content" style="max-height: 60vh; background-color: white !important;">
+            <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 0.5rem;">
+                <div class="modal-content" style="background-color: white !important;">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="flowbpmnVersionsModalLabel">
+                        <h5 class="modal-title m-0" id="flowbpmnVersionsModalLabel">
                             <i class="ti ti-history"></i> ${this._t('Version History')}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body pb-3" style="background-color: white;">
                         
                         <!-- Current Version Info -->
                         <div class="alert alert-info mb-3 d-flex align-items-center justify-content-between" style="min-height: 38px; padding: 0.5rem 1rem;">
@@ -706,7 +706,7 @@ class BpmnFlowEditor {
                         
                         ${versions.length === 0 ?
                 '<div class="alert alert-warning">' + this._t('No previous versions available') + '</div>' :
-                `<div class="flowbpmn-versions-grid" id="flowbpmn-versions-grid" data-total-pages="${totalPages}" data-current-page="1">
+                `<div class="flowbpmn-versions-grid" id="flowbpmn-versions-grid" data-total-pages="${totalPages}" data-current-page="1" style="padding: 0;">
                                 ${versions.slice(0, itemsPerPage).map(v => this.createVersionCard(v, data.canRestore)).join('')}
                             </div>
                             ${totalPages > 1 ? this.createPaginationHTML('versions', totalPages, versions, data.canRestore) : ''}`
@@ -1208,15 +1208,15 @@ class BpmnFlowEditor {
 
             let html = `
             <div class="modal fade" id="flowbpmn-templates-modal" tabindex="-1" aria-labelledby="flowbpmnTemplatesModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 1.75rem;">
-                    <div class="modal-content" style="max-height: 60vh; background-color: white !important;">
+                <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 0.5rem;">
+                    <div class="modal-content" style="background-color: white !important;">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="flowbpmnTemplatesModalLabel">
+                            <h5 class="modal-title m-0" id="flowbpmnTemplatesModalLabel">
                                 <i class="ti ti-template"></i> ${this._t('Template Gallery')}
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body" style="background-color: #f5f7fa;">
+                        <div class="modal-body pb-3" style="background-color: white;">
                             
                             <!-- Search Field -->
                             <div class="mb-3 sticky-top bg-white pt-2 pb-2" style="top: -16px; z-index: 5;">
@@ -1228,7 +1228,7 @@ class BpmnFlowEditor {
 
                             ${templates.length === 0 ?
                     `<div class="alert alert-info">${this._t('No templates found')}</div>` :
-                    `<div class="flowbpmn-versions-grid" id="flowbpmn-templates-grid" data-total-pages="${totalPages}" data-current-page="1" data-all-templates='${JSON.stringify(templates).replace(/'/g, "&apos;")}'>
+                    `<div class="flowbpmn-versions-grid" id="flowbpmn-templates-grid" data-total-pages="${totalPages}" data-current-page="1" data-all-templates='${JSON.stringify(templates).replace(/'/g, "&apos;")}' style="padding: 0;">
                                     ${templates.slice(0, itemsPerPage).map(t => this.createTemplateCardHTML(t)).join('')}
                                 </div>
                                 ${totalPages > 1 ? this.createPaginationHTML('templates', totalPages, templates) : ''}`
