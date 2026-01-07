@@ -47,10 +47,15 @@ try {
     }
 
     // 1. Get Current Flow with user name
+    // Use COALESCE to handle NULL firstname/realname and fallback to username
     $iterator = $DB->request([
         'SELECT' => [
             'f.*',
-            new QueryExpression("CONCAT(" . $DB->quoteName('u.firstname') . ", ' ', " . $DB->quoteName('u.realname') . ") AS user_name")
+            new QueryExpression("COALESCE(
+                NULLIF(CONCAT(COALESCE(" . $DB->quoteName('u.firstname') . ", ''), ' ', COALESCE(" . $DB->quoteName('u.realname') . ", '')), ' '),
+                " . $DB->quoteName('u.name') . ",
+                'Unknown'
+            ) AS user_name")
         ],
         'FROM'   => 'glpi_plugin_flowbpmn_flows AS f',
         'LEFT JOIN' => [
@@ -77,10 +82,15 @@ try {
     $flowId = (int)$currentFlow['id'];
 
     // 2. Get Versions with user name
+    // Use COALESCE to handle NULL firstname/realname and fallback to username
     $iterator = $DB->request([
         'SELECT' => [
             'v.*',
-            new QueryExpression("CONCAT(" . $DB->quoteName('u.firstname') . ", ' ', " . $DB->quoteName('u.realname') . ") AS user_name")
+            new QueryExpression("COALESCE(
+                NULLIF(CONCAT(COALESCE(" . $DB->quoteName('u.firstname') . ", ''), ' ', COALESCE(" . $DB->quoteName('u.realname') . ", '')), ' '),
+                " . $DB->quoteName('u.name') . ",
+                'Unknown'
+            ) AS user_name")
         ],
         'FROM'   => 'glpi_plugin_flowbpmn_versions AS v',
         'LEFT JOIN' => [
