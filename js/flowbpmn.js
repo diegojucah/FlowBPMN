@@ -1804,7 +1804,7 @@ class BpmnFlowEditor {
     }
 
     async loadImportGallery(type, search = '') {
-        const container = document.getElementById(`flowbpmn-import-grid-${type}`);
+        const container = document.getElementById(`flowbpmn-import-${type}-grid`);
         if (!container) return;
 
         // Show loading state
@@ -1878,7 +1878,7 @@ class BpmnFlowEditor {
     }
 
     renderImportPage(type, page, allItems) {
-        const container = document.getElementById(`flowbpmn-import-grid-${type}`);
+        const container = document.getElementById(`flowbpmn-import-${type}-grid`);
         if (!container) return;
 
         const itemsPerPage = 6;
@@ -2046,7 +2046,7 @@ class BpmnFlowEditor {
                                             
                                             <!-- Grid -->
                                             <div>
-                                                <div id="flowbpmn-import-grid-${type}" class="container-fluid"></div>
+                                                <div id="flowbpmn-import-${type}-grid" class="container-fluid"></div>
                                             </div>
                                         </div>
                                     </div>
