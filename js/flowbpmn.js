@@ -2013,7 +2013,7 @@ class BpmnFlowEditor {
                             
                             <!-- Import Button -->
                             <div class="ms-auto me-3">
-                                 <button class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('flowbpmn-import-file-input').click()">
+                                 <button class="btn btn-outline-secondary" onclick="document.getElementById('flowbpmn-import-file-input').click()">
                                     <i class="ti ti-upload"></i> ${this._t('Import from File')}
                                 </button>
                             </div>
