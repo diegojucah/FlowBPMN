@@ -35,7 +35,134 @@
     margin-right: 0.35rem;
 }
 
-/* ... (other styles) ... */
+/* Import Modal Tabs - Lean & Native Style */
+#flowbpmn-import-modal .nav-pills .nav-link {
+    color: #6c757d;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+#flowbpmn-import-modal .nav-pills .nav-link:hover {
+    color: #495057;
+    background-color: #f8f9fa;
+}
+
+#flowbpmn-import-modal .nav-pills .nav-link.active {
+    color: #fff !important;
+    background-color: #6c757d !important;
+    /* Matches gray badges */
+}
+
+/* Card Styling */
+.flowbpmn-version-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.flowbpmn-version-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.flowbpmn-version-preview {
+    height: 180px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 10px;
+}
+
+.flowbpmn-version-preview svg {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+}
+
+/* Overlay Actions */
+.flowbpmn-version-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    gap: 10px;
+}
+
+.flowbpmn-version-card:hover .flowbpmn-version-overlay {
+    opacity: 1;
+}
+
+.btn-flowbpmn-action {
+    background: white;
+    border: none;
+    color: #333;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-flowbpmn-action:hover {
+    background: #e9ecef;
+}
+
+.flowbpmn-version-info {
+    padding: 15px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.flowbpmn-version-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.flowbpmn-badge {
+    background: #333;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.flowbpmn-meta {
+    font-size: 0.85em;
+    color: #6c757d;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.flowbpmn-meta i {
+    text-align: center;
+    width: 20px;
+    margin-right: 5px;
+}
+
+.flowbpmn-actions {
+    margin-top: auto;
+    padding-top: 15px;
+}
 
 /* Full Image Modal - Standard Bootstrap Behavior */
 #flowbpmn-image-modal {
@@ -63,194 +190,4 @@
     /* Use standard close button */
     filter: none;
     position: static;
-}
-
-#flowbpmn-image-modal img,
-#flowbpmn-image-modal svg {
-    max-width: 100%;
-    max-height: 80vh;
-    width: auto;
-    height: auto;
-    box-shadow: none;
-}
-
-.flowbpmn-version-card {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-}
-
-.flowbpmn-version-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.flowbpmn-version-preview {
-    height: 180px;
-    background: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-bottom: 1px solid #eee;
-    overflow: hidden;
-    padding: 10px;
-    position: relative;
-    /* Needed for absolute overlay */
-}
-
-/* Hover Overlay */
-.flowbpmn-version-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    gap: 10px;
-}
-
-.flowbpmn-version-card:hover .flowbpmn-version-overlay {
-    opacity: 1;
-}
-
-.btn-flowbpmn-action {
-    color: white;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 4px;
-    padding: 5px 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.9em;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    text-decoration: none;
-}
-
-.btn-flowbpmn-action:hover {
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
-}
-
-.btn-flowbpmn-restore {
-    /* Style for the restore button in the list */
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 5px;
-}
-
-
-/* Full Image Modal - Standard Bootstrap Behavior */
-#flowbpmn-image-modal {
-    z-index: 1080 !important;
-}
-
-#flowbpmn-image-modal .modal-body {
-    display: block;
-    /* Native block layout for scrolling */
-    padding: 20px;
-    background: #f8f9fa;
-    min-height: 400px;
-    text-align: center;
-    overflow: auto;
-    /* Allow scrolling if image is huge */
-}
-
-#flowbpmn-image-modal .modal-content {
-    background: #fff;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-}
-
-#flowbpmn-image-modal .btn-close {
-    filter: none;
-    position: static;
-}
-
-#flowbpmn-image-modal img,
-#flowbpmn-image-modal svg {
-    max-width: 100%;
-    /* No max-height to allow full vertical expansion */
-    width: auto;
-    height: auto;
-    box-shadow: none;
-    margin: 0 auto;
-}
-
-.flowbpmn-version-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.flowbpmn-badge {
-    background-color: #000;
-    color: #fff;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-weight: bold;
-    font-size: 0.9em;
-}
-
-.flowbpmn-meta {
-    font-size: 0.85em;
-    color: #6c757d;
-    margin-bottom: 4px;
-}
-
-.flowbpmn-meta i {
-    margin-right: 5px;
-    width: 14px;
-    text-align: center;
-}
-
-.flowbpmn-actions {
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid #f0f0f0;
-    text-align: right;
-}
-
-/* Modal tweaks */
-#flowbpmn-versions-modal .modal-dialog {
-    max-width: 1000px;
-    margin: 50px auto;
-    /* Center horizontally, add top margin */
-}
-
-#flowbpmn-versions-modal {
-    z-index: 1060 !important;
-    /* Ensure it is above the backdrop (usually 1050) */
-}
-
-#flowbpmn-versions-modal .modal-body {
-    background-color: #f5f7fa;
-}
-
-/* BPMN Editor - Using default palette positioning */
-
-
-/* Toolbar do editor acima do canvas */
-.flowbpmn-toolbar {
-    position: relative !important;
-    z-index: 100 !important;
-    background: #fff !important;
-}
-
-/* Ocultar logo bpmn.io (créditos no README) */
-.flowbpmn-container .bjs-powered-by {
-    display: none !important;
 }

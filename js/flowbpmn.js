@@ -1994,18 +1994,18 @@ class BpmnFlowEditor {
                                 <!-- Tabs -->
                                 <ul class="nav nav-pills nav-sm" role="tablist">
                                     <li class="nav-item">
-                                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Ticket" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Ticket')">
-                                            ${this._t('Tickets')}
+                                        <button class="nav-link active d-flex align-items-center gap-2" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Ticket" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Ticket')">
+                                            <i class="ti ti-ticket"></i> ${this._t('Tickets')}
                                         </button>
                                     </li>
                                     <li class="nav-item">
-                                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Problem" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Problem')">
-                                            ${this._t('Problems')}
+                                        <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Problem" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Problem')">
+                                            <i class="ti ti-alert-circle"></i> ${this._t('Problems')}
                                         </button>
                                     </li>
                                     <li class="nav-item">
-                                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Change" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Change')">
-                                            ${this._t('Changes')}
+                                        <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Change" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Change')">
+                                            <i class="ti ti-exchange"></i> ${this._t('Changes')}
                                         </button>
                                     </li>
                                 </ul>
