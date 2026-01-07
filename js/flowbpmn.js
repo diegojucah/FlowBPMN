@@ -763,7 +763,7 @@ class BpmnFlowEditor {
             </div>
             <div class="flowbpmn-version-info">
                 <div class="flowbpmn-version-header">
-                    <span class="flowbpmn-badge">v${version.version_number}</span>
+                    <span class="badge" style="background-color: #6c757d; color: #fff; font-size: 0.85em; padding: 5px 10px; border-radius: 4px;">v${version.version_number}</span>
                 </div>
                 
                 <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
