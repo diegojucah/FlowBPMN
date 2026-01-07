@@ -194,6 +194,7 @@ $LANG['plugin_flowbpmn'] = [
     'Failed to restore version' => 'Error al restaurar versión',
     'Invalid format. Use .bpmn or .xml files' => 'Formato inválido. Use archivos .bpmn o .xml',
     'Diagram imported successfully!' => '¡Diagrama importado con éxito!',
+    'Diagram imported successfully.' => 'Diagrama importado con éxito.',
     'Error importing diagram: %s' => 'Error al importar diagrama: %s',
     'Error reading file' => 'Error al leer archivo',
     'Error processing file: %s' => 'Error al procesar archivo: %s',
