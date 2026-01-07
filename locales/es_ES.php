@@ -206,5 +206,13 @@ $LANG['plugin_flowbpmn'] = [
     'Error loading BPMN diagram' => 'Error al cargar el diagrama BPMN',
     'Error exporting: %s' => 'Error al exportar: %s',
     'Error listing templates: %s' => 'Error al listar plantillas: %s',
-    'Error: %s' => 'Error: %s'
+    'Error: %s' => 'Error: %s',
+    
+    // New translations
+    'Template saved successfully!' => '¡Plantilla guardada con éxito!',
+    'New Template' => 'Nueva Plantilla',
+    'Confirm' => 'Confirmar',
+    'Cancel' => 'Cancelar',
+    'Delete' => 'Eliminar',
+    'Are you sure?' => '¿Está seguro?'
 ];
