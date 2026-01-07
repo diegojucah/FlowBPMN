@@ -1911,29 +1911,22 @@ class BpmnFlowEditor {
     }
 
     createImportCardHTML(type, item) {
-        // Translate item type (Ticket -> Chamado, Problem -> Problema, Change -> Mudança)
-        const translatedType = this._t(type);
-        // Simple gray badge with white text
-        const badge = `<span class="badge" style="background-color: #6c757d; color: #fff; font-size: 0.85em; padding: 5px 10px; border-radius: 4px;">${translatedType} #${item.id}</span>`;
-
         // Thumbnail Logic
         let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> ' + this._t('No preview available') + '</div>';
         let svgData = '';
 
         if (item.svg_content && item.svg_content !== '0' && item.svg_content.length > 50) {
-            thumbnail = item.svg_content; // Directly embed SVG
+            thumbnail = item.svg_content;
             svgData = encodeURIComponent(item.svg_content);
-        } else {
-            thumbnail = `
-                 <div class="text-center">
-                    <i class="ti ti-file-import mb-2" style="font-size: 2.5rem; opacity: 0.5;"></i>
-                    <div class="small">${this._t('No Preview')}</div>
-                 </div>`;
         }
+
+        // Build display name: "Chamado #7"
+        const translatedType = this._t(type);
+        const displayName = `${translatedType} #${item.id}`;
 
         return `
         <div class="flowbpmn-version-card">
-            <div class="flowbpmn-version-preview text-muted d-flex align-items-center justify-content-center" style="background: #f8f9fa;">
+            <div class="flowbpmn-version-preview">
                  ${thumbnail}
                  <div class="flowbpmn-version-overlay">
                      <button type="button" class="btn-flowbpmn-action flowbpmn-view-import-image" data-svg="${svgData}" ${!svgData ? 'disabled' : ''}>
@@ -1943,11 +1936,10 @@ class BpmnFlowEditor {
             </div>
             
             <div class="flowbpmn-version-info">
-                <div class="flowbpmn-version-header d-flex justify-content-between align-items-center">
-                    ${badge}
+                <div class="flowbpmn-version-header">
+                    <strong>${this.escapeHtml(displayName)}</strong>
                 </div>
-                <div class="mb-2"><strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong></div>
-
+                
                 <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
                     <i class="ti ti-calendar"></i> ${item.date_mod_formatted}
                 </div>
@@ -1955,7 +1947,7 @@ class BpmnFlowEditor {
                     <i class="ti ti-user"></i> ${item.user_name || this._t('Unknown')}
                 </div>
 
-                <div class="flowbpmn-actions mt-3">
+                <div class="flowbpmn-actions">
                     <button type="button" class="btn btn-warning w-100" 
                             style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;"
                             onclick="window.BpmnFlowEditor_instance.loadDiagramFromItem('${type}', ${item.id}, document.getElementById('flowbpmn-import-modal'))">
