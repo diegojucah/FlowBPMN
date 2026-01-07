@@ -455,7 +455,7 @@ This project is licensed under the **GNU General Public License v3.0** - see the
 
 - **[bpmn.io](https://bpmn.io/)** - For the excellent BPMN editor library
 - **[GLPI Community](https://glpi-project.org/)** - For the amazing ITIL asset management system
-- **Contributors** - For all the valuable feedback and contributions
+
 
 ---
 
