@@ -1015,9 +1015,12 @@ class BpmnFlowEditor {
     }
 
     showSuccess(message) {
-        // Usar toast do GLPI se disponível
-        if (typeof glpi_toast !== 'undefined') {
-            glpi_toast('success', message);
+        // Use GLPI's native toast_info for blue info notifications
+        if (typeof glpi_toast_info === 'function') {
+            glpi_toast_info(message);
+        } else if (typeof glpi_toast !== 'undefined') {
+            // Fallback to old syntax if new functions not available
+            glpi_toast(this._t('Information'), message, 'bg-info text-white border-0');
         } else if (typeof displayAjaxMessageAfterRedirect === 'function') {
             displayAjaxMessageAfterRedirect();
         } else {
@@ -1026,8 +1029,12 @@ class BpmnFlowEditor {
     }
 
     showError(message) {
-        if (typeof glpi_toast !== 'undefined') {
-            glpi_toast('error', message);
+        // Use GLPI's native toast_error for red error notifications
+        if (typeof glpi_toast_error === 'function') {
+            glpi_toast_error(message);
+        } else if (typeof glpi_toast !== 'undefined') {
+            // Fallback to old syntax if new functions not available
+            glpi_toast(this._t('Error'), message, 'bg-danger text-white border-0');
         } else {
             console.error(message);
             alert(this._t('Error: %s').replace('%s', message));
