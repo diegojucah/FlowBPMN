@@ -1893,7 +1893,15 @@ class BpmnFlowEditor {
     }
 
     createImportCardHTML(type, item) {
-        const badge = `<span class="badge bg-dark mb-2">${type} #${item.id}</span>`;
+        // Badge colors following GLPI visual pattern
+        // Ticket = warning (yellow), Problem = danger (red), Change = primary (blue)
+        const badgeColors = {
+            'Ticket': 'background-color: #FFC107; color: #212529;',   // GLPI Yellow
+            'Problem': 'background-color: #dc3545; color: #fff;',     // GLPI Red
+            'Change': 'background-color: #0d6efd; color: #fff;'       // GLPI Blue
+        };
+        const badgeStyle = badgeColors[type] || 'background-color: #6c757d; color: #fff;';
+        const badge = `<span class="badge mb-2" style="${badgeStyle} font-size: 0.75em; padding: 4px 8px; border-radius: 4px;">${type} #${item.id}</span>`;
 
         // Thumbnail Logic
         let thumbnail = '<div class="text-muted"><i class="ti ti-photo-off"></i> ' + this._t('No preview available') + '</div>';
