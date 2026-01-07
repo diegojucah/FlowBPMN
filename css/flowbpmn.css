@@ -20,6 +20,21 @@
     }
 }
 
+/* FlowBPMN Toolbar - Compact dropdown items */
+.flowbpmn-toolbar .dropdown-menu {
+    min-width: auto;
+    padding: 0.25rem 0;
+}
+
+.flowbpmn-toolbar .dropdown-item {
+    font-size: 0.875rem;
+    padding: 0.35rem 0.75rem;
+}
+
+.flowbpmn-toolbar .dropdown-item i {
+    margin-right: 0.35rem;
+}
+
 /* ... (other styles) ... */
 
 /* Full Image Modal - Standard Bootstrap Behavior */
