@@ -1,21 +1,13 @@
 <?php
-declare(strict_types=1);
 /**
  * -------------------------------------------------------------------------
  * FlowBPMN Plugin for GLPI - Native DB Restore Handler v3.0
  * -------------------------------------------------------------------------
  */
 
-// Bootstrap GLPI
-$glpi_root = dirname(__DIR__, 3);
-require_once $glpi_root . '/vendor/autoload.php';
-
-use Glpi\Kernel\Kernel;
-use Glpi\Application\Environment;
-use Glpi\DBAL\QueryExpression;
-
-$kernel = new Kernel(Environment::PRODUCTION->value, false);
-$kernel->boot();
+// Initialize GLPI Environment
+include('../../../inc/includes.php');
+global $DB;
 
 global $CFG_GLPI, $DB;
 
@@ -103,7 +95,7 @@ try {
     if (!empty($flowData['bpmn_xml'])) {
         // Get max version number
         $iterator = $DB->request([
-            'SELECT' => [new QueryExpression('MAX(version_number) as max_v')],
+            'SELECT' => ['MAX(version_number) as max_v'],
             'FROM'   => 'glpi_plugin_flowbpmn_versions',
             'WHERE'  => ['plugin_flowbpmn_flows_id' => $flow_id]
         ]);

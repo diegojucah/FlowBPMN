@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * -------------------------------------------------------------------------
 /**
@@ -12,12 +11,10 @@ declare(strict_types=1);
 ob_start();
 
 // Bootstrap GLPI manually
-$glpi_root = dirname(__DIR__, 3);
+// Initialize GLPI Environment
+include('../../../inc/includes.php');
 
-// Include autoloader
-require_once $glpi_root . '/vendor/autoload.php';
-
-// Manual includes for Plugin Classes (Autoloader might fail in manual boot)
+// Manual includes for Plugin Classes (if autoloader fails)
 if (!class_exists('PluginFlowbpmnFlow')) {
     if (file_exists(__DIR__ . '/../inc/flow.class.php')) {
         include_once __DIR__ . '/../inc/flow.class.php';
@@ -34,18 +31,8 @@ if (!class_exists('PluginFlowbpmnProfile')) {
     }
 }
 
-// Initialize GLPI Kernel
-use Glpi\Kernel\Kernel;
-use Glpi\Application\Environment;
-use Glpi\DBAL\QueryExpression;
-
-$kernel = new Kernel(Environment::PRODUCTION->value, false);
-$kernel->boot();
-
-// Load GLPI configuration
-global $CFG_GLPI, $DB;
-
-// Get user_id from session
+// Check if user is logged in
+Session::checkLoginUser();
 $user_id = Session::getLoginUserID();
 
 // Custom Error Handler to convert PHP errors to JSON

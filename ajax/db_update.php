@@ -1,14 +1,7 @@
 <?php
-// Simple script to create templates table manually
-$glpi_root = dirname(__DIR__, 3);
-require_once $glpi_root . '/vendor/autoload.php';
-
-use Glpi\Kernel\Kernel;
-use Glpi\Application\Environment;
-
-$kernel = new Kernel(Environment::PRODUCTION->value, false);
-$kernel->boot();
-
+// Simple script to create templates// Initialize GLPI Environment
+include('../../../inc/includes.php');
+// header("Content-Type: application/json; charset=UTF-8"); // Optional if set later
 global $DB;
 
 $user_id = Session::getLoginUserID();

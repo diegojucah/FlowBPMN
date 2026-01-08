@@ -2,24 +2,14 @@
 // Buffer output immediately to catch Warnings during boot
 ob_start();
 
-// Bootstrap GLPI manually
-// Bootstrap GLPI manually
-$glpi_root = dirname(__DIR__, 3);
-require_once $glpi_root . '/vendor/autoload.php';
-
-use Glpi\Kernel\Kernel;
-use Glpi\Application\Environment;
-
-// Boot kernel
-$kernel = new Kernel(Environment::PRODUCTION->value, false);
-$kernel->boot();
-
-global $DB;
+// Initialize GLPI Environment
+include('../../../inc/includes.php');
 
 // Clean buffer after boot (remove Deprecation warnings etc)
-ob_end_clean();
+// ob_end_clean(); // Only if includes.php produced output, but usually safe to keep buffering for JSON
 
-header("Content-Type: application/json; charset=UTF-8");
+// Header set above
+global $DB;
 
 // Start robust buffer for JSON response
 ob_start();
@@ -107,7 +97,7 @@ try {
             }
             break;
             
-            break;
+            // break; (removed duplicate)
 
         case 'delete':
             if (!class_exists('PluginFlowbpmnTemplate')) {

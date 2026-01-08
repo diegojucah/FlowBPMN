@@ -1,21 +1,13 @@
 <?php
-declare(strict_types=1);
 /**
  * -------------------------------------------------------------------------
  * FlowBPMN Plugin for GLPI - Native DB Versions Handler v3.0
  * -------------------------------------------------------------------------
  */
 
-// Bootstrap GLPI
-$glpi_root = dirname(__DIR__, 3);
-require_once $glpi_root . '/vendor/autoload.php';
-
-use Glpi\Kernel\Kernel;
-use Glpi\Application\Environment;
-use Glpi\DBAL\QueryExpression;
-
-$kernel = new Kernel(Environment::PRODUCTION->value, false);
-$kernel->boot();
+// Initialize GLPI Environment
+include('../../../inc/includes.php');
+global $DB;
 
 global $CFG_GLPI, $DB;
 

@@ -69,6 +69,12 @@ class PluginFlowbpmnTemplate extends CommonDBTM {
         $input['date_creation'] = $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s');
         $input['date_mod'] = $input['date_creation'];
         $input['is_active'] = 1;
+
+        // Manual Escape for XML/SVG to prevent SQL errors with single quotes (GLPI 10 Workaround)
+        global $DB;
+        if (isset($input['svg_content']) && !empty($input['svg_content'])) {
+            $input['svg_content'] = $DB->escape($input['svg_content']);
+        }
         
         // Compression handling (reuse logic if large)
         if (isset($input['bpmn_xml']) && strlen($input['bpmn_xml']) > 10240) {
@@ -76,6 +82,9 @@ class PluginFlowbpmnTemplate extends CommonDBTM {
             if ($compressed !== false) {
                 $input['bpmn_xml'] = 'COMPRESSED::' . base64_encode($compressed);
             }
+        } else if (isset($input['bpmn_xml']) && !empty($input['bpmn_xml'])) {
+            // Escape if not compressed
+            $input['bpmn_xml'] = $DB->escape($input['bpmn_xml']);
         }
         
         return $input;
@@ -86,6 +95,12 @@ class PluginFlowbpmnTemplate extends CommonDBTM {
      */
     function prepareInputForUpdate($input) {
         $input['date_mod'] = $_SESSION['glpi_currenttime'] ?? date('Y-m-d H:i:s');
+
+        // Manual Escape for SVG (GLPI 10 Workaround)
+        global $DB;
+        if (isset($input['svg_content']) && !empty($input['svg_content'])) {
+             $input['svg_content'] = $DB->escape($input['svg_content']);
+        }
         
         // Compression handling
         if (isset($input['bpmn_xml']) && strlen($input['bpmn_xml']) > 10240 && strpos($input['bpmn_xml'], 'COMPRESSED::') === false) {
@@ -93,6 +108,9 @@ class PluginFlowbpmnTemplate extends CommonDBTM {
             if ($compressed !== false) {
                 $input['bpmn_xml'] = 'COMPRESSED::' . base64_encode($compressed);
             }
+        } else if (isset($input['bpmn_xml']) && !empty($input['bpmn_xml']) && strpos($input['bpmn_xml'], 'COMPRESSED::') === false) {
+            // Escape if not compressed
+            $input['bpmn_xml'] = $DB->escape($input['bpmn_xml']);
         }
         
         return $input;

@@ -11,17 +11,8 @@
 // Buffer output immediately to catch Warnings during boot
 ob_start();
 
-// Bootstrap GLPI manually
-$glpi_root = dirname(__DIR__, 3);
-require_once $glpi_root . '/vendor/autoload.php';
-
-use Glpi\Kernel\Kernel;
-use Glpi\Application\Environment;
-
-// Boot kernel
-$kernel = new Kernel(Environment::PRODUCTION->value, false);
-$kernel->boot();
-
+// Initialize GLPI Environment
+include('../../../inc/includes.php');
 global $DB;
 
 // Clean buffer after boot (remove Deprecation warnings etc)

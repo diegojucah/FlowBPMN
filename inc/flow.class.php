@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 /**
  * -------------------------------------------------------------------------
@@ -28,9 +27,9 @@ declare(strict_types=1);
  * @link      https://github.com/diegojucah/pluginBPMN
  * -------------------------------------------------------------------------
  */
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+// if (!defined('GLPI_ROOT')) {
+//     die("Sorry. You can't access directly to this file");
+// }
 
 /**
  * Main flow class - Manages BPMN flows
@@ -122,6 +121,11 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             return false;
         }
         
+        // Default name if empty
+        if (empty($input['name'])) {
+            $input['name'] = 'FlowBPMN Diagram';
+        }
+        
         // Set default values
         $input['users_id'] = Session::getLoginUserID();
         $input['is_active'] = 1;
@@ -134,6 +138,12 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         $input['date_creation'] = $_SESSION['glpi_currenttime'];
         $input['date_mod'] = $_SESSION['glpi_currenttime'];
         
+        // Manual Escape for XML/SVG to prevent SQL errors with single quotes
+        global $DB;
+        if (isset($input['svg_content']) && !empty($input['svg_content'])) {
+            $input['svg_content'] = $DB->escape($input['svg_content']);
+        }
+
         // Compression for large diagrams (Priority 2)
         if (isset($input['bpmn_xml']) && strlen($input['bpmn_xml']) > 10240) { // > 10KB
             // Use level 6 compression (default balance)
@@ -142,6 +152,9 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                 // Store as Base64 with prefix to identify compressed content
                 $input['bpmn_xml'] = 'COMPRESSED::' . base64_encode($compressed);
             }
+        } else if (isset($input['bpmn_xml']) && !empty($input['bpmn_xml'])) {
+            // Escape if not compressed
+            $input['bpmn_xml'] = $DB->escape($input['bpmn_xml']);
         }
         
         return parent::prepareInputForAdd($input);
@@ -159,12 +172,21 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         $input['date_mod'] = $_SESSION['glpi_currenttime'];
         $input['users_id'] = Session::getLoginUserID();
         
+        // Manual Escape for XML/SVG
+        global $DB;
+        if (isset($input['svg_content']) && !empty($input['svg_content'])) {
+             $input['svg_content'] = $DB->escape($input['svg_content']);
+        }
+
         // Compression for large diagrams (Priority 2)
         if (isset($input['bpmn_xml']) && strlen($input['bpmn_xml']) > 10240) { // > 10KB
             $compressed = gzcompress($input['bpmn_xml'], 6);
             if ($compressed !== false) {
                 $input['bpmn_xml'] = 'COMPRESSED::' . base64_encode($compressed);
             }
+        } else if (isset($input['bpmn_xml']) && !empty($input['bpmn_xml'])) {
+            // Escape if not compressed
+            $input['bpmn_xml'] = $DB->escape($input['bpmn_xml']);
         }
         
         return parent::prepareInputForUpdate($input);
@@ -645,7 +667,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "<button type='button' class='btn' id='bpmn-save-btn' style='background-color: #FFC107; color: #212529; border-color: #FFC107;'>";
             echo "<i class='{$saveIcon}'></i> " . self::_t('Save');
             echo "</button>";
-            echo "<button type='button' class='btn dropdown-toggle dropdown-toggle-split' data-toggle='dropdown' aria-expanded='false' style='background-color: #FFC107; color: #212529; border-color: #FFC107; border-left: 1px solid rgba(0,0,0,0.1);'>";
+            echo "<button type='button' class='btn dropdown-toggle dropdown-toggle-split' data-bs-toggle='dropdown' aria-expanded='false' style='background-color: #FFC107; color: #212529; border-color: #FFC107; border-left: 1px solid rgba(0,0,0,0.1);'>";
             echo "<span class='visually-hidden'>Toggle Dropdown</span>";
             echo "</button>";
             echo "<ul class='dropdown-menu'>";
@@ -664,7 +686,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "</button>";
 
             echo "<div class='btn-group ms-2' role='group'>";
-            echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-toggle='dropdown' aria-expanded='false'>";
+            echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
             echo "<i class='{$downloadIcon}'></i> " . self::_t('Export');
             echo "</button>";
             echo "<ul class='dropdown-menu'>";
@@ -755,8 +777,11 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         
         echo Html::scriptBlock("
             $(document).ready(function() {
-                // Initialize BPMN editor
+                // GLPI 10: Load JS dynamically
+                var scriptUrl = '{$pluginDir}/js/flowbpmn.js';
+                console.log('[FlowBPMN] Checking BpmnFlowEditor...');
                 if (typeof BpmnFlowEditor !== 'undefined') {
+                    console.log('[FlowBPMN] Already loaded, initializing...');
                     window.bpmnEditor = new BpmnFlowEditor({
                         container: '#bpmn-canvas',
                         existingXml: {$bpmnXmlJson},
@@ -764,7 +789,18 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                         dateMod: '{$dateMod}'
                     });
                 } else {
-                    console.error('BpmnFlowEditor class not found. Check if flowbpmn.js is loaded correctly.');
+                    console.log('[FlowBPMN] Loading JS from:', scriptUrl);
+                    $.getScript(scriptUrl)
+                        .done(function() { 
+                            console.log('[FlowBPMN] JS loaded! Initializing editor...');
+                            window.bpmnEditor = new BpmnFlowEditor({
+                                container: '#bpmn-canvas',
+                                existingXml: {$bpmnXmlJson},
+                                pluginUrl: '{$pluginDir}',
+                                dateMod: '{$dateMod}'
+                            });
+                        })
+                        .fail(function(e) { console.error('[FlowBPMN] Failed to load JS:', e); });
                 }
             });
         ");

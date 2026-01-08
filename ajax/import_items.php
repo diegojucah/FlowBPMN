@@ -4,19 +4,9 @@
 // Output buffer to prevent accidental output
 ob_start();
 
-// Bootstrap GLPI manually
-$glpi_root = dirname(__DIR__, 3);
-
-// Include autoloader
-require_once $glpi_root . '/vendor/autoload.php';
-
-// Initialize GLPI Kernel
-use Glpi\Kernel\Kernel;
-use Glpi\Application\Environment;
-
-$kernel = new Kernel(Environment::PRODUCTION->value, false);
-$kernel->boot();
-
+// Initialize GLPI Environment
+include('../../../inc/includes.php');
+global $DB;
 // Load GLPI configuration
 global $CFG_GLPI, $DB;
 
