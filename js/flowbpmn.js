@@ -1933,9 +1933,9 @@ class BpmnFlowEditorNew {
 
         return `
         <div class="flowbpmn-import-card-final" style="height: 100%; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <table style="width: 100%; height: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed;">
+            <table style="width: 100%; height: 100%; border-collapse: separate; border-spacing: 0;">
                 <tr>
-                    <td style="padding: 0; height: 180px; vertical-align: middle;">
+                    <td style="padding: 0; height: 180px; vertical-align: middle; width: 100%;">
                         <div class="flowbpmn-version-preview text-muted d-flex align-items-center justify-content-center" style="background: #f8f9fa; height: 180px; width: 100%; border-bottom: 1px solid #dee2e6; position: relative;">
                              ${thumbnail}
                              <div class="flowbpmn-version-overlay">
@@ -1947,7 +1947,7 @@ class BpmnFlowEditorNew {
                     </td>
                 </tr>
                 <tr>
-                    <td style="padding: 0; vertical-align: top;">
+                    <td style="padding: 0; vertical-align: top; width: 100%;">
                         <div style="padding: 1rem; display: flex; flex-direction: column; height: 100%;">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 ${badge}
@@ -1957,10 +1957,10 @@ class BpmnFlowEditorNew {
                                 <strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong>
                             </div>
             
-                            <div class="flowbpmn-meta small text-muted mb-1" title="${this._t('Modification Date')}">
+                            <div class="flowbpmn-meta small text-muted mb-1" title="${this._t('Modification Date')}" style="white-space: nowrap;">
                                 <i class="fas fa-calendar-alt me-1"></i> ${item.date_mod_formatted}
                             </div>
-                            <div class="flowbpmn-meta small text-muted mb-3" title="${this._t('Author')}">
+                            <div class="flowbpmn-meta small text-muted mb-3" title="${this._t('Author')}" style="white-space: nowrap;">
                                 <i class="fas fa-user me-1"></i> ${item.user_name || this._t('Unknown')}
                             </div>
             
