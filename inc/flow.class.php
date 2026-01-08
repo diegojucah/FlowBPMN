@@ -783,10 +783,10 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             $(document).ready(function() {
                 // GLPI 10: Load JS dynamically with cache busting
                 var scriptUrl = '{$pluginDir}/js/flowbpmn.js?v=" . time() . "';
-                console.log('[FlowBPMN] Checking BpmnFlowEditor...');
-                if (typeof BpmnFlowEditor !== 'undefined') {
+                console.log('[FlowBPMN] Checking BpmnFlowEditorNew...');
+                if (typeof BpmnFlowEditorNew !== 'undefined') {
                     console.log('[FlowBPMN] Already loaded, initializing...');
-                    window.bpmnEditor = new BpmnFlowEditor({
+                    window.bpmnEditor = new BpmnFlowEditorNew({
                         container: '#bpmn-canvas',
                         existingXml: {$bpmnXmlJson},
                         pluginUrl: '{$pluginDir}',
@@ -797,7 +797,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     $.getScript(scriptUrl)
                         .done(function() { 
                             console.log('[FlowBPMN] JS loaded! Initializing editor...');
-                            window.bpmnEditor = new BpmnFlowEditor({
+                            window.bpmnEditor = new BpmnFlowEditorNew({
                                 container: '#bpmn-canvas',
                                 existingXml: {$bpmnXmlJson},
                                 pluginUrl: '{$pluginDir}',
