@@ -781,8 +781,8 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         
         echo Html::scriptBlock("
             $(document).ready(function() {
-                // GLPI 10: Load JS dynamically
-                var scriptUrl = '{$pluginDir}/js/flowbpmn.js';
+                // GLPI 10: Load JS dynamically with cache busting
+                var scriptUrl = '{$pluginDir}/js/flowbpmn.js?v=" . time() . "';
                 console.log('[FlowBPMN] Checking BpmnFlowEditor...');
                 if (typeof BpmnFlowEditor !== 'undefined') {
                     console.log('[FlowBPMN] Already loaded, initializing...');
