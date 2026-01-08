@@ -1832,7 +1832,14 @@ class BpmnFlowEditorNew {
                 headers: { 'X-Glpi-Csrf-Token': this.getCSRFToken() }
             });
 
-            const result = await response.json();
+            const text = await response.text();
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch (e) {
+                console.error('[FlowBPMN] JSON Parse Error. Raw Text:', text);
+                throw new Error('Invalid Server Response (Not JSON). See Console.');
+            }
 
             if (!result.success) {
                 throw new Error(result.message);
