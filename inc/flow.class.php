@@ -220,22 +220,26 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         error_log("flowBPMN DEBUG: post_addItem called, flow_id=" . ($this->fields['id'] ?? 'NULL'));
         error_log("flowBPMN DEBUG: PluginFlowbpmnVersion exists: " . (class_exists('PluginFlowbpmnVersion') ? 'YES' : 'NO'));
         
-        if (class_exists('PluginFlowbpmnVersion') && isset($this->fields['id'])) {
-            try {
-                // Ensure SVG content is passed
-                $flowData = $this->fields;
-                if (empty($flowData['svg_content']) && !empty($this->input['svg_content'])) {
-                    $flowData['svg_content'] = $this->input['svg_content'];
-                }
-
-                error_log("flowBPMN DEBUG: Calling createVersion for flow_id=" . $this->fields['id']);
-                PluginFlowbpmnVersion::createVersion($this->fields['id'], $flowData);
-                error_log("flowBPMN DEBUG: Version created successfully");
-            } catch (Exception $e) {
-                error_log("flowBPMN ERROR: Failed to create initial version - " . $e->getMessage());
+        if (isset($this->fields['id'])) {
+            // Force include Version class if not autoloaded
+            if (!class_exists('PluginFlowbpmnVersion')) {
+                include_once(GLPI_ROOT . '/plugins/flowbpmn/inc/version.class.php');
             }
-        } else {
-            error_log("flowBPMN DEBUG: Skipping version creation - class_exists=" . (class_exists('PluginFlowbpmnVersion') ? 'YES' : 'NO') . ", id_isset=" . (isset($this->fields['id']) ? 'YES' : 'NO'));
+
+            if (class_exists('PluginFlowbpmnVersion')) {
+                try {
+                    // Combine fields and input to ensure we have data
+                    $flowData = array_merge($this->input, $this->fields);
+                    
+                    error_log("flowBPMN DEBUG: post_addItem calling createVersion for flow_id=" . $this->fields['id']);
+                    PluginFlowbpmnVersion::createVersion($this->fields['id'], $flowData);
+                    error_log("flowBPMN DEBUG: Version created successfully");
+                } catch (Exception $e) {
+                    error_log("flowBPMN ERROR: Failed to create initial version - " . $e->getMessage());
+                }
+            } else {
+                error_log("flowBPMN ERROR: PluginFlowbpmnVersion class not found in post_addItem");
+            }
         }
         
         // Save PNG if provided (stored temporarily in input)
