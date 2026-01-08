@@ -1933,9 +1933,9 @@ class BpmnFlowEditorNew {
 
         return `
         <div class="flowbpmn-import-card-final" style="height: 100%; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <table style="width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed;">
+            <table style="width: 100%; height: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed;">
                 <tr>
-                    <td style="padding: 0; height: 180px; vertical-align: top;">
+                    <td style="padding: 0; height: 180px; vertical-align: middle;">
                         <div class="flowbpmn-version-preview text-muted d-flex align-items-center justify-content-center" style="background: #f8f9fa; height: 180px; width: 100%; border-bottom: 1px solid #dee2e6; position: relative;">
                              ${thumbnail}
                              <div class="flowbpmn-version-overlay">
@@ -1948,21 +1948,23 @@ class BpmnFlowEditorNew {
                 </tr>
                 <tr>
                     <td style="padding: 0; vertical-align: top;">
-                        <div style="padding: 15px; display: flex; flex-direction: column;">
+                        <div style="padding: 1rem; display: flex; flex-direction: column; height: 100%;">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 ${badge}
                             </div>
                             
-                            <div class="mb-2"><strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong></div>
-            
-                            <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
-                                <i class="fas fa-calendar-alt"></i> ${item.date_mod_formatted}
-                            </div>
-                            <div class="flowbpmn-meta" title="${this._t('Author')}">
-                                <i class="fas fa-user"></i> ${item.user_name || this._t('Unknown')}
+                            <div class="mb-2 text-truncate" title="${this.escapeHtml(item.name)}">
+                                <strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong>
                             </div>
             
-                            <div class="flowbpmn-actions mt-3">
+                            <div class="flowbpmn-meta small text-muted mb-1" title="${this._t('Modification Date')}">
+                                <i class="fas fa-calendar-alt me-1"></i> ${item.date_mod_formatted}
+                            </div>
+                            <div class="flowbpmn-meta small text-muted mb-3" title="${this._t('Author')}">
+                                <i class="fas fa-user me-1"></i> ${item.user_name || this._t('Unknown')}
+                            </div>
+            
+                            <div class="mt-auto">
                                 <button type="button" class="btn btn-warning w-100" 
                                         style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;"
                                         onclick="window.BpmnFlowEditor_instance.loadDiagramFromItem('${type}', ${item.id}, document.getElementById('flowbpmn-import-modal'))">
