@@ -149,16 +149,12 @@ try {
         Log::HISTORY_LOG_SIMPLE_MESSAGE
     );
 
-    file_put_contents($debug_file, "Restore successful, returning XML\n", FILE_APPEND);
-    
     // Success response
     ob_clean();
     echo json_encode(['success' => true]);
     exit;
 
 } catch (Exception $e) {
-    $debug_file = __DIR__ . '/../debug_restore.txt';
-    file_put_contents($debug_file, "EXCEPTION: " . $e->getMessage() . "\n", FILE_APPEND);
     http_response_code(400);
     ob_clean();
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
