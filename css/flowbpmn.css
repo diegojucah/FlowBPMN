@@ -179,13 +179,17 @@
 }
 
 #flowbpmn-image-modal .modal-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: block;
+    /* Was flex, caused shrinking */
     padding: 20px;
     background: #f8f9fa;
     /* Light gray background for contrast */
     min-height: 400px;
+}
+
+#flowbpmn-image-container {
+    width: 100%;
+    min-height: 100%;
 }
 
 #flowbpmn-image-modal .modal-content {
