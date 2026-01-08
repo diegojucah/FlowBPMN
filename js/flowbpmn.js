@@ -1915,9 +1915,9 @@ class BpmnFlowEditorNew {
     }
 
     createImportCardHTML(type, item) {
-        // Translate item type (Ticket -> Chamado, Problem -> Problema, Change -> Mudança)
+        // Translate item type
         const translatedType = this._t(type);
-        // Simple gray badge with white text
+        // Badge
         const badge = `<span class="badge" style="background-color: #6c757d; color: #fff; font-size: 0.85em; padding: 5px 10px; border-radius: 4px;">${translatedType} #${item.id}</span>`;
 
         // Thumbnail Logic
@@ -1925,19 +1925,15 @@ class BpmnFlowEditorNew {
         let svgData = '';
 
         if (item.svg_content && item.svg_content !== '0' && item.svg_content.length > 50) {
-            thumbnail = item.svg_content; // Directly embed SVG
+            thumbnail = item.svg_content;
             svgData = encodeURIComponent(item.svg_content);
         } else {
-            thumbnail = `
-                 <div class="text-center">
-                    <i class="fas fa-file-import mb-2" style="font-size: 2.5rem; opacity: 0.5;"></i>
-                    <div class="small">${this._t('No Preview')}</div>
-                 </div>`;
+            thumbnail = `<div class="text-muted"><i class="fas fa-eye-slash"></i> ${this._t('No preview available')}</div>`;
         }
 
         return `
-        <div class="flowbpmn-version-card" style="display: flex; flex-direction: column; height: 100%; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background: #fff;">
-            <div class="flowbpmn-version-preview text-muted d-flex align-items-center justify-content-center" style="background: #f8f9fa; height: 180px; width: 100%; border-bottom: 1px solid #dee2e6; position: relative; flex-shrink: 0;">
+        <div class="flowbpmn-version-card">
+            <div class="flowbpmn-version-preview">
                  ${thumbnail}
                  <div class="flowbpmn-version-overlay">
                      <button type="button" class="btn-flowbpmn-action flowbpmn-view-import-image" data-svg="${svgData}" ${!svgData ? 'disabled' : ''}>
@@ -1947,9 +1943,10 @@ class BpmnFlowEditorNew {
             </div>
             
             <div class="flowbpmn-version-info">
-                <div class="flowbpmn-version-header d-flex justify-content-between align-items-center">
+                <div class="flowbpmn-version-header">
                     ${badge}
                 </div>
+                
                 <div class="mb-2"><strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong></div>
 
                 <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
