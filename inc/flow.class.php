@@ -715,7 +715,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                 }
                 
                 // Só renderizar botão se houver 1+ versões
-                if ($versionCount >= 1) {
+                if ($versionCount > 1) {
                     echo "<button type='button' class='btn btn-secondary ms-2' id='bpmn-versions-btn'>";
                     echo "<i class='{$historyIcon}'></i> " . self::_t('Versions');
                     echo " <span class='badge bg-light text-dark ms-1'>{$versionCount}</span>";
