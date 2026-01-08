@@ -85,8 +85,10 @@ try {
     echo json_encode(['success' => true, 'items' => $items]);
     exit;
 
-} catch (Exception $e) {
-    http_response_code(400); // Bad Request or Internal Error, but return JSON
-    ob_clean();
+} catch (Throwable $e) {
+    if (!headers_sent()) {
+        http_response_code(400); 
+    }
+    ob_end_clean(); // Ensure buffer is cleared
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
