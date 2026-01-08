@@ -18,7 +18,7 @@ const BPMN_FONT = '/plugins/flowbpmn/lib/bpmn-js/bpmn-embedded.css';
 /**
  * BPMN Flow Editor Class
  */
-class BpmnFlowEditor {
+class BpmnFlowEditorNew {
     constructor(options) {
         // Expose instance for global access (needed for modal onclick events)
         window.BpmnFlowEditor_instance = this;
