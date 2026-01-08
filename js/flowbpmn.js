@@ -2050,7 +2050,7 @@ class BpmnFlowEditor {
                                             
                                             <!-- Grid -->
                                             <div>
-                                                <div id="flowbpmn-import-${type}-grid" class="container-fluid"></div>
+                                                <div id="flowbpmn-import-${type}-grid" class="flowbpmn-versions-grid"></div>
                                             </div>
                                         </div>
                                     </div>
