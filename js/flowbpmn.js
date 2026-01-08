@@ -2040,6 +2040,38 @@ class BpmnFlowEditorNew {
 
     createImportModalHTML() {
         return `
+            <style>
+                #flowbpmn-import-modal .flowbpmn-version-overlay {
+                    opacity: 0 !important;
+                    background: rgba(0,0,0,0.5) !important;
+                    transition: opacity 0.2s !important;
+                    position: absolute !important; top: 0; left: 0; right: 0; bottom: 0;
+                    display: flex !important; align-items: center; justify-content: center;
+                    z-index: 5;
+                }
+                #flowbpmn-import-modal .flowbpmn-version-card:hover .flowbpmn-version-overlay {
+                    opacity: 1 !important;
+                }
+                #flowbpmn-import-modal .btn-flowbpmn-action {
+                    background-color: #fff !important;
+                    color: #333 !important;
+                    border: none !important;
+                    padding: 8px 12px !important;
+                    border-radius: 4px !important;
+                    cursor: pointer !important;
+                    margin: 0 5px !important;
+                    opacity: 1 !important;
+                    font-weight: 500 !important;
+                }
+                #flowbpmn-import-modal .btn-flowbpmn-action:hover {
+                    background-color: #f8f9fa !important;
+                }
+                #flowbpmn-import-modal .flowbpmn-meta {
+                    white-space: nowrap !important;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            </style>
             <div class="modal fade" id="flowbpmn-import-modal" tabindex="-1" style="z-index: 1060;">
                 <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 0.5rem;">
                     <div class="modal-content" style="background-color: white !important;">
