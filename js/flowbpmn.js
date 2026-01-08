@@ -2110,4 +2110,4 @@ class BpmnFlowEditorNew {
 } // End Class
 
 // Export to global scope
-window.BpmnFlowEditor = BpmnFlowEditor;
+window.BpmnFlowEditor = BpmnFlowEditorNew;
