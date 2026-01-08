@@ -645,7 +645,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "<button type='button' class='btn' id='bpmn-save-btn' style='background-color: #FFC107; color: #212529; border-color: #FFC107;'>";
             echo "<i class='{$saveIcon}'></i> " . self::_t('Save');
             echo "</button>";
-            echo "<button type='button' class='btn dropdown-toggle dropdown-toggle-split' data-bs-toggle='dropdown' aria-expanded='false' style='background-color: #FFC107; color: #212529; border-color: #FFC107; border-left: 1px solid rgba(0,0,0,0.1);'>";
+            echo "<button type='button' class='btn dropdown-toggle dropdown-toggle-split' data-toggle='dropdown' aria-expanded='false' style='background-color: #FFC107; color: #212529; border-color: #FFC107; border-left: 1px solid rgba(0,0,0,0.1);'>";
             echo "<span class='visually-hidden'>Toggle Dropdown</span>";
             echo "</button>";
             echo "<ul class='dropdown-menu'>";
@@ -664,7 +664,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             echo "</button>";
 
             echo "<div class='btn-group ms-2' role='group'>";
-            echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>";
+            echo "<button type='button' class='btn btn-outline-secondary dropdown-toggle' data-toggle='dropdown' aria-expanded='false'>";
             echo "<i class='{$downloadIcon}'></i> " . self::_t('Export');
             echo "</button>";
             echo "<ul class='dropdown-menu'>";
