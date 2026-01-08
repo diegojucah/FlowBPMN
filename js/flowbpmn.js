@@ -1980,49 +1980,40 @@ class BpmnFlowEditorNew {
         }
 
         return `
-        <div class="flowbpmn-import-card-final flowbpmn-version-card" style="display: block !important; height: 100%; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <table style="width: 100%; height: 100%; border-collapse: separate; border-spacing: 0;">
-                <tr>
-                    <td style="padding: 0; height: 180px; vertical-align: middle; width: 100%;">
-                        <div class="flowbpmn-version-preview text-muted d-flex align-items-center justify-content-center p-3" style="background: #f8f9fa; height: 180px; width: 100%; border-bottom: 1px solid #dee2e6; position: relative;">
-                             ${thumbnail}
-                             <div class="flowbpmn-version-overlay">
-                                 <button type="button" class="btn-flowbpmn-action flowbpmn-view-import-image" data-svg="${svgData}" ${!svgData ? 'disabled' : ''}>
-                                    <i class="fas fa-eye"></i> ${this._t('View')}
-                                </button>
-                             </div>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 0; vertical-align: top; width: 100%;">
-                        <div style="padding: 1rem; display: flex; flex-direction: column; height: 100%;">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                ${badge}
-                            </div>
-                            
-                            <div class="mb-2 text-truncate" title="${this.escapeHtml(item.name)}">
-                                <strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong>
-                            </div>
+        <div class="flowbpmn-version-card flowbpmn-import-card-final" id="import-card-${item.id}">
+            <div class="flowbpmn-version-preview">
+                ${thumbnail}
+                <div class="flowbpmn-version-overlay">
+                    <button type="button" class="btn-flowbpmn-action flowbpmn-view-import-image" data-svg="${svgData}" ${!svgData ? 'disabled' : ''}>
+                        <i class="fas fa-eye"></i> ${this._t('View')}
+                    </button>
+                </div>
+            </div>
             
-                            <div class="flowbpmn-meta small text-muted mb-1" title="${this._t('Modification Date')}" style="white-space: nowrap;">
-                                <i class="fas fa-calendar-alt me-1"></i> ${item.date_mod_formatted}
-                            </div>
-                            <div class="flowbpmn-meta small text-muted mb-3" title="${this._t('Author')}" style="white-space: nowrap;">
-                                <i class="fas fa-user me-1"></i> ${item.user_name || this._t('Unknown')}
-                            </div>
-            
-                            <div class="mt-auto">
-                                <button type="button" class="btn btn-warning w-100" 
-                                        style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;"
-                                        onclick="window.BpmnFlowEditor_instance.loadDiagramFromItem('${type}', ${item.id}, document.getElementById('flowbpmn-import-modal'))">
-                                    <i class="fas fa-download me-1"></i> ${this._t('Import')}
-                                </button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            </table>
+            <div class="flowbpmn-version-info">
+                <div class="flowbpmn-version-header">
+                    ${badge}
+                </div>
+                
+                <div class="mb-2 text-truncate" title="${this.escapeHtml(item.name)}">
+                    <strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong>
+                </div>
+
+                <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
+                    <i class="fas fa-calendar-alt me-1"></i> ${item.date_mod_formatted}
+                </div>
+                <div class="flowbpmn-meta" title="${this._t('Author')}">
+                    <i class="fas fa-user me-1"></i> ${item.user_name || this._t('Unknown')}
+                </div>
+
+                <div class="flowbpmn-actions">
+                    <button type="button" class="btn btn-warning w-100" 
+                            style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;"
+                            onclick="window.BpmnFlowEditor_instance.loadDiagramFromItem('${type}', ${item.id}, document.getElementById('flowbpmn-import-modal'))">
+                        <i class="fas fa-download me-1"></i> ${this._t('Import')}
+                    </button>
+                </div>
+            </div>
         </div>`;
     }
 
@@ -2041,6 +2032,48 @@ class BpmnFlowEditorNew {
     createImportModalHTML() {
         return `
             <style>
+                #flowbpmn-import-modal .flowbpmn-versions-grid {
+                    display: grid !important;
+                    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+                    gap: 20px !important;
+                    padding: 20px !important;
+                }
+                #flowbpmn-import-modal .flowbpmn-version-card {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    background: #fff !important;
+                    border: 1px solid #dee2e6 !important;
+                    border-radius: 8px !important;
+                    overflow: hidden !important;
+                    height: 100% !important;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+                    transition: box-shadow 0.2s !important;
+                }
+                #flowbpmn-import-modal .flowbpmn-version-card:hover {
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+                }
+                #flowbpmn-import-modal .flowbpmn-version-preview {
+                    height: 180px !important;
+                    background: #f8f9fa !important;
+                    border-bottom: 1px solid #dee2e6 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    position: relative !important;
+                    padding: 10px !important;
+                }
+                #flowbpmn-import-modal .flowbpmn-version-info {
+                    padding: 15px !important;
+                    flex-grow: 1 !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                }
+                #flowbpmn-import-modal .flowbpmn-version-header {
+                    margin-bottom: 10px !important;
+                    display: flex !important;
+                    justify-content: space-between !important; 
+                    align-items: center !important;
+                }
                 #flowbpmn-import-modal .flowbpmn-version-overlay {
                     opacity: 0 !important;
                     background: rgba(0,0,0,0.5) !important;
@@ -2062,6 +2095,7 @@ class BpmnFlowEditorNew {
                     margin: 0 5px !important;
                     opacity: 1 !important;
                     font-weight: 500 !important;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
                 }
                 #flowbpmn-import-modal .btn-flowbpmn-action:hover {
                     background-color: #f8f9fa !important;
@@ -2070,6 +2104,15 @@ class BpmnFlowEditorNew {
                     white-space: nowrap !important;
                     overflow: hidden;
                     text-overflow: ellipsis;
+                    font-size: 0.9em !important;
+                    color: #6c757d !important;
+                    margin-bottom: 5px !important;
+                    display: block !important;
+                    width: 100% !important;
+                }
+                #flowbpmn-import-modal .flowbpmn-actions {
+                    margin-top: auto !important;
+                    padding-top: 15px !important;
                 }
             </style>
             <div class="modal fade" id="flowbpmn-import-modal" tabindex="-1" style="z-index: 1060;">
