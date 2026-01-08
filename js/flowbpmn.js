@@ -37,7 +37,49 @@ class BpmnFlowEditorNew {
         this.lastDateMod = options.dateMod || ''; // Optimistic Locking
         this.modeler = null;
 
+        this._injectCriticalStyles();
         this.init();
+    }
+
+    _injectCriticalStyles() {
+        if (document.getElementById('flowbpmn-critical-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'flowbpmn-critical-styles';
+        style.textContent = `
+            .flowbpmn-version-overlay {
+                position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0, 0, 0, 0.5) !important;
+                display: flex; align-items: center; justify-content: center;
+                opacity: 0; transition: opacity 0.2s;
+                z-index: 10;
+            }
+            .flowbpmn-version-card:hover .flowbpmn-version-overlay {
+                opacity: 1 !important;
+            }
+            .btn-flowbpmn-action {
+                background: #fff !important;
+                border: none;
+                color: #333 !important;
+                padding: 8px 12px;
+                border-radius: 4px;
+                font-size: 0.9em;
+                cursor: pointer;
+                margin: 0 5px;
+                opacity: 1 !important;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+            .btn-flowbpmn-action:hover {
+                background: #f8f9fa !important;
+            }
+            .flowbpmn-meta {
+                white-space: nowrap !important;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+                display: block !important;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     /**
