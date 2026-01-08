@@ -1932,7 +1932,7 @@ class BpmnFlowEditorNew {
         }
 
         return `
-        <div class="flowbpmn-version-card" style="display: block !important; height: auto; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background: #fffbe6;">
+        <div class="flowbpmn-import-card-final" style="display: flex; flex-direction: column; height: 100%; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
             <div class="flowbpmn-version-preview text-muted d-flex align-items-center justify-content-center" style="background: #f8f9fa; height: 180px; width: 100%; border-bottom: 1px solid #dee2e6; position: relative;">
                  ${thumbnail}
                  <div class="flowbpmn-version-overlay">
