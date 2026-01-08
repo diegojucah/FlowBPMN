@@ -200,3 +200,14 @@
     filter: none;
     position: static;
 }
+
+/* User Request: Remove button focus shadow/outline */
+.btn-flowbpmn-action:focus,
+.btn-flowbpmn-action:active,
+#flowbpmn-container .btn:focus,
+#flowbpmn-container .btn:active,
+#flowbpmn-container .btn-group .btn:focus,
+#flowbpmn-container .btn-group .btn:active {
+    box-shadow: none !important;
+    outline: none !important;
+}
