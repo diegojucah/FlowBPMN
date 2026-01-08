@@ -87,6 +87,15 @@
     height: auto;
 }
 
+/* Close button - Bootstrap 4 & 5 compatibility */
+#flowbpmn-image-modal .btn-close,
+#flowbpmn-image-modal .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
 /* Overlay Actions */
 .flowbpmn-version-overlay {
     position: absolute;
