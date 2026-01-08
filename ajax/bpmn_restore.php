@@ -151,9 +151,26 @@ try {
         Log::HISTORY_LOG_SIMPLE_MESSAGE
     );
 
+    // Prepare XML for response (Decompress if necessary)
+    $restored_xml = $versionData['bpmn_xml'];
+    if (strpos($restored_xml, 'COMPRESSED::') === 0) {
+        $encoded = substr($restored_xml, 12);
+        $compressed = base64_decode($encoded);
+        if ($compressed) {
+            $decompressed = gzuncompress($compressed);
+            if ($decompressed) {
+                $restored_xml = $decompressed;
+            }
+        }
+    }
+
     // Success response
     ob_clean();
-    echo json_encode(['success' => true]);
+    echo json_encode([
+        'success' => true,
+        'bpmn_xml' => $restored_xml,
+        'message' => "Versão restaurada com sucesso!"
+    ]);
     exit;
 
 } catch (Exception $e) {
