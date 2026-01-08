@@ -57,7 +57,15 @@ class BpmnFlowEditor {
      * @returns {string} - CSRF token
      */
     getCSRFToken() {
-        const meta = document.querySelector('meta[name="glpi-csrf-token"]');
+        // Try modern GLPI (property="glpi:csrf_token")
+        let meta = document.querySelector('meta[property="glpi:csrf_token"]');
+
+        // Try standard HTML (name="glpi:csrf_token")
+        if (!meta) meta = document.querySelector('meta[name="glpi:csrf_token"]');
+
+        // Try legacy/plugin specific (name="glpi-csrf-token")
+        if (!meta) meta = document.querySelector('meta[name="glpi-csrf-token"]');
+
         return meta ? meta.getAttribute('content') : '';
     }
 
