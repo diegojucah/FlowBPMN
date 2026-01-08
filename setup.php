@@ -91,7 +91,7 @@ function plugin_init_flowbpmn() {
 
         // Add JavaScript with cache buster
         // JS
-        $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = ['js/flowbpmn.js?v=' . time()]; // Force cache refresh during dev
+        // $PLUGIN_HOOKS['add_javascript']['flowbpmn'] = ['js/flowbpmn.js?v=' . time()]; // Force cache refresh during dev
 
         // Hook for saving Profile rights
         // GLOBAL LISTENER: Catch ALL updates (Fallback)
