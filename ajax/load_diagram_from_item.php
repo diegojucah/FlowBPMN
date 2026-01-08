@@ -117,6 +117,7 @@ try {
         'date_mod' => $flow->fields['date_mod'],
         'date_mod_formatted' => $dateFormatted
     ]);
+    exit;
     
 } catch (Throwable $e) {
     ob_clean(); // Clean buffer before error output
@@ -126,4 +127,5 @@ try {
         'success' => false,
         'message' => $e->getMessage()
     ]);
+    exit;
 }

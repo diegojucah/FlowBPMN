@@ -151,11 +151,10 @@ try {
 
     file_put_contents($debug_file, "Restore successful, returning XML\n", FILE_APPEND);
     
-    echo json_encode([
-        'success' => true, 
     // Success response
     ob_clean();
     echo json_encode(['success' => true]);
+    exit;
 
 } catch (Exception $e) {
     $debug_file = __DIR__ . '/../debug_restore.txt';

@@ -132,31 +132,14 @@ try {
     // 5. Check restore permissions
     $canRestore = PluginFlowbpmnProfile::canRestoreFlow($itemtype);
 
-    // Calculate actual version number (count of old versions, current is the latest)
-    // If there are 30 old versions, current is v30 (not v31)
-    $versionNumber = count($formattedVersions);
-    
-    echo json_encode([
-        'success' => true,
-        'versions' => $formattedVersions,
-        'current' => [
-            'id' => $versionNumber, // Show version number for display
-            'flow_db_id' => $currentFlow['id'], // Real database ID for restore
-            'name' => $currentFlow['name'],
-            'date_mod' => $currentFlow['date_mod'],
-            'date_mod_formatted' => $formatDate($currentFlow['date_mod']),
-            'user_name' => $currentFlow['user_name'] ?: 'Unknown'
-        ],
-        'canRestore' => $canRestore
-    ]);
-    
+    // Final JSON Response
     ob_clean();
     echo json_encode([
         'success' => true,
         'versions' => $formattedVersions,
         'current' => [
-            'id' => $versionNumber, // Show version number for display
-            'flow_db_id' => $currentFlow['id'], // Real database ID for restore
+            'id' => $versionNumber,
+            'flow_db_id' => $currentFlow['id'],
             'name' => $currentFlow['name'],
             'date_mod' => $currentFlow['date_mod'],
             'date_mod_formatted' => $formatDate($currentFlow['date_mod']),
@@ -164,6 +147,7 @@ try {
         ],
         'canRestore' => $canRestore
     ]);
+    exit;
 
 } catch (Exception $e) {
     http_response_code(400);

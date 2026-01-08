@@ -503,7 +503,9 @@ try {
         default:
             http_response_code(400);
             throw new Exception('Invalid action');
+            throw new Exception('Invalid action');
     }
+    exit; // Ensure strict termination to prevent GLPI footer injection
 } catch (Exception $e) {
     error_log("FlowBPMN ERROR: " . $e->getMessage());
     error_log("FlowBPMN ERROR Trace: " . $e->getTraceAsString());

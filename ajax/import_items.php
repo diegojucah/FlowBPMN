@@ -83,6 +83,7 @@ try {
 
     ob_clean(); // Clean any previous output (headers, whitespace)
     echo json_encode(['success' => true, 'items' => $items]);
+    exit;
 
 } catch (Exception $e) {
     http_response_code(400); // Bad Request or Internal Error, but return JSON
