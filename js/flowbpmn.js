@@ -689,7 +689,7 @@ class BpmnFlowEditor {
                         <h5 class="modal-title m-0" id="flowbpmnVersionsModalLabel">
                             <i class="fas fa-history"></i> ${this._t('Version History')}
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body pb-3" style="background-color: white;">
                         
@@ -714,7 +714,7 @@ class BpmnFlowEditor {
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Close')}</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">${this._t('Close')}</button>
                     </div>
                 </div>
             </div>
@@ -725,7 +725,7 @@ class BpmnFlowEditor {
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body position-relative">
-                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px; z-index: 10;"></button>
+                         <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px; z-index: 10;"></button>
                          <div id="flowbpmn-image-container" class="d-flex justify-content-center"></div>
                     </div>
                 </div>
@@ -1066,13 +1066,13 @@ class BpmnFlowEditor {
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title"><i class="fas fa-exclamation-circle text-warning"></i> ${this._t('Confirm')}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <p class="mb-0">${message}</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">${this._t('Cancel')}</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">${this._t('Cancel')}</button>
                         <button type="button" class="btn btn-danger btn-sm" id="flowbpmn-confirm-btn-yes">${this._t('Confirm')}</button>
                     </div>
                 </div>
@@ -1172,7 +1172,7 @@ class BpmnFlowEditor {
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">${this._t('Save as Template')}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
@@ -1181,7 +1181,7 @@ class BpmnFlowEditor {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Cancel')}</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">${this._t('Cancel')}</button>
                         <button type="button" class="btn btn-primary" id="flowbpmn-confirm-save-template">${this._t('Save')}</button>
                     </div>
                 </div>
@@ -1214,7 +1214,7 @@ class BpmnFlowEditor {
                             <h5 class="modal-title m-0" id="flowbpmnTemplatesModalLabel">
                                 <i class="fas fa-layer-group"></i> ${this._t('Template Gallery')}
                             </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body pb-3" style="background-color: white;">
                             
@@ -1234,7 +1234,7 @@ class BpmnFlowEditor {
                                 ${totalPages > 1 ? this.createPaginationHTML('templates', totalPages, templates) : ''}`
                 }               </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Close')}</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">${this._t('Close')}</button>
                         </div>
                     </div>
                 </div>
@@ -1245,7 +1245,7 @@ class BpmnFlowEditor {
                 <div class="modal-dialog modal-xl modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-body position-relative">
-                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px; z-index: 10;"></button>
+                             <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px; z-index: 10;"></button>
                              <div id="flowbpmn-templates-image-container" class="d-flex justify-content-center"></div>
                         </div>
                     </div>
@@ -1678,7 +1678,7 @@ class BpmnFlowEditor {
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body position-relative">
-                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px; z-index: 10;"></button>
+                         <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px; z-index: 10;"></button>
                          <div id="flowbpmn-image-container" class="d-flex justify-content-center align-items-center" style="min-height: 400px; padding: 20px; overflow: auto;">
                             ${content}
                          </div>
@@ -1994,17 +1994,17 @@ class BpmnFlowEditor {
                                 <!-- Tabs -->
                                 <ul class="nav nav-pills nav-sm" role="tablist">
                                     <li class="nav-item">
-                                        <button class="nav-link active d-flex align-items-center gap-2" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Ticket" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Ticket')">
+                                        <button class="nav-link active d-flex align-items-center gap-2" data-toggle="pill" data-target="#flowbpmn-panel-Ticket" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Ticket')">
                                             <i class="fas fa-ticket-alt"></i> ${this._t('Tickets')}
                                         </button>
                                     </li>
                                     <li class="nav-item">
-                                        <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Problem" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Problem')">
+                                        <button class="nav-link d-flex align-items-center gap-2" data-toggle="pill" data-target="#flowbpmn-panel-Problem" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Problem')">
                                             <i class="fas fa-exclamation-circle"></i> ${this._t('Problems')}
                                         </button>
                                     </li>
                                     <li class="nav-item">
-                                        <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="pill" data-bs-target="#flowbpmn-panel-Change" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Change')">
+                                        <button class="nav-link d-flex align-items-center gap-2" data-toggle="pill" data-target="#flowbpmn-panel-Change" type="button" onclick="window.BpmnFlowEditor_instance.loadImportGallery('Change')">
                                             <i class="fas fa-exchange-alt"></i> ${this._t('Changes')}
                                         </button>
                                     </li>
@@ -2019,7 +2019,7 @@ class BpmnFlowEditor {
                             </div>
                             
                             <!-- Close Button -->
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                         </div>
 
                         <!-- Body -->
@@ -2056,7 +2056,7 @@ class BpmnFlowEditor {
                         
                         <!-- Footer -->
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${this._t('Close')}</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">${this._t('Close')}</button>
                         </div>
 
                     </div>
