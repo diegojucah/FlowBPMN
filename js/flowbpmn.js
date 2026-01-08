@@ -1932,38 +1932,47 @@ class BpmnFlowEditorNew {
         }
 
         return `
-        <div class="flowbpmn-import-card-final" style="display: flex; flex-direction: column; height: 100%; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <div class="flowbpmn-version-preview text-muted d-flex align-items-center justify-content-center" style="background: #f8f9fa; height: 180px; width: 100%; border-bottom: 1px solid #dee2e6; position: relative;">
-                 ${thumbnail}
-                 <div class="flowbpmn-version-overlay">
-                     <button type="button" class="btn-flowbpmn-action flowbpmn-view-import-image" data-svg="${svgData}" ${!svgData ? 'disabled' : ''}>
-                        <i class="fas fa-eye"></i> ${this._t('View')}
-                    </button>
-                 </div>
-            </div>
+        <div class="flowbpmn-import-card-final" style="height: 100%; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <table style="width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed;">
+                <tr>
+                    <td style="padding: 0; height: 180px; vertical-align: top;">
+                        <div class="flowbpmn-version-preview text-muted d-flex align-items-center justify-content-center" style="background: #f8f9fa; height: 180px; width: 100%; border-bottom: 1px solid #dee2e6; position: relative;">
+                             ${thumbnail}
+                             <div class="flowbpmn-version-overlay">
+                                 <button type="button" class="btn-flowbpmn-action flowbpmn-view-import-image" data-svg="${svgData}" ${!svgData ? 'disabled' : ''}>
+                                    <i class="fas fa-eye"></i> ${this._t('View')}
+                                </button>
+                             </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0; vertical-align: top;">
+                        <div style="padding: 15px; display: flex; flex-direction: column;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                ${badge}
+                            </div>
+                            
+                            <div class="mb-2"><strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong></div>
             
-            <div class="flowbpmn-version-info">
-                <div class="flowbpmn-version-header">
-                    ${badge}
-                </div>
-                
-                <div class="mb-2"><strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong></div>
-
-                <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
-                    <i class="fas fa-calendar-alt"></i> ${item.date_mod_formatted}
-                </div>
-                <div class="flowbpmn-meta" title="${this._t('Author')}">
-                    <i class="fas fa-user"></i> ${item.user_name || this._t('Unknown')}
-                </div>
-
-                <div class="flowbpmn-actions mt-3">
-                    <button type="button" class="btn btn-warning w-100" 
-                            style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;"
-                            onclick="window.BpmnFlowEditor_instance.loadDiagramFromItem('${type}', ${item.id}, document.getElementById('flowbpmn-import-modal'))">
-                        <i class="fas fa-download me-1"></i> ${this._t('Import')}
-                    </button>
-                </div>
-            </div>
+                            <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
+                                <i class="fas fa-calendar-alt"></i> ${item.date_mod_formatted}
+                            </div>
+                            <div class="flowbpmn-meta" title="${this._t('Author')}">
+                                <i class="fas fa-user"></i> ${item.user_name || this._t('Unknown')}
+                            </div>
+            
+                            <div class="flowbpmn-actions mt-3">
+                                <button type="button" class="btn btn-warning w-100" 
+                                        style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;"
+                                        onclick="window.BpmnFlowEditor_instance.loadDiagramFromItem('${type}', ${item.id}, document.getElementById('flowbpmn-import-modal'))">
+                                    <i class="fas fa-download me-1"></i> ${this._t('Import')}
+                                </button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>`;
     }
 
