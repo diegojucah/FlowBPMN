@@ -1819,126 +1819,124 @@ class BpmnFlowEditorNew {
         container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">' + this._t('Loading items...') + '</p></div>';
 
         const root = typeof CFG_GLPI !== 'undefined' ? CFG_GLPI.root_doc : '';
-        const url = `${root}/plugins/flowbpmn/ajax/import_items.php`;
+        const url = `${root}/plugins/flowbpmn/ajax/import_items.php?itemtype=${type}&search=${encodeURIComponent(search)}`;
 
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-Glpi-Csrf-Token': this.getCSRFToken()
+            }
+        });
+
+        const text = await response.text();
+        let result;
         try {
-            const formData = new FormData();
-            formData.append('itemtype', type);
-            formData.append('search', search);
+            result = JSON.parse(text);
+        } catch (e) {
+            console.error('[FlowBPMN] JSON Parse Error. Raw Text:', text);
+            throw new Error('Invalid Server Response (Not JSON). See Console.');
+        }
 
-            const response = await fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-Glpi-Csrf-Token': this.getCSRFToken() }
-            });
+        if (!result.success) {
+            throw new Error(result.message);
+        }
 
-            const text = await response.text();
-            let result;
-            try {
-                result = JSON.parse(text);
-            } catch (e) {
-                console.error('[FlowBPMN] JSON Parse Error. Raw Text:', text);
-                throw new Error('Invalid Server Response (Not JSON). See Console.');
+        // Clean old pagination
+        const parent = container.parentNode;
+        Array.from(parent.children).forEach(child => {
+            if (child !== container && (child.classList.contains('flowbpmn-import-pagination-wrapper') || child.querySelector('.pagination'))) {
+                child.remove();
             }
+        });
 
-            if (!result.success) {
-                throw new Error(result.message);
-            }
-
-            // Clean old pagination
-            const parent = container.parentNode;
-            Array.from(parent.children).forEach(child => {
-                if (child !== container && (child.classList.contains('flowbpmn-import-pagination-wrapper') || child.querySelector('.pagination'))) {
-                    child.remove();
-                }
-            });
-
-            if (result.items.length === 0) {
-                container.innerHTML = `<div class="text-center p-5 text-muted">
+        if (result.items.length === 0) {
+            container.innerHTML = `<div class="text-center p-5 text-muted">
                     <i class="fas fa-ghost mb-3" style="font-size: 2rem;"></i>
                     <p>${this._t('No diagram found')}</p>
                 </div>`;
-                return;
-            }
+            return;
+        }
 
-            // Store all data for pagination
-            const itemsPerPage = 6;
-            const totalPages = Math.ceil(result.items.length / itemsPerPage);
+        // Store all data for pagination
+        const itemsPerPage = 6;
+        const totalPages = Math.ceil(result.items.length / itemsPerPage);
 
-            // Render first page immediately
-            this.renderImportPage(type, 1, result.items);
+        // Render first page immediately
+        this.renderImportPage(type, 1, result.items);
 
-            // Add pagination controls if needed
-            if (totalPages > 1) {
-                const paginationHtml = this.createPaginationHTML(`import-${type}`, totalPages, result.items);
-                const paginationContainer = document.createElement('div');
-                paginationContainer.className = 'flowbpmn-import-pagination-wrapper';
-                paginationContainer.innerHTML = paginationHtml;
-                container.parentNode.appendChild(paginationContainer); // Append AFTER grid
+        // Add pagination controls if needed
+        if (totalPages > 1) {
+            const paginationHtml = this.createPaginationHTML(`import-${type}`, totalPages, result.items);
+            const paginationContainer = document.createElement('div');
+            paginationContainer.className = 'flowbpmn-import-pagination-wrapper';
+            paginationContainer.innerHTML = paginationHtml;
+            container.parentNode.appendChild(paginationContainer); // Append AFTER grid
 
-                this.bindPaginationEvents(`import-${type}`, result.items);
-            }
+            this.bindPaginationEvents(`import-${type}`, result.items);
+        }
 
-        } catch (err) {
-            console.error('Error loading gallery:', err);
-            container.innerHTML = `<div class="text-center p-5 text-danger">
+    } catch(err) {
+        console.error('Error loading gallery:', err);
+        container.innerHTML = `<div class="text-center p-5 text-danger">
                 <i class="fas fa-exclamation-triangle mb-2"></i><br>
                 ${err.message || this._t('Error loading items')}
             </div>`;
-        }
+    }
+}
+
+renderImportPage(type, page, allItems) {
+    const container = document.getElementById(`flowbpmn-import-${type}-grid`);
+    if (!container) return;
+
+    const itemsPerPage = 6;
+    const start = (page - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageItems = allItems.slice(start, end);
+
+    container.className = 'flowbpmn-versions-grid';
+    container.style.padding = '0';
+
+    // Ensure container has data attributes for pagination to work
+    container.dataset.currentPage = page;
+    container.dataset.totalPages = Math.ceil(allItems.length / itemsPerPage);
+
+    container.innerHTML = pageItems.map(item => this.createImportCardHTML(type, item)).join('');
+
+    // Update pagination active state
+    const pagination = document.getElementById(`flowbpmn-import-${type}-pagination`);
+    if (pagination) {
+        pagination.querySelectorAll('.page-item[data-page]').forEach(li => {
+            li.classList.toggle('active', parseInt(li.dataset.page) === page);
+        });
+        // Update prev/next buttons
+        const prevBtn = document.getElementById(`flowbpmn-import-${type}-prev`);
+        const nextBtn = document.getElementById(`flowbpmn-import-${type}-next`);
+
+        if (prevBtn) prevBtn.classList.toggle('disabled', page === 1);
+        if (nextBtn) nextBtn.classList.toggle('disabled', page === Math.ceil(allItems.length / itemsPerPage));
+    }
+}
+
+createImportCardHTML(type, item) {
+    // Translate item type
+    const translatedType = this._t(type);
+    // Badge
+    const badge = `<span class="badge" style="background-color: #6c757d; color: #fff; font-size: 0.85em; padding: 5px 10px; border-radius: 4px;">${translatedType} #${item.id}</span>`;
+
+    // Thumbnail Logic
+    let thumbnail = '<div class="text-muted"><i class="fas fa-eye-slash"></i> ' + this._t('No preview available') + '</div>';
+    let svgData = '';
+
+    if (item.svg_content && item.svg_content !== '0' && item.svg_content.length > 50) {
+        thumbnail = item.svg_content;
+        svgData = encodeURIComponent(item.svg_content);
+    } else {
+        thumbnail = `<div class="text-muted"><i class="fas fa-eye-slash"></i> ${this._t('No preview available')}</div>`;
     }
 
-    renderImportPage(type, page, allItems) {
-        const container = document.getElementById(`flowbpmn-import-${type}-grid`);
-        if (!container) return;
-
-        const itemsPerPage = 6;
-        const start = (page - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        const pageItems = allItems.slice(start, end);
-
-        container.className = 'flowbpmn-versions-grid';
-        container.style.padding = '0';
-
-        // Ensure container has data attributes for pagination to work
-        container.dataset.currentPage = page;
-        container.dataset.totalPages = Math.ceil(allItems.length / itemsPerPage);
-
-        container.innerHTML = pageItems.map(item => this.createImportCardHTML(type, item)).join('');
-
-        // Update pagination active state
-        const pagination = document.getElementById(`flowbpmn-import-${type}-pagination`);
-        if (pagination) {
-            pagination.querySelectorAll('.page-item[data-page]').forEach(li => {
-                li.classList.toggle('active', parseInt(li.dataset.page) === page);
-            });
-            // Update prev/next buttons
-            const prevBtn = document.getElementById(`flowbpmn-import-${type}-prev`);
-            const nextBtn = document.getElementById(`flowbpmn-import-${type}-next`);
-
-            if (prevBtn) prevBtn.classList.toggle('disabled', page === 1);
-            if (nextBtn) nextBtn.classList.toggle('disabled', page === Math.ceil(allItems.length / itemsPerPage));
-        }
-    }
-
-    createImportCardHTML(type, item) {
-        // Translate item type
-        const translatedType = this._t(type);
-        // Badge
-        const badge = `<span class="badge" style="background-color: #6c757d; color: #fff; font-size: 0.85em; padding: 5px 10px; border-radius: 4px;">${translatedType} #${item.id}</span>`;
-
-        // Thumbnail Logic
-        let thumbnail = '<div class="text-muted"><i class="fas fa-eye-slash"></i> ' + this._t('No preview available') + '</div>';
-        let svgData = '';
-
-        if (item.svg_content && item.svg_content !== '0' && item.svg_content.length > 50) {
-            thumbnail = item.svg_content;
-            svgData = encodeURIComponent(item.svg_content);
-        } else {
-            thumbnail = `<div class="text-muted"><i class="fas fa-eye-slash"></i> ${this._t('No preview available')}</div>`;
-        }
-
-        return `
+    return `
         <div class="flowbpmn-import-card-final flowbpmn-version-card" style="display: block !important; height: 100%; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
             <table style="width: 100%; height: 100%; border-collapse: separate; border-spacing: 0;">
                 <tr>
@@ -1983,22 +1981,22 @@ class BpmnFlowEditorNew {
                 </tr>
             </table>
         </div>`;
-    }
+}
 
-    /**
-     * Debounce Search Input
-     * @param {string} type - 'Ticket', 'Problem', 'Change'
-     * @param {string} value - Search term
-     */
-    debounceSearch(type, value) {
-        if (this.searchTimeout) clearTimeout(this.searchTimeout);
-        this.searchTimeout = setTimeout(() => {
-            this.loadImportGallery(type, value);
-        }, 500); // 500ms delay
-    }
+/**
+ * Debounce Search Input
+ * @param {string} type - 'Ticket', 'Problem', 'Change'
+ * @param {string} value - Search term
+ */
+debounceSearch(type, value) {
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+        this.loadImportGallery(type, value);
+    }, 500); // 500ms delay
+}
 
-    createImportModalHTML() {
-        return `
+createImportModalHTML() {
+    return `
             <div class="modal fade" id="flowbpmn-import-modal" tabindex="-1" style="z-index: 1060;">
                 <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 0.5rem;">
                     <div class="modal-content" style="background-color: white !important;">
@@ -2081,38 +2079,38 @@ class BpmnFlowEditorNew {
                     </div>
                 </div>
             </div>`;
-    }
-    bindImportEvents(modalEl) {
-        // File Import Logic
-        const fileInput = modalEl.querySelector('#flowbpmn-import-file-input');
-        if (fileInput) {
-            fileInput.addEventListener('change', () => {
-                if (fileInput.files.length === 0) return;
-                const file = fileInput.files[0];
-                const reader = new FileReader();
+}
+bindImportEvents(modalEl) {
+    // File Import Logic
+    const fileInput = modalEl.querySelector('#flowbpmn-import-file-input');
+    if (fileInput) {
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length === 0) return;
+            const file = fileInput.files[0];
+            const reader = new FileReader();
 
-                reader.onload = (e) => {
-                    this.loadDiagram(e.target.result);
-                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                    if (modalInstance) modalInstance.hide();
-                    this.showSuccess(this._t('Diagram imported from file.'));
-                };
-                reader.readAsText(file);
-            });
-        }
-
-        // View Image Delegation
-        modalEl.addEventListener('click', (e) => {
-            const btn = e.target.closest('.flowbpmn-view-import-image');
-            if (btn && !btn.disabled) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (btn.dataset.svg) {
-                    this.showImageModal(decodeURIComponent(btn.dataset.svg));
-                }
-            }
+            reader.onload = (e) => {
+                this.loadDiagram(e.target.result);
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) modalInstance.hide();
+                this.showSuccess(this._t('Diagram imported from file.'));
+            };
+            reader.readAsText(file);
         });
     }
+
+    // View Image Delegation
+    modalEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('.flowbpmn-view-import-image');
+        if (btn && !btn.disabled) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (btn.dataset.svg) {
+                this.showImageModal(decodeURIComponent(btn.dataset.svg));
+            }
+        }
+    });
+}
 
 } // End Class
 
