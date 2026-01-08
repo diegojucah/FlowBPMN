@@ -149,8 +149,25 @@ try {
         ],
         'canRestore' => $canRestore
     ]);
+    
+    ob_clean();
+    echo json_encode([
+        'success' => true,
+        'versions' => $formattedVersions,
+        'current' => [
+            'id' => $versionNumber, // Show version number for display
+            'flow_db_id' => $currentFlow['id'], // Real database ID for restore
+            'name' => $currentFlow['name'],
+            'date_mod' => $currentFlow['date_mod'],
+            'date_mod_formatted' => $formatDate($currentFlow['date_mod']),
+            'user_name' => $currentFlow['user_name'] ?: 'Unknown'
+        ],
+        'canRestore' => $canRestore
+    ]);
 
 } catch (Exception $e) {
     http_response_code(400);
+    http_response_code(400);
+    ob_clean();
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }

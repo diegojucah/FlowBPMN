@@ -81,9 +81,11 @@ try {
         $items[] = $row;
     }
 
+    ob_clean(); // Clean any previous output (headers, whitespace)
     echo json_encode(['success' => true, 'items' => $items]);
 
 } catch (Exception $e) {
     http_response_code(400); // Bad Request or Internal Error, but return JSON
+    ob_clean();
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }

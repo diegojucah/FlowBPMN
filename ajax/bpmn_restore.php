@@ -153,13 +153,14 @@ try {
     
     echo json_encode([
         'success' => true, 
-        'message' => 'Versão restaurada com sucesso (Backup criado).',
-        'bpmn_xml' => $versionData['bpmn_xml']
-    ]);
+    // Success response
+    ob_clean();
+    echo json_encode(['success' => true]);
 
 } catch (Exception $e) {
     $debug_file = __DIR__ . '/../debug_restore.txt';
     file_put_contents($debug_file, "EXCEPTION: " . $e->getMessage() . "\n", FILE_APPEND);
     http_response_code(400);
+    ob_clean();
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
