@@ -37,33 +37,7 @@ class BpmnFlowEditorNew {
         this.lastDateMod = options.dateMod || ''; // Optimistic Locking
         this.modeler = null;
 
-        this._injectCriticalStyles();
-        this.init();
-    }
 
-    _injectCriticalStyles() {
-        if (document.getElementById('flowbpmn-critical-styles')) return;
-        const style = document.createElement('style');
-        style.id = 'flowbpmn-critical-styles';
-        style.textContent = `
-            #flowbpmn-import-modal .flowbpmn-version-overlay {
-                opacity: 0 !important;
-            }
-            #flowbpmn-import-modal .flowbpmn-version-card:hover .flowbpmn-version-overlay {
-                opacity: 1 !important;
-            }
-            #flowbpmn-import-modal .btn-flowbpmn-action {
-                background-color: #fff !important;
-                color: #333 !important;
-                opacity: 1 !important;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-            }
-            #flowbpmn-import-modal .btn-flowbpmn-action:hover {
-                background-color: #f8f9fa !important;
-            }
-        `;
-        document.head.appendChild(style);
-    }
 
     /**
      * Security: Escape HTML to prevent XSS attacks
@@ -143,44 +117,6 @@ class BpmnFlowEditorNew {
             link3.href = BPMN_FONT;
             document.head.appendChild(link3);
         }
-
-        // Custom CSS for FlowBPMN Interface
-        if (!document.getElementById('flowbpmn-custom-css')) {
-            const css = `
-                /* Versions Modal Grid */
-                .flowbpmn-versions-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-                    gap: 25px;
-                    padding: 10px;
-                }
-                
-                /* Version Card Styling */
-                .flowbpmn-version-card {
-                    border: 1px solid #e9ecef;
-                    border-radius: 12px;
-                    overflow: hidden;
-                    background: #fff;
-                    transition: all 0.2s ease;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-                    display: flex;
-                    flex-direction: column;
-                }
-                .flowbpmn-version-card:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-                }
-
-                /* Preview Area */
-                .flowbpmn-version-preview {
-                    height: 240px;
-                    background-color: #f8f9fa;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    position: relative;
-                    border-bottom: 1px solid #e9ecef;
-                    overflow: hidden;
                 }
                 .flowbpmn-version-preview svg {
                     width: 100%;
@@ -1817,7 +1753,6 @@ class BpmnFlowEditorNew {
      * Show Modal to Import Diagrams (Unified)
      */
     showImportModal() {
-        this._injectCriticalStyles();
         const modalId = 'flowbpmn-import-modal';
         let modal = document.getElementById(modalId);
         if (modal) modal.remove();
@@ -1923,7 +1858,7 @@ class BpmnFlowEditorNew {
         const pageItems = allItems.slice(start, end);
 
         container.className = 'flowbpmn-versions-grid';
-        container.style.cssText = 'display: grid !important; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important; gap: 20px !important; padding: 20px !important;';
+        container.style.padding = '0';
 
         // Ensure container has data attributes for pagination to work
         container.dataset.currentPage = page;
@@ -1964,23 +1899,18 @@ class BpmnFlowEditorNew {
         }
 
         return `
-        <div class="flowbpmn-version-card flowbpmn-import-card-final" id="import-card-${item.id}"
-             style="display: flex !important; flex-direction: column !important; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; height: 100%; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative;">
-            
-            <div class="flowbpmn-version-preview" 
-                 style="height: 180px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; justify-content: center; position: relative; padding: 10px;">
+        <div class="flowbpmn-version-card flowbpmn-import-card-final" id="import-card-${item.id}">
+            <div class="flowbpmn-version-preview">
                 ${thumbnail}
-                <div class="flowbpmn-version-overlay" 
-                     style="opacity: 0; background: rgba(0,0,0,0.5); transition: opacity 0.2s; position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; z-index: 5;">
-                    <button type="button" class="btn-flowbpmn-action flowbpmn-view-import-image" data-svg="${svgData}" ${!svgData ? 'disabled' : ''}
-                            style="background: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin: 0 5px; font-weight: 500;">
+                <div class="flowbpmn-version-overlay">
+                    <button type="button" class="btn-flowbpmn-action flowbpmn-view-import-image" data-svg="${svgData}" ${!svgData ? 'disabled' : ''}>
                         <i class="fas fa-eye"></i> ${this._t('View')}
                     </button>
                 </div>
             </div>
             
-            <div class="flowbpmn-version-info" style="padding: 15px; flex-grow: 1; display: flex; flex-direction: column;">
-                <div class="flowbpmn-version-header" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+            <div class="flowbpmn-version-info">
+                <div class="flowbpmn-version-header">
                     ${badge}
                 </div>
                 
@@ -1988,14 +1918,14 @@ class BpmnFlowEditorNew {
                     <strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong>
                 </div>
 
-                <div class="flowbpmn-meta" title="${this._t('Modification Date')}" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #6c757d; margin-bottom: 5px; font-size: 0.9em;">
+                <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
                     <i class="fas fa-calendar-alt me-1"></i> ${item.date_mod_formatted}
                 </div>
-                <div class="flowbpmn-meta" title="${this._t('Author')}" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #6c757d; margin-bottom: 5px; font-size: 0.9em;">
+                <div class="flowbpmn-meta" title="${this._t('Author')}">
                     <i class="fas fa-user me-1"></i> ${item.user_name || this._t('Unknown')}
                 </div>
 
-                <div class="flowbpmn-actions" style="margin-top: auto; padding-top: 15px;">
+                <div class="flowbpmn-actions">
                     <button type="button" class="btn btn-warning w-100" 
                             style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;"
                             onclick="window.BpmnFlowEditor_instance.loadDiagramFromItem('${type}', ${item.id}, document.getElementById('flowbpmn-import-modal'))">
@@ -2020,90 +1950,6 @@ class BpmnFlowEditorNew {
 
     createImportModalHTML() {
         return `
-            <style>
-                #flowbpmn-import-modal .flowbpmn-versions-grid {
-                    display: grid !important;
-                    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
-                    gap: 20px !important;
-                    padding: 20px !important;
-                }
-                #flowbpmn-import-modal .flowbpmn-version-card {
-                    display: flex !important;
-                    flex-direction: column !important;
-                    background: #fff !important;
-                    border: 1px solid #dee2e6 !important;
-                    border-radius: 8px !important;
-                    overflow: hidden !important;
-                    height: 100% !important;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
-                    transition: box-shadow 0.2s !important;
-                }
-                #flowbpmn-import-modal .flowbpmn-version-card:hover {
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-                }
-                #flowbpmn-import-modal .flowbpmn-version-preview {
-                    height: 180px !important;
-                    background: #f8f9fa !important;
-                    border-bottom: 1px solid #dee2e6 !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    position: relative !important;
-                    padding: 10px !important;
-                }
-                #flowbpmn-import-modal .flowbpmn-version-info {
-                    padding: 15px !important;
-                    flex-grow: 1 !important;
-                    display: flex !important;
-                    flex-direction: column !important;
-                }
-                #flowbpmn-import-modal .flowbpmn-version-header {
-                    margin-bottom: 10px !important;
-                    display: flex !important;
-                    justify-content: space-between !important; 
-                    align-items: center !important;
-                }
-                #flowbpmn-import-modal .flowbpmn-version-overlay {
-                    opacity: 0 !important;
-                    background: rgba(0,0,0,0.5) !important;
-                    transition: opacity 0.2s !important;
-                    position: absolute !important; top: 0; left: 0; right: 0; bottom: 0;
-                    display: flex !important; align-items: center; justify-content: center;
-                    z-index: 5;
-                }
-                #flowbpmn-import-modal .flowbpmn-version-card:hover .flowbpmn-version-overlay {
-                    opacity: 1 !important;
-                }
-                #flowbpmn-import-modal .btn-flowbpmn-action {
-                    background-color: #fff !important;
-                    color: #333 !important;
-                    border: none !important;
-                    padding: 8px 12px !important;
-                    border-radius: 4px !important;
-                    cursor: pointer !important;
-                    margin: 0 5px !important;
-                    opacity: 1 !important;
-                    font-weight: 500 !important;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-                }
-                #flowbpmn-import-modal .btn-flowbpmn-action:hover {
-                    background-color: #f8f9fa !important;
-                }
-                #flowbpmn-import-modal .flowbpmn-meta {
-                    white-space: nowrap !important;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    font-size: 0.9em !important;
-                    color: #6c757d !important;
-                    margin-bottom: 5px !important;
-                    display: block !important;
-                    width: 100% !important;
-                }
-                #flowbpmn-import-modal .flowbpmn-actions {
-                    margin-top: auto !important;
-                    padding-top: 15px !important;
-                }
-            </style>
             <div class="modal fade" id="flowbpmn-import-modal" tabindex="-1" style="z-index: 1060;">
                 <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 0.5rem;">
                     <div class="modal-content" style="background-color: white !important;">
