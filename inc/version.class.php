@@ -60,17 +60,18 @@ class PluginFlowbpmnVersion extends CommonDBTM {
         
         // Get next version number - Use QueryExpression for MAX()
         error_log("flowBPMN DEBUG: Getting max version number");
-        $iterator = $DB->request([
-            'SELECT' => ['MAX(version_number) AS max_version'],
-            'FROM'   => self::getTable(),
-            'WHERE'  => ['plugin_flowbpmn_flows_id' => $flow_id]
-        ]);
+        // Get next version number - Use raw query for reliability
+        error_log("flowBPMN DEBUG: Getting max version number");
+        $query = "SELECT MAX(version_number) AS max_version FROM " . self::getTable() . " WHERE plugin_flowbpmn_flows_id = $flow_id";
+        $result = $DB->query($query);
         
         $maxVersion = 0;
-        if (count($iterator)) {
-            $result = $iterator->current();
-            $maxVersion = $result['max_version'] ?? 0;
+        if ($result && $DB->numrows($result)) {
+            $row = $DB->fetchAssoc($result);
+            $maxVersion = $row['max_version'] ?? 0;
         }
+        
+        // $maxVersion calculated above
         
         $nextVersion = $maxVersion + 1;
         error_log("flowBPMN DEBUG: Next version will be v$nextVersion");
