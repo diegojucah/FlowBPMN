@@ -202,6 +202,20 @@ try {
                 throw new Exception('Falha ao salvar diagrama');
             }
 
+            // SAFETY NET: Ensure v1 is created for new flows if post_addItem failed
+            if ($action === 'criado') {
+                 if (!class_exists('PluginFlowbpmnVersion')) {
+                      include_once(GLPI_ROOT . '/plugins/flowbpmn/inc/version.class.php');
+                 }
+                 if (class_exists('PluginFlowbpmnVersion')) {
+                      $currentCount = PluginFlowbpmnVersion::countVersions($flow_id);
+                      if ($currentCount == 0) {
+                           error_log("flowBPMN INFO: Manual v1 creation in ajax/flow.php for flow_id=$flow_id");
+                           PluginFlowbpmnVersion::createVersion($flow_id, $flowInput);
+                      }
+                 }
+            }
+
             // Get updated flow data to return new date_mod
             $updatedFlow = $flow->getFromDB($flow_id);
             $newDateMod = $updatedFlow ? $flow->fields['date_mod'] : date('Y-m-d H:i:s');
