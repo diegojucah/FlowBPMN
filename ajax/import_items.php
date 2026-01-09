@@ -4,6 +4,8 @@
 // Output buffer to prevent accidental output
 ob_start();
 
+define('GLPI_AJAX', 1);
+
 // Initialize GLPI Environment
 include('../../../inc/includes.php');
 global $DB;
