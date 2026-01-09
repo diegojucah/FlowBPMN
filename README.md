@@ -5,7 +5,7 @@
 [![PHP Version](https://img.shields.io/badge/PHP-7.4+-purple.svg)](https://php.net/)
 [![Languages](https://img.shields.io/badge/Languages-EN%20|%20PT%20|%20ES-green.svg)](https://github.com/diegojucah/FlowBPMN)
 
-Professional BPMN (Business Process Model and Notation) editor plugin for GLPI 11, enabling creation, editing, and management of BPMN diagrams directly within Tickets, Problems, and Changes.
+Professional BPMN (Business Process Model and Notation) editor plugin for GLPI 10, enabling creation, editing, and management of BPMN diagrams directly within Tickets, Problems, and Changes.
 
 **Developed by [KactuX](https://github.com/diegojucah)** - Contributing to the GLPI open-source community.
 
@@ -23,7 +23,7 @@ Professional BPMN (Business Process Model and Notation) editor plugin for GLPI 1
 - **🔒 Granular Permissions** - Per-profile rights management (view, edit, delete, restore)
 - **💾 Auto-save** - Automatic PNG attachment to items
 - **📤 Export Options** - Export to BPMN XML, SVG, PNG, and PDF (via browser print)
-- **🎨 Modern UI** - Fully integrated with GLPI 11 design system (Bootstrap 5)
+- **🎨 Modern UI** - Fully integrated with GLPI 10 design system (Bootstrap 4)
 - **🌙 Dark Mode** - Full support for GLPI dark theme
 - **📱 Responsive** - Works on desktop and mobile devices
 - **🌍 Multilingual** - Full support for English, Portuguese (BR), and Spanish
@@ -504,7 +504,7 @@ This project is licensed under the **GNU General Public License v3.0** - see the
 - ✨ Granular permission system per profile
 - ✨ Multiple export formats (BPMN, SVG, PNG, PDF)
 - ✨ Auto-save and automatic PNG attachment
-- ✨ Modern UI fully integrated with GLPI 11
+- ✨ Modern UI fully integrated with GLPI 10
 - ✨ Dark mode support
 - ✨ Responsive design for mobile devices
 - 🔒 Complete authentication and audit trail

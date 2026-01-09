@@ -7,7 +7,7 @@
  * This file is processed through GLPI's Kernel, ensuring session is active
  */
 
-// Bootstrap GLPI 11
+// Bootstrap GLPI 10
 $glpi_root = dirname(__DIR__, 3);
 require_once $glpi_root . '/vendor/autoload.php';
 require_once $glpi_root . '/inc/includes.php';
@@ -19,7 +19,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Note: Session::checkRight() causes SessionExpiredException in GLPI 11 AJAX context
+// Note: Session::checkRight() causes SessionExpiredException in GLPI 10 AJAX context
 // User is already authenticated via browser session, so we proceed directly
 
 try {

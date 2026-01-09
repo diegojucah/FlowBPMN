@@ -30,4 +30,4 @@
 
 // This file is intentionally empty.
 // All hooks are now defined in setup.php using plugin_init_flowbpmn()
-// This follows GLPI 11 best practices for plugin architecture.
+// This follows GLPI 10 best practices for plugin architecture.

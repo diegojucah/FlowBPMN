@@ -7,7 +7,7 @@
  * This file is processed through GLPI's Kernel, ensuring session is active
  */
 
-// Bootstrap GLPI 11
+// Bootstrap GLPI 10
 $glpi_root = dirname(__DIR__, 3);
 require_once $glpi_root . '/vendor/autoload.php';
 require_once $glpi_root . '/inc/includes.php';

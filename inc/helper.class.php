@@ -43,13 +43,13 @@ if (!defined('GLPI_ROOT')) {
 class PluginFlowbpmnHelper {
 
     /**
-     * Check if running GLPI 11.x
+     * Check if running GLPI 10.x
      *
-     * @return bool True if GLPI 11.x or higher
+     * @return bool True if GLPI 10.x or higher
      */
     /**
-     * Check if running GLPI 11.x
-     * Always returns true as plugin requires GLPI 11+
+     * Check if running GLPI 10.x
+     * Always returns true as plugin requires GLPI 10+
      *
      * @return bool True
      */
@@ -59,7 +59,7 @@ class PluginFlowbpmnHelper {
 
     /**
      * Check if running GLPI 10.x
-     * Always returns false as plugin requires GLPI 11+
+     * Always returns false as plugin requires GLPI 10+
      *
      * @return bool False
      */
@@ -70,7 +70,7 @@ class PluginFlowbpmnHelper {
     /**
      * Get appropriate icon based on GLPI version
      *
-     * @param string $glpi11Icon Tabler icon for GLPI 11.x (e.g., 'ti ti-diagram')
+     * @param string $glpi11Icon Tabler icon for GLPI 10.x (e.g., 'ti ti-diagram')
      * @param string $glpi10Icon FontAwesome icon for GLPI 10.x (e.g., 'fas fa-project-diagram')
      *
      * @return string Icon class
@@ -84,8 +84,8 @@ class PluginFlowbpmnHelper {
      *
      * @param string      $title     Tab title
      * @param int         $count     Badge count (optional)
-     * @param string|null $itemtype  Item type (GLPI 11.x)
-     * @param string|null $icon      Icon class (GLPI 11.x)
+     * @param string|null $itemtype  Item type (GLPI 10.x)
+     * @param string|null $icon      Icon class (GLPI 10.x)
      *
      * @return string|array Tab entry
      */
@@ -211,7 +211,7 @@ class PluginFlowbpmnHelper {
     }
 
     /**
-     * Upload document for GLPI 11.x
+     * Upload document for GLPI 10.x
      *
      * @param mixed  $file_data Binary data
      * @param string $filename  Filename
@@ -238,7 +238,7 @@ class PluginFlowbpmnHelper {
         }
 
         try {
-            // Simulate file upload array structure for GLPI 11
+            // Simulate file upload array structure for GLPI 10
             $_FILES['filename'] = [
                 'name' => $filename,
                 'tmp_name' => $filepath,
@@ -272,7 +272,7 @@ class PluginFlowbpmnHelper {
                     'entities_id' => $_SESSION['glpiactive_entity'] ?? 0
                 ]);
 
-                error_log("flowBPMN: Document uploaded successfully (GLPI 11.x) - ID: $doc_id");
+                error_log("flowBPMN: Document uploaded successfully (GLPI 10.x) - ID: $doc_id");
             }
 
             // Clean up temp file
@@ -281,7 +281,7 @@ class PluginFlowbpmnHelper {
             return $doc_id;
 
         } catch (Exception $e) {
-            error_log('flowBPMN: Upload failed (GLPI 11.x): ' . $e->getMessage());
+            error_log('flowBPMN: Upload failed (GLPI 10.x): ' . $e->getMessage());
             @unlink($filepath);
             return false;
         }

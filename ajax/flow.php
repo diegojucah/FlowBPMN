@@ -75,7 +75,7 @@ if (!$user_id) {
 }
 
 
-// CSRF Protection (optional for now - GLPI 11 may not always provide token in AJAX)
+// CSRF Protection (optional for now - GLPI 10 may not always provide token in AJAX)
 // TODO: Make this mandatory after confirming GLPI token availability
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $csrfToken = $_SERVER['HTTP_X_GLPI_CSRF_TOKEN'] ?? '';

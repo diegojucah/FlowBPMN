@@ -492,7 +492,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
                     return '';
                 }
 
-                // GLPI 11+ - uses icon parameter
+                // GLPI 10+ - uses icon parameter
                 return self::createTabEntry(
                     'FlowBPMN',
                     0,
@@ -536,7 +536,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
         // Get existing flow
         $existing = $this->getForItem($itemtype, $items_id);
 
-        // GLPI 11+ icons
+        // GLPI 10+ icons
         $iconClass = 'ti ti-git-fork';
         $saveIcon = 'ti ti-device-floppy';
         $uploadIcon = 'ti ti-upload';
@@ -979,7 +979,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             $timestamp = date('Y-m-d H-i-s');
             $filename = 'diagrama-' . $timestamp . '.png';
 
-            // GLPI 11 - Use document upload system with proper file upload array
+            // GLPI 10 - Use document upload system with proper file upload array
             $filepath = GLPI_TMP_DIR . '/' . $filename;
 
             // Save temporary file
@@ -991,7 +991,7 @@ class PluginFlowbpmnFlow extends CommonDBTM {
             // Create document
             $document = new Document();
 
-            // Simulate file upload array structure for GLPI 11
+            // Simulate file upload array structure for GLPI 10
             $_FILES['filename'] = [
                 'name' => $filename,
                 'tmp_name' => $filepath,
