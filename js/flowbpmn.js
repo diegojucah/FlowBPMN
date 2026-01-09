@@ -36,6 +36,8 @@ class BpmnFlowEditorNew {
         this.pluginUrl = options.pluginUrl || '';
         this.lastDateMod = options.dateMod || ''; // Optimistic Locking
         this.modeler = null;
+        this.init();
+    }
 
 
 
@@ -116,85 +118,6 @@ class BpmnFlowEditorNew {
             link3.rel = 'stylesheet';
             link3.href = BPMN_FONT;
             document.head.appendChild(link3);
-        }
-                }
-                .flowbpmn-version-preview svg {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: contain;
-                }
-
-                /* Overlay */
-                .flowbpmn-version-overlay {
-                    position: absolute;
-                    top: 0; left: 0; right: 0; bottom: 0;
-                    background: rgba(33, 37, 41, 0.85); /* Dark overlay */
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    opacity: 0;
-                    transition: opacity 0.2s;
-                    gap: 10px;
-                }
-                .flowbpmn-version-card:hover .flowbpmn-version-overlay {
-                    opacity: 1;
-                }
-
-                /* Info Section */
-                .flowbpmn-version-info {
-                    padding: 15px;
-                    flex-grow: 1;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                }
-                .flowbpmn-version-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 5px;
-                }
-                .flowbpmn-badge {
-                    background: #212529;
-                    color: #fff;
-                    padding: 4px 8px;
-                    border-radius: 6px;
-                    font-size: 0.85rem;
-                    font-weight: 600;
-                }
-                .flowbpmn-meta {
-                    font-size: 0.9rem;
-                    color: #6c757d;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                }
-
-                /* Actions Footer */
-                .flowbpmn-actions {
-                    margin-top: 15px;
-                }
-                
-                /* Action Buttons in Overlay */
-                .btn-flowbpmn-action {
-                    background: rgba(255,255,255,0.15);
-                    border: 1px solid rgba(255,255,255,0.5);
-                    color: white;
-                    border-radius: 6px;
-                    padding: 8px 16px;
-                    backdrop-filter: blur(4px);
-                    transition: all 0.2s;
-                }
-                .btn-flowbpmn-action:hover {
-                    background: white;
-                    color: #212529;
-                    border-color: white;
-                }
-            `;
-            const style = document.createElement('style');
-            style.id = 'flowbpmn-custom-css';
-            style.textContent = css;
-            document.head.appendChild(style);
         }
     }
 
@@ -649,7 +572,7 @@ class BpmnFlowEditorNew {
         let html = `
         <div class="modal fade" id="flowbpmn-versions-modal" tabindex="-1" aria-labelledby="flowbpmnVersionsModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 0.5rem;">
-                <div class="modal-content" style="background-color: white !important;">
+                <div class="modal-content" style="background-color: #ffffff !important; opacity: 1 !important; box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;">
                     <div class="modal-header">
                         <h5 class="modal-title m-0" id="flowbpmnVersionsModalLabel">
                             <i class="fas fa-history"></i> ${this._t('Version History')}
@@ -1174,7 +1097,7 @@ class BpmnFlowEditorNew {
             let html = `
             <div class="modal fade" id="flowbpmn-templates-modal" tabindex="-1" aria-labelledby="flowbpmnTemplatesModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 0.5rem;">
-                    <div class="modal-content" style="background-color: white !important;">
+                    <div class="modal-content" style="background-color: #ffffff !important; opacity: 1 !important; box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;">
                         <div class="modal-header">
                             <h5 class="modal-title m-0" id="flowbpmnTemplatesModalLabel">
                                 <i class="fas fa-layer-group"></i> ${this._t('Template Gallery')}
@@ -1892,14 +1815,32 @@ class BpmnFlowEditorNew {
         let svgData = '';
 
         if (item.svg_content && item.svg_content !== '0' && item.svg_content.length > 50) {
-            thumbnail = item.svg_content;
-            svgData = encodeURIComponent(item.svg_content);
+            try {
+                // Use DOM parser to extract ONLY the SVG element, discarding any malformed HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(item.svg_content, 'text/html');
+                const svgElement = doc.querySelector('svg');
+                
+                if (svgElement) {
+                    // Get clean SVG as string
+                    const cleanSvg = svgElement.outerHTML;
+                    thumbnail = cleanSvg;
+                    svgData = encodeURIComponent(cleanSvg);
+                } else {
+                    // No valid SVG found, show placeholder
+                    thumbnail = `<div class="text-muted"><i class="fas fa-eye-slash"></i> ${this._t('No preview available')}</div>`;
+                }
+            } catch (e) {
+                // If parsing fails, show placeholder
+                console.warn('Failed to parse SVG content:', e);
+                thumbnail = `<div class="text-muted"><i class="fas fa-eye-slash"></i> ${this._t('No preview available')}</div>`;
+            }
         } else {
             thumbnail = `<div class="text-muted"><i class="fas fa-eye-slash"></i> ${this._t('No preview available')}</div>`;
         }
 
         return `
-        <div class="flowbpmn-version-card flowbpmn-import-card-final" id="import-card-${item.id}">
+        <div class="flowbpmn-version-card" id="import-card-${item.id}">
             <div class="flowbpmn-version-preview">
                 ${thumbnail}
                 <div class="flowbpmn-version-overlay">
@@ -1908,38 +1849,38 @@ class BpmnFlowEditorNew {
                     </button>
                 </div>
             </div>
-            
             <div class="flowbpmn-version-info">
                 <div class="flowbpmn-version-header">
                     ${badge}
                 </div>
                 
-                <div class="mb-2 text-truncate" title="${this.escapeHtml(item.name)}">
+                <div class="flowbpmn-meta" title="${this.escapeHtml(item.name)}">
                     <strong>${this.escapeHtml(item.name || this._t('No Title'))}</strong>
                 </div>
-
+                
                 <div class="flowbpmn-meta" title="${this._t('Modification Date')}">
-                    <i class="fas fa-calendar-alt me-1"></i> ${item.date_mod_formatted}
+                    <i class="fas fa-calendar-alt"></i> ${item.date_mod_formatted}
                 </div>
                 <div class="flowbpmn-meta" title="${this._t('Author')}">
-                    <i class="fas fa-user me-1"></i> ${item.user_name || this._t('Unknown')}
+                    <i class="fas fa-user"></i> ${item.user_name || this._t('Unknown')}
                 </div>
 
                 <div class="flowbpmn-actions">
-                    <button type="button" class="btn btn-warning w-100" 
+                    <button type="button" class="btn btn-warning w-100"
                             style="background-color: #FFC107; border: none; color: #212529; font-weight: 500;"
                             onclick="window.BpmnFlowEditor_instance.loadDiagramFromItem('${type}', ${item.id}, document.getElementById('flowbpmn-import-modal'))">
-                        <i class="fas fa-download me-1"></i> ${this._t('Import')}
+                        <i class="fas fa-download"></i> ${this._t('Import')}
                     </button>
                 </div>
             </div>
         </div>`;
     }
 
+
+
+
     /**
      * Debounce Search Input
-     * @param {string} type - 'Ticket', 'Problem', 'Change'
-     * @param {string} value - Search term
      */
     debounceSearch(type, value) {
         if (this.searchTimeout) clearTimeout(this.searchTimeout);
@@ -1952,7 +1893,7 @@ class BpmnFlowEditorNew {
         return `
             <div class="modal fade" id="flowbpmn-import-modal" tabindex="-1" style="z-index: 1060;">
                 <div class="modal-dialog modal-xl" style="max-width: 65vw; margin-top: 0.5rem;">
-                    <div class="modal-content" style="background-color: white !important;">
+                    <div class="modal-content" style="background-color: #ffffff !important; opacity: 1 !important; box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;">
                         
                         <!-- Header -->
                         <div class="modal-header d-flex justify-content-between align-items-center">
