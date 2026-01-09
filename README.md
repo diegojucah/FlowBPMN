@@ -1,7 +1,7 @@
 # FlowBPMN v1.0.0 - BPMN Editor Plugin for GLPI
 
 [![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![GLPI Version](https://img.shields.io/badge/GLPI-11.0+-orange.svg)](https://glpi-project.org/)
+[![GLPI Version](https://img.shields.io/badge/GLPI-10.0+-orange.svg)](https://glpi-project.org/)
 [![PHP Version](https://img.shields.io/badge/PHP-7.4+-purple.svg)](https://php.net/)
 [![Languages](https://img.shields.io/badge/Languages-EN%20|%20PT%20|%20ES-green.svg)](https://github.com/diegojucah/FlowBPMN)
 
@@ -41,8 +41,8 @@ Professional BPMN (Business Process Model and Notation) editor plugin for GLPI 1
 
 ## 📋 Requirements
 
-- **GLPI**: 11.0.0 or higher
-- **PHP**: 7.4 or higher (8.1+ recommended)
+- **GLPI**: 10.0.0 or higher
+- **PHP**: 7.4 or higher
 - **Web Browser**: Modern browser with JavaScript enabled (Chrome, Firefox, Edge, Safari)
 - **Database**: MySQL 5.7+ or MariaDB 10.3+
 
