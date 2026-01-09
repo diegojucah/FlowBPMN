@@ -6,7 +6,7 @@
 
 try {
     // GLPI root - don't define, let autoloader do it
-    $glpi_root = '/var/www/glpi';
+    $glpi_root = '/var/www/html/glpi';
     
     // Change to GLPI directory FIRST (required for autoloader)
     chdir($glpi_root);
